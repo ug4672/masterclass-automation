@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IK Masterclass Launch</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --border: #e1e4e8;
+  --text: #1a1d21;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dk: #1d4ed8;
+  --r: 10px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 32px 16px 64px;
+}
+
+.wrap { max-width: 700px; margin: 0 auto; }
+
+.page-hd { margin-bottom: 20px; }
+.page-hd h1 { font-size: 20px; font-weight: 700; }
+.page-hd p  { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+/* Card */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.card-hd.borderless { border-bottom: none; }
+.card-hd.clickable  { cursor: pointer; }
+.card-hd.clickable:hover { background: #fafbfc; }
+.card-hd h2 { font-size: 13.5px; font-weight: 600; }
+
+.toggle-btn { font-size: 12px; color: var(--muted); user-select: none; }
+
+.card-body { padding: 18px; }
+.card-body.hidden { display: none; }
+
+/* Form */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.col2 { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; }
+.field label .req { color: #dc2626; }
+.field label .opt { font-weight: 400; color: var(--muted); font-size: 11px; }
+
+select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  width: 100%;
+  -webkit-appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+textarea { resize: vertical; }
+
+.sep {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin: 18px 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.sep:first-child { margin-top: 0; }
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-dk); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.form-foot { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+/* Status steps */
+.steps { display: flex; flex-direction: column; gap: 8px; }
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  color: var(--muted);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.step.busy { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+.step.ok   { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.step.fail { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+.step-ic { width: 16px; flex-shrink: 0; text-align: center; padding-top: 1px; font-size: 14px; }
+
+.spin {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.step-label  { font-weight: 600; }
+.step-detail { font-size: 11.5px; margin-top: 2px; opacity: 0.8; }
+.step-detail a { color: inherit; }
+
+/* Tab toggle */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 4px;
+  margin-bottom: 20px;
+}
+.tab {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Results table */
+.results-wrap {
+  overflow-x: auto;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.results-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+table.results {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+table.results th {
+  background: #f3f4f6;
+  padding: 7px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+table.results td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.results tr:last-child td { border-bottom: none; }
+
+/* Notice */
+.notice {
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #713f12;
+  margin-bottom: 14px;
+}
+.notice code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  background: rgba(0,0,0,0.07);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-hd">
+    <h1>IK Masterclass Launch</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabCreateEvent" onclick="switchTab('create')">Create Event</button>
+    <button class="tab" id="tabLeads" onclick="switchTab('leads')">Leads</button>
+  </div>
+
+  <!-- ── Create Event view ──────────────────────────────────────────────── -->
+  <div id="viewCreate">
+
+  <div class="notice">
+    <strong>Note:</strong> If you see network/CORS errors, serve this file locally:
+    <code>python3 -m http.server 8080</code> then open <code>http://localhost:8080</code>
+  </div>
+
+  <!-- ── Config ─────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-hd clickable" id="cfgHd" onclick="toggleCfg()">
+      <h2>&#9881; Configuration</h2>
+      <span class="toggle-btn" id="cfgToggle">&#9662; hide</span>
+    </div>
+    <div class="card-body" id="cfgBody">
+
+      <div class="sep">Jira</div>
+      <div class="grid">
+        <div class="field">
+          <label>Base URL <span class="req">*</span></label>
+          <input type="url" id="jiraBaseUrl" placeholder="https://company.atlassian.net" data-cfg="jiraBaseUrl">
+        </div>
+        <div class="field">
+          <label>Project Key <span class="req">*</span></label>
+          <input type="text" id="jiraProjectKey" placeholder="MC" data-cfg="jiraProjectKey">
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="jiraEmail" placeholder="you@company.com" data-cfg="jiraEmail">
+        </div>
+        <div class="field">
+          <label>API Token <span class="req">*</span></label>
+          <input type="password" id="jiraToken" placeholder="Your Jira API token" data-cfg="jiraToken">
+        </div>
+        <div class="field">
+          <label>Issue Type <span class="req">*</span></label>
+          <input type="text" id="jiraIssueType" value="Task" data-cfg="jiraIssueType">
+        </div>
+        <div class="field">
+          <label>Assignee Account ID <span class="opt">(optional)</span></label>
+          <input type="text" id="jiraAssignee" placeholder="Leave blank for unassigned" data-cfg="jiraAssignee">
+        </div>
+      </div>
+
+      <div class="sep">BigQuery</div>
+      <div class="grid">
+        <div class="field col2">
+          <label>Service Account Key File <span class="opt">(optional)</span></label>
+          <input type="text" id="bqKeyFile" placeholder="/path/to/service-account.json" data-cfg="bqKeyFile">
+        </div>
+      </div>
+
+      <div class="sep">Slack</div>
+      <div class="grid">
+        <div class="field col2">
+          <label>Bot Token <span class="req">*</span></label>
+          <input type="password" id="slackToken" placeholder="xoxb-..." data-cfg="slackToken">
+        </div>
+        <div class="field">
+          <label>Performance Lead User ID <span class="req">*</span></label>
+          <input type="text" id="slackPerfLead" placeholder="U0XXXXXXXXX" data-cfg="slackPerfLead">
+        </div>
+        <div class="field">
+          <label>CRM Lead User ID <span class="req">*</span></label>
+          <input type="text" id="slackCrmLead" placeholder="U0XXXXXXXXX" data-cfg="slackCrmLead">
+        </div>
+        <div class="field">
+          <label>Daily Snapshot Slack ID</label>
+          <input type="text" id="slackSnapshotId" placeholder="U0XXXXXXXXX" data-cfg="slackSnapshotId">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Event form ────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-hd borderless">
+      <h2>Event Details</h2>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      <div class="grid">
+        <div class="field">
+          <label for="mcEventType">Event Type <span class="req">*</span></label>
+          <select id="mcEventType" onchange="onEventTypeChange()">
+            <option value="masterclass">Masterclass</option>
+            <option value="launchpad">Launchpad</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mcTitle">Event Title <span class="req">*</span></label>
+          <input type="text" id="mcTitle" placeholder="e.g. Cracking the System Design Interview">
+        </div>
+        <div class="field col2">
+          <label for="mcLandingUrl">Landing Page URL <span class="req">*</span></label>
+          <input type="url" id="mcLandingUrl" placeholder="https://in.interviewkickstart.com/event/...">
+        </div>
+        <div class="field" id="day1DateField">
+          <label for="mcMcDate" id="day1DateLabel">Event Date <span class="req">*</span></label>
+          <input type="date" id="mcMcDate">
+        </div>
+        <div class="field" id="day2DateField" style="display:none;">
+          <label for="mcMcDate2">Day 2 Date <span class="req">*</span></label>
+          <input type="date" id="mcMcDate2">
+        </div>
+        <div class="field">
+          <label for="mcMcTime">Event Time (IST) <span class="req">*</span></label>
+          <input type="time" id="mcMcTime">
+        </div>
+        <div class="field">
+          <label for="mcDate">Go-Live Date <span class="req">*</span></label>
+          <input type="date" id="mcDate">
+        </div>
+        <div class="field">
+          <label for="mcCountry">Country <span class="req">*</span></label>
+          <select id="mcCountry" onchange="onCountryChange()">
+            <option value="India">India</option>
+            <option value="US">US</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mcTopic">Webinar Type <span class="req">*</span></label>
+          <select id="mcTopic">
+            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
+            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
+            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
+          </select>
+        </div>
+
+
+        <!-- Single instructor (Masterclass) -->
+        <div class="field" id="instructorSingle">
+          <label for="mcSpeaker">Instructor <span class="req">*</span></label>
+          <input type="text" id="mcSpeaker" placeholder="e.g. Priya Sharma">
+        </div>
+
+        <!-- Four instructors (Launchpad) -->
+        <div class="field col2" id="instructorMulti" style="display:none;">
+          <label>Instructors <span class="req">*</span></label>
+          <div class="grid" style="margin-top:6px;">
+            <div class="field">
+              <label for="mcSpeaker1" style="font-weight:400;font-size:11.5px;">Day 1 · Session 1</label>
+              <input type="text" id="mcSpeaker1" placeholder="e.g. Priya Sharma">
+            </div>
+            <div class="field">
+              <label for="mcSpeaker2" style="font-weight:400;font-size:11.5px;">Day 1 · Session 2</label>
+              <input type="text" id="mcSpeaker2" placeholder="e.g. Rahul Gupta">
+            </div>
+            <div class="field">
+              <label for="mcSpeaker3" style="font-weight:400;font-size:11.5px;">Day 2 · Session 1</label>
+              <input type="text" id="mcSpeaker3" placeholder="e.g. Anita Menon">
+            </div>
+            <div class="field">
+              <label for="mcSpeaker4" style="font-weight:400;font-size:11.5px;">Day 2 · Session 2</label>
+              <input type="text" id="mcSpeaker4" placeholder="e.g. Vikram Nair">
+            </div>
+          </div>
+        </div>
+
+        <div class="field col2">
+          <label for="mcSummary">Content / One-Pager Summary <span class="req">*</span></label>
+          <textarea id="mcSummary" rows="5" placeholder="Key takeaways, target audience, what will be covered..."></textarea>
+        </div>
+        <div class="field col2">
+          <label for="mcDesign">Design Notes <span class="opt">(optional)</span></label>
+          <textarea id="mcDesign" rows="3" placeholder="Color palette, branding direction, reference assets..."></textarea>
+        </div>
+      </div>
+      <div class="form-foot">
+        <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">
+          Launch Event
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Status ─────────────────────────────────────────────────────────── -->
+  <div class="card" id="statusCard" style="display:none;">
+    <div class="card-hd borderless">
+      <h2>Progress</h2>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      <div class="steps" id="steps"></div>
+    </div>
+  </div>
+
+  </div><!-- /viewCreate -->
+
+  <!-- ── Leads view ────────────────────────────────────────────────────── -->
+  <div id="viewLeads" style="display:none;">
+  <div class="card">
+    <div class="card-hd clickable" id="queryHd" onclick="toggleQuery()">
+      <h2>&#9881; Query</h2>
+      <span class="toggle-btn" id="queryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="queryBody">
+      <textarea id="queryText" rows="14" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd borderless">
+      <h2>Leads</h2>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Event Date <span class="req">*</span></label>
+          <input type="date" id="leadsDate1">
+        </div>
+        <div class="field">
+          <label>Day 2 Date <span class="opt">(optional)</span></label>
+          <input type="date" id="leadsDate2">
+        </div>
+        <div class="field col2">
+          <label>Webinar Type <span class="req">*</span></label>
+          <select id="leadsWebinarType">
+            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
+            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
+            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
+            <option value="MASTERCLASS_EVENT_AI">MASTERCLASS_EVENT_AI</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-foot" style="justify-content:flex-start; gap:12px; margin-top:0; margin-bottom:14px;">
+        <button class="btn btn-primary" id="runQueryBtn" onclick="runQuery()">Run</button>
+        <button class="btn btn-secondary" onclick="sendSnapshotToSlack()">Send to Slack</button>
+      </div>
+      <div id="queryResults" style="display:none;">
+        <div id="resultsOverall"></div>
+        <div id="resultsFacebook"></div>
+        <div id="resultsCrm"></div>
+        <div id="resultsOthers"></div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /viewLeads -->
+
+</div>
+<script>
+'use strict';
+
+// ── Persistence ──────────────────────────────────────────────────────────────
+const LS = 'ik_mc_launch_v1';
+
+function loadConfig() {
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS) || '{}'); } catch (_) {}
+  document.querySelectorAll('[data-cfg]').forEach(function(el) {
+    if (saved[el.dataset.cfg] !== undefined) el.value = saved[el.dataset.cfg];
+  });
+  var critical = ['jiraBaseUrl','jiraProjectKey','jiraEmail','jiraToken','slackToken','slackPerfLead','slackCrmLead'];
+  if (critical.every(function(k) { return saved[k]; })) toggleCfg();
+}
+
+function saveConfig() {
+  var d = {};
+  document.querySelectorAll('[data-cfg]').forEach(function(el) { d[el.dataset.cfg] = el.value; });
+  localStorage.setItem(LS, JSON.stringify(d));
+}
+
+function getCfg() {
+  var d = {};
+  document.querySelectorAll('[data-cfg]').forEach(function(el) { d[el.dataset.cfg] = el.value.trim(); });
+  return d;
+}
+
+document.querySelectorAll('[data-cfg]').forEach(function(el) {
+  el.addEventListener('input', saveConfig);
+});
+
+// ── Config toggle ────────────────────────────────────────────────────────────
+var cfgOpen = true;
+
+function toggleCfg() {
+  cfgOpen = !cfgOpen;
+  document.getElementById('cfgBody').classList.toggle('hidden', !cfgOpen);
+  document.getElementById('cfgHd').classList.toggle('borderless', !cfgOpen);
+  document.getElementById('cfgToggle').textContent = cfgOpen ? '▾ hide' : '▸ show';
+}
+
+// ── Country / webinar type sync ───────────────────────────────────────────────
+var WEBINAR_TYPES = {
+  India: ['MASTERCLASS_INDIA', 'MASTERCLASS_INDIA_3', 'MASTERCLASS_INDIA_5'],
+  US:    ['MASTERCLASS_EVENT_AI'],
+};
+
+function onCountryChange() {
+  var country = document.getElementById('mcCountry').value;
+  var sel = document.getElementById('mcTopic');
+  var opts = WEBINAR_TYPES[country] || [];
+  sel.innerHTML = opts.map(function(v) {
+    return '<option value="' + v + '">' + v + '</option>';
+  }).join('');
+}
+
+// ── Event type toggle ─────────────────────────────────────────────────────────
+function onEventTypeChange() {
+  var isLaunchpad = document.getElementById('mcEventType').value === 'launchpad';
+  document.getElementById('day2DateField').style.display    = isLaunchpad ? '' : 'none';
+  document.getElementById('day1DateLabel').innerHTML        = (isLaunchpad ? 'Day 1 Date' : 'Event Date') + ' <span class="req">*</span>';
+  document.getElementById('instructorSingle').style.display = isLaunchpad ? 'none' : '';
+  document.getElementById('instructorMulti').style.display  = isLaunchpad ? '' : 'none';
+}
+
+// ── Status steps ─────────────────────────────────────────────────────────────
+var STEPS = [
+  { id: 'j1', label: 'Jira — Email comms & banners' },
+  { id: 'j2', label: 'Jira — Waiting room & background images' },
+  { id: 'sp', label: 'Slack — Performance team lead' },
+  { id: 'sc', label: 'Slack — CRM team lead' },
+];
+
+function initSteps() {
+  var card = document.getElementById('statusCard');
+  card.style.display = '';
+  document.getElementById('steps').innerHTML = STEPS.map(function(s) {
+    return '<div class="step" id="s-' + s.id + '">' +
+      '<div class="step-ic">○</div>' +
+      '<div><div class="step-label">' + s.label + '</div></div>' +
+      '</div>';
+  }).join('');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setStep(id, state, detail) {
+  var el = document.getElementById('s-' + id);
+  el.className = 'step ' + state;
+  var label = STEPS.find(function(s) { return s.id === id; }).label;
+  var icon = state === 'busy'
+    ? '<span class="spin"></span>'
+    : state === 'ok' ? '✓' : '✕';
+  el.innerHTML =
+    '<div class="step-ic">' + icon + '</div>' +
+    '<div><div class="step-label">' + label + '</div>' +
+    (detail ? '<div class="step-detail">' + detail + '</div>' : '') +
+    '</div>';
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function fmtDate(s) {
+  var parts = s.split('-').map(Number);
+  var y = parts[0], m = parts[1], d = parts[2];
+  var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d + ' ' + mon[m - 1] + ' ' + y;
+}
+
+function fmtTime(s) {
+  var parts = s.split(':').map(Number);
+  var h = parts[0], m = parts[1];
+  return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h >= 12 ? 'PM' : 'AM');
+}
+
+// ── Jira ADF builder ─────────────────────────────────────────────────────────
+function adfText(text, bold) {
+  var n = { type: 'text', text: text };
+  if (bold) n.marks = [{ type: 'strong' }];
+  return n;
+}
+
+function adfPara(nodes) {
+  return { type: 'paragraph', content: nodes };
+}
+
+function textToNodes(str) {
+  var lines = str.split('\n');
+  var nodes = [];
+  lines.forEach(function(line, i) {
+    if (i > 0) nodes.push({ type: 'hardBreak' });
+    if (line) nodes.push(adfText(line));
+  });
+  return nodes.length ? nodes : [adfText(' ')];
+}
+
+function adfLink(url) {
+  return { type: 'text', text: url, marks: [{ type: 'link', attrs: { href: url } }] };
+}
+
+function adfBulletList(items) {
+  return {
+    type: 'bulletList',
+    content: items.map(function(text) {
+      return { type: 'listItem', content: [adfPara([adfText(text)])] };
+    }),
+  };
+}
+
+function buildAdf(rows) {
+  var content = [];
+  rows.forEach(function(row) {
+    if (row.multi) {
+      content.push(adfPara([adfText(row.label, true)]));
+      content.push(adfPara(textToNodes(row.value)));
+    } else {
+      content.push(adfPara([adfText(row.label, true), adfText(row.value)]));
+    }
+  });
+  return { version: 1, type: 'doc', content: content };
+}
+
+// ── Jira API ─────────────────────────────────────────────────────────────────
+async function jiraCreate(c, summary, description, contentType) {
+  var base = c.jiraBaseUrl.replace(/\/+$/, '');
+  var body = {
+    fields: {
+      project:   { key: c.jiraProjectKey },
+      summary:   summary,
+      description: description,
+      issuetype: { name: c.jiraIssueType || 'Task' },
+    }
+  };
+  if (c.jiraAssignee) body.fields.assignee = { accountId: c.jiraAssignee };
+  if (contentType) body.fields.customfield_10238 = { value: contentType };
+  body.fields.customfield_10241 = [{ accountId: '712020:7f2235dc-a6e1-4441-993d-bb956943c7bd' }];
+
+  var target = encodeURIComponent(base + '/rest/api/3/issue');
+  var res = await fetch('/proxy?url=' + target, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + btoa(c.jiraEmail + ':' + c.jiraToken),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  var json = await res.json();
+  if (!res.ok) {
+    var msg = (json.errorMessages && json.errorMessages[0])
+      || Object.values(json.errors || {}).join('; ')
+      || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return json;
+}
+
+function jiraUrl(c, key) {
+  return c.jiraBaseUrl.replace(/\/+$/, '') + '/browse/' + key;
+}
+
+// ── Slack API ────────────────────────────────────────────────────────────────
+async function slackDM(token, userId, text) {
+  var openRes = await fetch('/proxy?url=' + encodeURIComponent('https://slack.com/api/conversations.open'), {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ users: userId }),
+  });
+  var openJson = await openRes.json();
+  if (!openJson.ok) throw new Error('conversations.open: ' + openJson.error);
+
+  var msgRes = await fetch('/proxy?url=' + encodeURIComponent('https://slack.com/api/chat.postMessage'), {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ channel: openJson.channel.id, text: text }),
+  });
+  var msgJson = await msgRes.json();
+  if (!msgJson.ok) throw new Error('chat.postMessage: ' + msgJson.error);
+}
+
+// ── Submit ───────────────────────────────────────────────────────────────────
+async function handleSubmit() {
+  var c = getCfg();
+  var eventType = document.getElementById('mcEventType').value;
+  var isLaunchpad = eventType === 'launchpad';
+  var eventAbbr = isLaunchpad ? 'LP' : 'MC';
+
+  var speakers = isLaunchpad
+    ? [1,2,3,4].map(function(n) { return document.getElementById('mcSpeaker' + n).value.trim(); })
+    : [document.getElementById('mcSpeaker').value.trim()];
+
+  var f = {
+    title:      document.getElementById('mcTitle').value.trim(),
+    date:       document.getElementById('mcDate').value,
+    speaker:    speakers[0],
+    speakers:   speakers,
+    landingUrl: document.getElementById('mcLandingUrl').value.trim(),
+    webinarType: document.getElementById('mcTopic').value.trim(),
+    summary:    document.getElementById('mcSummary').value.trim(),
+    design:     document.getElementById('mcDesign').value.trim(),
+    country:    document.getElementById('mcCountry').value.trim(),
+    mcDate:     document.getElementById('mcMcDate').value,
+    mcDate2:    document.getElementById('mcMcDate2').value,
+    mcTime:     document.getElementById('mcMcTime').value,
+  };
+
+  var cfgChecks = [
+    [c.jiraBaseUrl,    'Jira Base URL'],
+    [c.jiraProjectKey, 'Jira Project Key'],
+    [c.jiraEmail,      'Jira Email'],
+    [c.jiraToken,      'Jira API Token'],
+    [c.jiraIssueType,  'Jira Issue Type'],
+    [c.slackToken,     'Slack Bot Token'],
+    [c.slackPerfLead,  'Slack Performance Lead User ID'],
+    [c.slackCrmLead,   'Slack CRM Lead User ID'],
+  ];
+  var instructorChecks = isLaunchpad
+    ? f.speakers.map(function(s, i) {
+        var labels = ['Day 1 Session 1','Day 1 Session 2','Day 2 Session 1','Day 2 Session 2'];
+        return [s, 'Instructor — ' + labels[i]];
+      })
+    : [[f.speaker, 'Instructor']];
+
+  var formChecks = [
+    [f.title,      'Event Title'],
+    [f.date,       'Go-Live Date'],
+    [f.landingUrl, 'Landing Page URL'],
+    [f.summary,    'Content / One-Pager Summary'],
+    [f.country,    'Country'],
+    [f.mcDate,                        isLaunchpad ? 'Day 1 Date' : 'Event Date'],
+    ...(isLaunchpad ? [[f.mcDate2,   'Day 2 Date']] : []),
+    [f.mcTime,     'Event Time'],
+  ].concat(instructorChecks);
+
+  var missing = cfgChecks.concat(formChecks)
+    .filter(function(pair) { return !pair[0]; })
+    .map(function(pair) { return pair[1]; });
+
+  if (missing.length) {
+    alert('Please fill in:\n• ' + missing.join('\n• '));
+    var cfgNames = cfgChecks.map(function(p) { return p[1]; });
+    if (missing.some(function(m) { return cfgNames.indexOf(m) >= 0; }) && !cfgOpen) toggleCfg();
+    return;
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  initSteps();
+
+  var goLive = fmtDate(f.date);
+  var day1Short = fmtDate(f.mcDate).split(' ').slice(0,2).join(' ');
+  var scheduleStr = isLaunchpad
+    ? day1Short + '-' + fmtDate(f.mcDate2).split(' ').slice(0,2).join(' ') + ', ' + fmtTime(f.mcTime) + ' IST'
+    : day1Short + ', ' + fmtTime(f.mcTime) + ' IST';
+  var t1Url = '', t2Url = '';
+
+  // Jira ticket 1: Email comms & banners
+  setStep('j1', 'busy');
+  try {
+    var mcDateShort = (function(s) {
+      var p = s.split('-').map(Number);
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return p[2] + ' ' + mon[p[1]-1];
+    })(f.mcDate);
+
+    var desc1 = {
+      version: 1, type: 'doc',
+      content: [
+        adfPara([adfText('Please share the following email & banner for ' + f.title + ':')]),
+        adfBulletList([
+          'Registration confirmation',
+          '3x Registration invitation',
+          'Reminder comms',
+        ]),
+        adfPara([adfText('Landing page content: ', true), adfLink(f.landingUrl)]),
+        adfPara([adfText('Schedule: ', true), adfText(scheduleStr)]),
+        isLaunchpad
+          ? adfBulletList(f.speakers.map(function(s, i) {
+              var labels = ['Day 1 S1','Day 1 S2','Day 2 S1','Day 2 S2'];
+              return labels[i] + ': ' + s;
+            }))
+          : adfPara([adfText('Instructor: ', true), adfText(f.speaker)]),
+      ],
+    };
+
+    var j1 = await jiraCreate(c,
+      mcDateShort + ' ' + f.country + ' ' + eventAbbr + ': email comms & banner',
+      desc1,
+      'Email'
+    );
+    t1Url = jiraUrl(c, j1.key);
+    setStep('j1', 'ok', '<a href="' + t1Url + '" target="_blank">' + esc(j1.key) + ' ↗</a>');
+  } catch (e) {
+    setStep('j1', 'fail', esc(e.message));
+    btn.disabled = false;
+    return;
+  }
+
+  // Jira ticket 2: Waiting room & background images
+  setStep('j2', 'busy');
+  try {
+    var mcDateShort2 = (function(s) {
+      var p = s.split('-').map(Number);
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return p[2] + ' ' + mon[p[1]-1];
+    })(f.mcDate);
+
+    var desc2 = {
+      version: 1, type: 'doc',
+      content: [
+        adfPara([adfText('Please share the waiting room image & zoom background for ' + f.title)]),
+        adfPara([adfText(' ')]),
+        adfPara([adfText('Content: ', true), adfLink(f.landingUrl)]),
+      ],
+    };
+
+    var j2 = await jiraCreate(c,
+      mcDateShort2 + ' ' + f.country + ' ' + eventAbbr + ': waiting room image & zoom background',
+      desc2,
+      'Other creatives'
+    );
+    t2Url = jiraUrl(c, j2.key);
+    setStep('j2', 'ok', '<a href="' + t2Url + '" target="_blank">' + esc(j2.key) + ' ↗</a>');
+  } catch (e) {
+    setStep('j2', 'fail', esc(e.message));
+    btn.disabled = false;
+    return;
+  }
+
+  // Slack DM: Performance team lead
+  setStep('sp', 'busy');
+  try {
+    var eventLabel = isLaunchpad ? 'launchpad' : 'masterclass';
+    var instrLabel = isLaunchpad
+      ? f.speakers.map(function(s, i) {
+          var labels = ['Day 1 S1','Day 1 S2','Day 2 S1','Day 2 S2'];
+          return labels[i] + ': ' + s;
+        }).join(', ')
+      : f.speaker;
+
+    var eventDateStr = isLaunchpad
+      ? fmtDate(f.mcDate).split(' ').slice(0,2).join(' ') + '-' + fmtDate(f.mcDate2).split(' ').slice(0,2).join(' ')
+      : fmtDate(f.mcDate).split(' ').slice(0,2).join(' ');
+
+    var perfLines = [
+      'We\'ve a ' + eventLabel + ' for ' + f.country + ' audience on ' + eventDateStr + '. Details are as follows:',
+      '',
+      'LP for ' + f.title + ': ' + f.landingUrl,
+      'Schedule: ' + scheduleStr,
+      'Instructor: ' + instrLabel,
+      '',
+      'LP will go live on ' + fmtDate(f.date).split(' ').slice(0,2).join(' ') + '.',
+    ];
+
+    var perfMsg = perfLines.join('\n');
+    await slackDM(c.slackToken, c.slackPerfLead, perfMsg);
+    setStep('sp', 'ok', 'Message delivered');
+  } catch (e) {
+    setStep('sp', 'fail', esc(e.message));
+  }
+
+  // Slack DM: CRM team lead
+  setStep('sc', 'busy');
+  try {
+    var crmLines = [
+      'We\'ve a ' + eventLabel + ' for ' + f.country + ' audience on ' + eventDateStr + '. Details are as follows:',
+      '',
+      'LP for ' + f.title + ': ' + f.landingUrl,
+      'Schedule: ' + scheduleStr,
+      'Instructor: ' + instrLabel,
+      'Webinar Type: ' + f.webinarType,
+      '',
+      'LP will go live on ' + fmtDate(f.date).split(' ').slice(0,2).join(' ') + '.',
+    ];
+    var crmMsg = crmLines.join('\n');
+    await slackDM(c.slackToken, c.slackCrmLead, crmMsg);
+    setStep('sc', 'ok', 'Message delivered');
+  } catch (e) {
+    setStep('sc', 'fail', esc(e.message));
+  }
+
+  btn.disabled = false;
+}
+
+// ── Query toggle ──────────────────────────────────────────────────────────────
+var queryOpen = false;
+function toggleQuery() {
+  queryOpen = !queryOpen;
+  document.getElementById('queryBody').classList.toggle('hidden', !queryOpen);
+  document.getElementById('queryHd').classList.toggle('borderless', !queryOpen);
+  document.getElementById('queryToggle').textContent = queryOpen ? '▾ hide' : '▸ show';
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  var isLeads = tab === 'leads';
+  document.getElementById('viewCreate').style.display = isLeads ? 'none' : '';
+  document.getElementById('viewLeads').style.display  = isLeads ? '' : 'none';
+  document.getElementById('tabCreateEvent').classList.toggle('active', !isLeads);
+  document.getElementById('tabLeads').classList.toggle('active', isLeads);
+}
+
+// ── Lead extraction query ─────────────────────────────────────────────────────
+function generateQuery() {
+  var date1 = document.getElementById('leadsDate1').value;
+  var date2 = document.getElementById('leadsDate2').value;
+  var webinarType = document.getElementById('leadsWebinarType').value;
+
+  if (!date1 || !webinarType) {
+    alert('Please fill in the Event Date and Webinar Type fields first.');
+    return;
+  }
+
+  var dateLiteral = date2
+    ? "'" + date1 + "', '" + date2 + "'"
+    : "'" + date1 + "'";
+
+  var isUS = (webinarType === 'MASTERCLASS_EVENT_AI');
+
+  var leadsCte = isUS ? [
+    'WITH base AS (',
+    '  SELECT',
+    '    formatted_date, utm_campaign,',
+    '    DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,',
+    '    CASE',
+    '      WHEN LOWER(utm_campaign) LIKE "%l10x_social%" THEN "Social"',
+    '      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"__l10x__") THEN "L10X base - Email/SMS"',
+    '      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"youtube_l10x") THEN "YT"',
+    '      WHEN LOWER(utm_campaign) LIKE "%nibucket%" THEN "NI Base"',
+    '      WHEN LOWER(utm_campaign) LIKE "%l10x-bot%" THEN "L10X base - Bot Calling"',
+    '      ELSE "Organic & Other"',
+    '    END AS new_channel,',
+    '    leads_hubspot_id, dupe_flag, gql_flag, dupe_logic,',
+    '    ROW_NUMBER() OVER (',
+    '      PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")',
+    '      ORDER BY formatted_date ASC',
+    '    ) AS rnk',
+    '  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`',
+    '  WHERE webinar_type = "MASTERCLASS_EVENT_AI" AND dupe_logic = 1',
+    '),',
+    'leads AS (',
+    '  SELECT DATE(formatted_date) AS registration_date, new_channel AS channel, utm_campaign,',
+    '    COUNT(*) AS total_leads, "reg" AS lead_type',
+    '  FROM base WHERE rnk = 1',
+    "    AND web_scheduled_date IN (" + dateLiteral + ")",
+    '  GROUP BY registration_date, channel, utm_campaign',
+    '  UNION ALL',
+    '  SELECT DATE(formatted_date) AS registration_date, new_channel AS channel, utm_campaign,',
+    '    COUNT(*) AS total_leads, "gql" AS lead_type',
+    '  FROM base WHERE rnk = 1',
+    "    AND web_scheduled_date IN (" + dateLiteral + ")",
+    '    AND dupe_flag = 0 AND gql_flag = 0',
+    '  GROUP BY registration_date, channel, utm_campaign',
+    '),',
+  ] : [
+    'WITH leads AS (',
+    '  SELECT',
+    '    DATE(formatted_date) AS registration_date,',
+    '    channel,',
+    '    utm_campaign,',
+    '    COUNT(*) AS total_leads',
+    '  FROM (',
+    '    SELECT',
+    '      formatted_date, channel, utm_campaign,',
+    '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
+    '      hubspot_ID, dupe_flag, gql_flag, work_ex, webinar_type, dupe_logic,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
+    '        ORDER BY formatted_date ASC',
+    '      ) AS rnk',
+    '    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '    WHERE dupe_logic = 1',
+    '  )',
+    '  WHERE rnk = 1',
+    "    AND web_scheduled_date IN (" + dateLiteral + ")",
+    "    AND webinar_type = '" + webinarType + "'",
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    "    AND LOWER(work_ex) NOT LIKE '%student%'",
+    "    AND work_ex NOT IN ('0-2', '3-4')",
+    '  GROUP BY registration_date, channel, utm_campaign',
+    '),',
+  ];
+
+  var spendCost  = isUS ? 'cost_usd_' : 'cost';
+  var spendTable = isUS
+    ? '`ik-marketing-data.Google_Sheets.Combined_Spend_data`'
+    : '`ik-marketing-data.India_Leads.Combined_India_Spend`';
+
+  var query = leadsCte.concat([
+    'spends AS (',
+    '  SELECT',
+    '    DATE(campaign_date, ' + (isUS ? '"America/Los_Angeles"' : '"Asia/Kolkata"') + ') AS spend_date,',
+    '    campaign_name,',
+    '    SUM(' + spendCost + ') AS total_spend',
+    '  FROM ' + spendTable,
+    '  WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")',
+    '    AND (LOWER(campaign_name) LIKE "%meta%" OR LOWER(campaign_name) LIKE "%facebook%" OR LOWER(campaign_name) LIKE "%l10x%")',
+    '  GROUP BY spend_date, campaign_name',
+    ')',
+    'SELECT',
+    '  l.registration_date,',
+    '  l.channel,',
+    '  l.utm_campaign,',
+    '  l.total_leads,',
+    isUS ? '  l.lead_type,' : '',
+    '  SUM(s.total_spend) AS total_spend',
+    'FROM leads l',
+    'LEFT JOIN spends s',
+    '  ON l.registration_date = s.spend_date',
+    '  AND LOWER(l.utm_campaign) LIKE CONCAT("%", LOWER(s.campaign_name), "%")',
+    isUS
+      ? 'GROUP BY l.registration_date, l.channel, l.utm_campaign, l.total_leads, l.lead_type'
+      : 'GROUP BY l.registration_date, l.channel, l.utm_campaign, l.total_leads',
+    isUS
+      ? 'ORDER BY l.lead_type, l.registration_date, l.channel, l.utm_campaign'
+      : 'ORDER BY l.registration_date, l.channel, l.utm_campaign',
+  ]).join('\n');
+
+  document.getElementById('queryText').value = query;
+}
+
+async function bqFetch(query) {
+  var keyFile = (document.getElementById('bqKeyFile') || {}).value || '';
+  var res = await fetch('/bigquery', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query, keyFile: keyFile.trim(), project: 'ik-marketing-data' }),
+  });
+  var json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'HTTP ' + res.status);
+  return json.rows;
+}
+
+async function runQuery() {
+  generateQuery();
+  var query = document.getElementById('queryText').value;
+  if (!query) return;
+
+  // Push snapshot config to server for daily scheduler
+  var cfg = getCfg();
+  var date1 = document.getElementById('leadsDate1').value;
+  var date2 = document.getElementById('leadsDate2').value;
+  var snapDates = [date1];
+  if (date2) snapDates.push(date2);
+  fetch('/save-snapshot-config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      slackToken:      cfg.slackToken,
+      slackSnapshotId: cfg.slackSnapshotId,
+      webinarDates:    snapDates,
+      webinarType:     document.getElementById('leadsWebinarType').value,
+    }),
+  });
+
+  var btn = document.getElementById('runQueryBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  document.getElementById('queryResults').style.display = 'none';
+
+  try {
+    var rows = await bqFetch(query);
+    // rows: [registration_date, channel, utm_campaign, total_leads, total_spend]
+
+    var isUS = document.getElementById('leadsWebinarType').value === 'MASTERCLASS_EVENT_AI';
+    var spendSymbol = isUS ? '$' : '₹';
+
+    var dateIdx = 0, chanIdx = 1, campIdx = 2, countIdx = 3;
+    var typeIdx = isUS ? 4 : -1;
+    var spendIdx = isUS ? 5 : 4;
+
+    var SPENDS = {}, ytSpends = {}, campSpends = {}, seenSpend = {}, campaigns = {};
+
+    // US channels
+    var US_CHANNELS = ['yt', 'l10xbase', 'botcalling', 'nibase', 'social', 'others'];
+    var usBuckets    = { yt: {}, l10xbase: {}, botcalling: {}, nibase: {}, social: {}, others: {} };
+    var usGqlBuckets = { yt: {}, l10xbase: {}, botcalling: {}, nibase: {}, social: {}, others: {} };
+
+    // India channels
+    var indiaBuckets = { overall: {}, facebook: {}, crm: {}, others: {} };
+
+    function chKey(ch) {
+      var c = (ch || '').toLowerCase();
+      if (c === 'yt') return 'yt';
+      if (c.indexOf('email') > -1 || c.indexOf('sms') > -1) return 'l10xbase';
+      if (c.indexOf('bot') > -1) return 'botcalling';
+      if (c.indexOf('ni base') > -1 || c.indexOf('nibucket') > -1) return 'nibase';
+      if (c === 'social') return 'social';
+      return 'others';
+    }
+    function isFacebook(ch) { return /facebook|fb|\bsocial\b/i.test(ch || ''); }
+    function isCrm(ch)      { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
+
+    rows.forEach(function(row) {
+      var date  = String(row[dateIdx] || '').substring(0, 10);
+      var ch    = String(row[chanIdx] || '');
+      var camp  = String(row[campIdx] || '(none)');
+      var count = Number(row[countIdx]) || 0;
+      var spend = Number(row[spendIdx]) || 0;
+
+      var leadType = isUS ? String(row[typeIdx] || 'reg') : 'india';
+
+      // Only track spends from reg rows (avoid double-counting)
+      if (!isUS || leadType === 'reg') {
+        var spendKey = date + '|' + camp;
+        if (spend && !seenSpend[spendKey]) {
+          seenSpend[spendKey] = true;
+          SPENDS[date] = (SPENDS[date] || 0) + spend;
+          if (!campSpends[camp]) campSpends[camp] = {};
+          campSpends[camp][date] = (campSpends[camp][date] || 0) + spend;
+          if (isUS && chKey(ch) === 'yt') {
+            ytSpends[date] = (ytSpends[date] || 0) + spend;
+          }
+        }
+      }
+
+      function add(b) { b[date] = (b[date] || 0) + count; }
+
+      if (isUS) {
+        if (leadType === 'reg') {
+          add(usBuckets[chKey(ch)]);
+          if (chKey(ch) === 'social') {
+            if (!campaigns[camp]) campaigns[camp] = {};
+            campaigns[camp][date] = (campaigns[camp][date] || 0) + count;
+          }
+        } else {
+          add(usGqlBuckets[chKey(ch)]);
+        }
+      } else {
+        add(indiaBuckets.overall);
+        if (isFacebook(ch)) {
+          add(indiaBuckets.facebook);
+          if (!campaigns[camp]) campaigns[camp] = {};
+          campaigns[camp][date] = (campaigns[camp][date] || 0) + count;
+        }
+        else if (isCrm(ch)) add(indiaBuckets.crm);
+        else                 add(indiaBuckets.others);
+      }
+    });
+
+    function mergeDates(bucketsObj) {
+      return Object.keys(Object.assign.apply(Object, [{}].concat(US_CHANNELS.map(function(k) { return bucketsObj[k]; })))).sort();
+    }
+    var allDates    = isUS ? mergeDates(usBuckets)    : Object.keys(indiaBuckets.overall).sort();
+    var allGqlDates = isUS ? mergeDates(usGqlBuckets) : [];
+
+    var html = '';
+
+    function buildUsTable(buckets, dates, ytSpendMap, title, cplLabel) {
+      var restCols = [
+        { key: 'l10xbase',   label: 'L10X Base' },
+        { key: 'botcalling', label: 'Bot Calling' },
+        { key: 'nibase',     label: 'NI Base' },
+        { key: 'social',     label: 'Social' },
+        { key: 'others',     label: 'Organic & Others' },
+      ];
+      var t = { spends: 0, yt: 0, l10xbase: 0, botcalling: 0, nibase: 0, social: 0, others: 0, overall: 0 };
+      var out = '<div class="sep" style="margin-top:20px;">' + title + '</div>';
+      out += '<div class="results-wrap"><table class="results"><thead><tr>' +
+        '<th>Date</th><th>Spends (' + spendSymbol + ')</th><th>YT</th><th>' + cplLabel + '</th>' +
+        restCols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('') +
+        '<th>Overall</th></tr></thead><tbody>';
+      dates.forEach(function(d) {
+        var sp  = (ytSpendMap || {})[d] || 0;
+        var yt  = buckets.yt[d] || 0;
+        t.spends += sp; t.yt += yt;
+        var cpl = yt > 0 && sp > 0 ? (sp / yt).toFixed(2) : '—';
+        var rowTotal = yt;
+        var cells = restCols.map(function(c) {
+          var v = buckets[c.key][d] || 0;
+          t[c.key] += v; rowTotal += v;
+          return '<td>' + v + '</td>';
+        }).join('');
+        t.overall += rowTotal;
+        out += '<tr><td>' + esc(d) + '</td><td>' + fmtSpend(sp) + '</td><td>' + yt + '</td><td>' + cpl + '</td>' + cells + '<td>' + rowTotal + '</td></tr>';
+      });
+      var totalCpl = t.yt > 0 && t.spends > 0 ? (t.spends / t.yt).toFixed(2) : '—';
+      var totalCells = restCols.map(function(c) { return '<td>' + t[c.key] + '</td>'; }).join('');
+      out += '<tr style="font-weight:600;"><td>Total</td><td>' + fmtSpend(t.spends) + '</td><td>' + t.yt + '</td><td>' + totalCpl + '</td>' + totalCells + '<td>' + t.overall + '</td></tr>';
+      out += '</tbody></table></div>';
+      return { html: out, totals: t };
+    }
+
+    var usTotals, usGqlTotals;
+    if (isUS) {
+      var regResult = buildUsTable(usBuckets, allDates, ytSpends, 'Daily Registration Summary', 'CPL');
+      var gqlResult = buildUsTable(usGqlBuckets, allGqlDates, ytSpends, 'Daily GQL Summary', 'CPGQL');
+      usTotals    = regResult.totals;
+      usGqlTotals = gqlResult.totals;
+      html = regResult.html + gqlResult.html;
+    } else {
+      var totals = { spends: 0, meta: 0, crm: 0, others: 0, overall: 0 };
+      html = '<div class="sep" style="margin-top:20px;">Daily IQL Summary</div>';
+      html += '<div class="results-wrap"><table class="results"><thead><tr>' +
+        '<th>Registration Date</th><th>Spends (' + spendSymbol + ')</th><th>Meta</th><th>CPIQL (' + spendSymbol + ')</th><th>CRM</th><th>Others</th><th>Overall</th>' +
+        '</tr></thead><tbody>';
+      allDates.forEach(function(d) {
+        var spends = SPENDS[d] || 0;
+        var meta   = indiaBuckets.facebook[d] || 0;
+        var crm    = indiaBuckets.crm[d]      || 0;
+        var oth    = indiaBuckets.others[d]   || 0;
+        var all    = indiaBuckets.overall[d]  || 0;
+        var cpiql  = meta > 0 ? (spends / meta).toFixed(2) : '—';
+        totals.spends += spends; totals.meta += meta; totals.crm += crm; totals.others += oth; totals.overall += all;
+        html += '<tr><td>' + esc(d) + '</td><td>' + fmtSpend(spends) + '</td><td>' + meta + '</td><td>' + cpiql + '</td><td>' + crm + '</td><td>' + oth + '</td><td>' + all + '</td></tr>';
+      });
+      var totalCpiql = totals.meta > 0 ? (totals.spends / totals.meta).toFixed(2) : '—';
+      html += '<tr style="font-weight:600;"><td>Total</td><td>' + fmtSpend(totals.spends) + '</td><td>' + totals.meta + '</td><td>' + totalCpiql + '</td><td>' + totals.crm + '</td><td>' + totals.others + '</td><td>' + totals.overall + '</td></tr>';
+      html += '</tbody></table></div>';
+    }
+
+    // Campaign table (Meta only) — collapsible campaign × date breakdown
+    var campNames = Object.keys(campaigns).sort();
+    var campHtml = '';
+    if (campNames.length) {
+      campHtml = '<div class="sep" style="margin-top:24px;">Campaign Performance (' + (isUS ? 'Social' : 'Meta') + ')</div>';
+      campHtml += '<div class="results-wrap"><table class="results" id="campTable"><thead><tr>' +
+        '<th>Campaign</th><th>Spends (' + spendSymbol + ')</th><th>IQLs</th><th>CPIQL (' + spendSymbol + ')</th>' +
+        '</tr></thead><tbody>';
+
+      var grandTotals = { spends: 0, leads: 0 };
+      campNames.forEach(function(camp, ci) {
+        var dates = Object.keys(campaigns[camp]).sort();
+        var cTotals = { spends: 0, leads: 0 };
+        dates.forEach(function(d) {
+          cTotals.leads  += campaigns[camp][d] || 0;
+          cTotals.spends += (campSpends[camp] && campSpends[camp][d]) ? campSpends[camp][d] : 0;
+        });
+        grandTotals.spends += cTotals.spends;
+        grandTotals.leads  += cTotals.leads;
+        var cCpiql = cTotals.leads > 0 && cTotals.spends > 0 ? (cTotals.spends / cTotals.leads).toFixed(2) : '—';
+
+        campHtml += '<tr class="camp-hdr" onclick="toggleCamp(' + ci + ')" style="cursor:pointer;font-weight:600;">' +
+          '<td><span id="ctoggle-' + ci + '">▼</span> ' + esc(camp) + '</td>' +
+          '<td>' + fmtSpend(cTotals.spends) + '</td>' +
+          '<td>' + cTotals.leads + '</td>' +
+          '<td>' + cCpiql + '</td></tr>';
+
+        dates.forEach(function(d) {
+          var leads  = campaigns[camp][d] || 0;
+          var spends = (campSpends[camp] && campSpends[camp][d]) ? campSpends[camp][d] : 0;
+          var cpiql  = leads > 0 && spends > 0 ? (spends / leads).toFixed(2) : '—';
+          campHtml += '<tr class="camp-date-row camp-date-' + ci + '" style="color:#555;">' +
+            '<td style="padding-left:24px;">' + esc(d) + '</td>' +
+            '<td>' + fmtSpend(spends) + '</td>' +
+            '<td>' + leads + '</td>' +
+            '<td>' + cpiql + '</td></tr>';
+        });
+      });
+
+      var grandCpiql = grandTotals.leads > 0 && grandTotals.spends > 0 ? (grandTotals.spends / grandTotals.leads).toFixed(2) : '—';
+      campHtml += '<tr style="font-weight:600;border-top:2px solid #ddd;">' +
+        '<td>Total</td><td>' + fmtSpend(grandTotals.spends) + '</td><td>' + grandTotals.leads + '</td><td>' + grandCpiql + '</td></tr>';
+      campHtml += '</tbody></table></div>';
+    }
+
+    // Store snapshot data for Slack
+    window._snapshotData = isUS
+      ? { allDates: allDates, buckets: usBuckets, SPENDS: SPENDS, totals: usTotals, isUS: true }
+      : { allDates: allDates, buckets: indiaBuckets, SPENDS: SPENDS, totals: totals, isUS: false };
+
+    document.getElementById('resultsOverall').innerHTML = html + campHtml;
+    document.getElementById('resultsFacebook').innerHTML = '';
+    document.getElementById('resultsCrm').innerHTML = '';
+    document.getElementById('resultsOthers').innerHTML = '';
+
+    document.getElementById('queryResults').style.display = '';
+  } catch (e) {
+    alert('BigQuery error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run in BigQuery';
+  }
+}
+
+async function sendSnapshotToSlack() {
+  var userId = getCfg().slackSnapshotId;
+  if (!userId) { alert('Set a Daily Snapshot Slack ID in Configuration first.'); return; }
+  var snap = window._snapshotData;
+  if (!snap) { alert('Run the query first.'); return; }
+  var cfg = getCfg();
+  if (!cfg.slackToken) { alert('Slack token not configured.'); return; }
+
+  var col = function(s, w) { return String(s).padStart(w); };
+  var lines = [];
+  lines.push('*Registration Summary*');
+  lines.push('```');
+  lines.push(
+    'Date'.padEnd(12) +
+    col('Spends (₹)', 14) +
+    col('Meta', 7) +
+    col('CPIQL', 8) +
+    col('CRM', 6) +
+    col('Others', 8) +
+    col('Overall', 9)
+  );
+  lines.push('-'.repeat(64));
+  snap.allDates.forEach(function(d) {
+    var spends = snap.SPENDS[d] || 0;
+    var meta   = snap.buckets.facebook[d] || 0;
+    var crm    = snap.buckets.crm[d]      || 0;
+    var oth    = snap.buckets.others[d]   || 0;
+    var all    = snap.buckets.overall[d]  || 0;
+    var cpiql  = meta > 0 ? (spends / meta).toFixed(2) : '—';
+    lines.push(
+      d.padEnd(12) +
+      col(spends ? Math.round(spends).toLocaleString('en-IN') : '—', 14) +
+      col(meta,  7) +
+      col(cpiql, 8) +
+      col(crm,   6) +
+      col(oth,   8) +
+      col(all,   9)
+    );
+  });
+  lines.push('-'.repeat(64));
+  var t = snap.totals;
+  var totalCpiql = t.meta > 0 ? (t.spends / t.meta).toFixed(2) : '—';
+  lines.push(
+    'Total'.padEnd(12) +
+    col(Math.round(t.spends).toLocaleString('en-IN'), 14) +
+    col(t.meta,    7) +
+    col(totalCpiql,8) +
+    col(t.crm,     6) +
+    col(t.others,  8) +
+    col(t.overall, 9)
+  );
+  lines.push('```');
+
+  var btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    await slackDM(cfg.slackToken, userId, lines.join('\n'));
+    btn.textContent = 'Sent!';
+    setTimeout(function() { btn.disabled = false; btn.textContent = 'Send to Slack'; }, 2000);
+  } catch(e) {
+    alert('Slack error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Send to Slack';
+  }
+}
+
+function fmtSpend(val) {
+  return val ? Math.round(val).toLocaleString('en-IN') : '—';
+}
+
+function toggleCamp(ci) {
+  var rows = document.querySelectorAll('.camp-date-' + ci);
+  var toggle = document.getElementById('ctoggle-' + ci);
+  var hidden = rows.length && rows[0].style.display === 'none';
+  rows.forEach(function(r) { r.style.display = hidden ? '' : 'none'; });
+  toggle.textContent = hidden ? '▼' : '▶';
+}
+
+function copyQuery() {
+  var ta = document.getElementById('queryText');
+  ta.select();
+  document.execCommand('copy');
+  var btn = event.target;
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>
