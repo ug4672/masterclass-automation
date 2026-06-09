@@ -4,73 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IK Masterclass Launch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f5f6f8;
+  --bg: #f0f2f5;
   --card: #ffffff;
-  --border: #e1e4e8;
-  --text: #1a1d21;
+  --border: #e2e5ea;
+  --border-light: #eef0f3;
+  --text: #111827;
   --muted: #6b7280;
-  --primary: #2563eb;
-  --primary-dk: #1d4ed8;
-  --r: 10px;
+  --muted-light: #9ca3af;
+  --primary: #4f46e5;
+  --primary-dk: #4338ca;
+  --primary-light: rgba(79,70,229,0.08);
+  --success: #16a34a;
+  --danger: #dc2626;
+  --r: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
-  padding: 32px 16px 64px;
+  padding: 36px 16px 72px;
+  -webkit-font-smoothing: antialiased;
 }
 
-.wrap { max-width: 700px; margin: 0 auto; }
+.wrap { max-width: 720px; margin: 0 auto; }
 
-.page-hd { margin-bottom: 20px; }
-.page-hd h1 { font-size: 20px; font-weight: 700; }
-.page-hd p  { font-size: 13px; color: var(--muted); margin-top: 3px; }
+/* Page header */
+.page-hd {
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.page-hd-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+}
+.page-hd h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+.page-hd p  { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 
 /* Card */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
 }
 
 .card-hd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
 }
 .card-hd.borderless { border-bottom: none; }
 .card-hd.clickable  { cursor: pointer; }
 .card-hd.clickable:hover { background: #fafbfc; }
-.card-hd h2 { font-size: 13.5px; font-weight: 600; }
+.card-hd h2 { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.1px; }
 
-.toggle-btn { font-size: 12px; color: var(--muted); user-select: none; }
+.toggle-btn {
+  font-size: 11.5px;
+  color: var(--muted-light);
+  user-select: none;
+  background: var(--bg);
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-weight: 500;
+}
 
-.card-body { padding: 18px; }
+.card-body { padding: 20px; }
 .card-body.hidden { display: none; }
 
 /* Form */
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .col2 { grid-column: 1 / -1; }
 
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 12px; font-weight: 600; }
-.field label .req { color: #dc2626; }
-.field label .opt { font-weight: 400; color: var(--muted); font-size: 11px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; font-weight: 600; color: #374151; letter-spacing: 0.01em; }
+.field label .req { color: #ef4444; margin-left: 1px; }
+.field label .opt { font-weight: 400; color: var(--muted-light); font-size: 11px; }
 
 select {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 10px;
+  border-radius: 8px;
+  padding: 8px 32px 8px 11px;
   font-size: 13.5px;
   font-family: inherit;
   color: var(--text);
@@ -80,13 +116,14 @@ select {
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
+  background-position: right 11px center;
   cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 input[type="text"],
@@ -97,8 +134,8 @@ input[type="date"],
 input[type="time"],
 textarea {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 10px;
+  border-radius: 8px;
+  padding: 8px 11px;
   font-size: 13.5px;
   font-family: inherit;
   color: var(--text);
@@ -110,40 +147,57 @@ textarea {
 input:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
+input::placeholder, textarea::placeholder { color: #c4c9d4; }
 textarea { resize: vertical; }
 
 .sep {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-  margin: 18px 0 12px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.7px;
+  color: var(--muted-light);
+  margin: 20px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
 }
 .sep:first-child { margin-top: 0; }
 
-/* Button */
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 22px;
+  gap: 7px;
+  padding: 9px 20px;
   font-size: 13.5px;
   font-weight: 600;
   font-family: inherit;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: var(--primary-dk); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:active { transform: scale(0.98); }
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dk);
+  box-shadow: 0 4px 12px rgba(79,70,229,0.35);
+}
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
 
-.form-foot { display: flex; justify-content: flex-end; margin-top: 18px; }
+.form-foot { display: flex; justify-content: flex-end; margin-top: 20px; }
 
 /* Status steps */
 .steps { display: flex; flex-direction: column; gap: 8px; }
@@ -151,20 +205,20 @@ textarea { resize: vertical; }
 .step {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 7px;
+  gap: 12px;
+  padding: 11px 15px;
+  border-radius: 9px;
   font-size: 13px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   background: #f9fafb;
   color: var(--muted);
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
-.step.busy { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
-.step.ok   { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
-.step.fail { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.step.busy { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+.step.ok   { background: #f0fdf4; border-color: #bbf7d0; color: var(--success); }
+.step.fail { background: #fef2f2; border-color: #fecaca; color: var(--danger); }
 
-.step-ic { width: 16px; flex-shrink: 0; text-align: center; padding-top: 1px; font-size: 14px; }
+.step-ic { width: 18px; flex-shrink: 0; text-align: center; padding-top: 1px; font-size: 14px; }
 
 .spin {
   display: inline-block;
@@ -178,18 +232,19 @@ textarea { resize: vertical; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .step-label  { font-weight: 600; }
-.step-detail { font-size: 11.5px; margin-top: 2px; opacity: 0.8; }
+.step-detail { font-size: 11.5px; margin-top: 2px; opacity: 0.85; }
 .step-detail a { color: inherit; }
 
-/* Tab toggle */
+/* Tabs */
 .tabs {
   display: flex;
   gap: 0;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 4px;
+  padding: 5px;
   margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
 }
 .tab {
   flex: 1;
@@ -200,27 +255,31 @@ textarea { resize: vertical; }
   text-align: center;
   background: none;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--muted);
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  letter-spacing: -0.1px;
 }
 .tab.active {
   background: var(--primary);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.25);
 }
+.tab:not(.active):hover { background: var(--bg); color: var(--text); }
 
 /* Results table */
 .results-wrap {
   overflow-x: auto;
   margin-top: 14px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 9px;
 }
 .results-meta {
   font-size: 12px;
   color: var(--muted);
   margin-bottom: 8px;
+  font-weight: 500;
 }
 table.results {
   width: 100%;
@@ -228,39 +287,47 @@ table.results {
   font-size: 12px;
 }
 table.results th {
-  background: #f3f4f6;
-  padding: 7px 10px;
+  background: #f7f8fa;
+  padding: 8px 12px;
   text-align: left;
   font-weight: 600;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+  color: #374151;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
 }
 table.results td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border-light);
   white-space: nowrap;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+table.results tr:hover td { background: #fafbfc; }
 table.results tr:last-child td { border-bottom: none; }
 
 /* Notice */
 .notice {
-  background: #fefce8;
+  background: #fffbeb;
   border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 9px;
+  padding: 11px 15px;
   font-size: 12.5px;
-  color: #713f12;
-  margin-bottom: 14px;
+  color: #92400e;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
+.notice::before { content: '⚠️'; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 .notice code {
   font-family: ui-monospace, Menlo, monospace;
   font-size: 11.5px;
-  background: rgba(0,0,0,0.07);
+  background: rgba(0,0,0,0.06);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 </style>
 </head>
@@ -268,19 +335,25 @@ table.results tr:last-child td { border-bottom: none; }
 <div class="wrap">
 
   <div class="page-hd">
-    <h1>IK Masterclass Launch</h1>
+    <div class="page-hd-icon">🎓</div>
+    <div>
+      <h1>IK Masterclass Launch</h1>
+      <p>Create Jira tickets, send Slack notifications, and track leads.</p>
+    </div>
   </div>
 
   <div class="tabs">
     <button class="tab active" id="tabCreateEvent" onclick="switchTab('create')">Create Event</button>
     <button class="tab" id="tabLeads" onclick="switchTab('leads')">Leads</button>
+    <button class="tab" id="tabAttendance" onclick="switchTab('attendance')">Webinar Attendance</button>
+    <button class="tab" id="tabSale" onclick="switchTab('sale')">Sales</button>
   </div>
 
   <!-- ── Create Event view ──────────────────────────────────────────────── -->
   <div id="viewCreate">
 
   <div class="notice">
-    <strong>Note:</strong> If you see network/CORS errors, serve this file locally:
+    If you see network/CORS errors, serve this file locally:
     <code>python3 -m http.server 8080</code> then open <code>http://localhost:8080</code>
   </div>
 
@@ -516,6 +589,67 @@ table.results tr:last-child td { border-bottom: none; }
     </div>
   </div>
   </div><!-- /viewLeads -->
+
+  <!-- ── Webinar Attendance view ───────────────────────────────────────── -->
+  <div id="viewAttendance" style="display:none;">
+  <div class="card">
+    <div class="card-hd clickable" id="attendanceQueryHd" onclick="toggleAttendanceQuery()">
+      <h2>&#9881; Query</h2>
+      <span class="toggle-btn" id="attendanceQueryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="attendanceQueryBody">
+      <textarea id="attendanceQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyAttendanceQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd borderless">
+      <h2>Webinar Attendance</h2>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Event Date <span class="req">*</span></label>
+          <input type="date" id="attendanceDate">
+        </div>
+        <div class="field">
+          <label>Day 2 Date <span class="opt">(optional)</span></label>
+          <input type="date" id="attendanceDate2">
+        </div>
+        <div class="field col2">
+          <label>Webinar Type <span class="req">*</span></label>
+          <select id="attendanceWebinarType">
+            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
+            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
+            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-foot" style="justify-content:flex-start; gap:12px; margin-top:0; margin-bottom:14px;">
+        <button class="btn btn-primary" id="runAttendanceBtn" onclick="runAttendanceQuery()">Run</button>
+      </div>
+      <div id="attendanceResults" style="display:none;">
+        <div id="attendanceSummary"></div>
+        <div id="attendanceDetail"></div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /viewAttendance -->
+
+  <!-- ── Sale view ─────────────────────────────────────────────────────── -->
+  <div id="viewSale" style="display:none;">
+  <div class="card">
+    <div class="card-hd borderless">
+      <h2>Sales</h2>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      <p style="font-size:13px;color:var(--muted);">Coming soon.</p>
+    </div>
+  </div>
+  </div><!-- /viewSale -->
 
 </div>
 <script>
@@ -966,11 +1100,14 @@ function toggleQuery() {
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  var isLeads = tab === 'leads';
-  document.getElementById('viewCreate').style.display = isLeads ? 'none' : '';
-  document.getElementById('viewLeads').style.display  = isLeads ? '' : 'none';
-  document.getElementById('tabCreateEvent').classList.toggle('active', !isLeads);
-  document.getElementById('tabLeads').classList.toggle('active', isLeads);
+  document.getElementById('viewCreate').style.display     = tab === 'create'     ? '' : 'none';
+  document.getElementById('viewLeads').style.display      = tab === 'leads'      ? '' : 'none';
+  document.getElementById('viewAttendance').style.display = tab === 'attendance' ? '' : 'none';
+  document.getElementById('viewSale').style.display       = tab === 'sale'       ? '' : 'none';
+  document.getElementById('tabCreateEvent').classList.toggle('active', tab === 'create');
+  document.getElementById('tabLeads').classList.toggle('active', tab === 'leads');
+  document.getElementById('tabAttendance').classList.toggle('active', tab === 'attendance');
+  document.getElementById('tabSale').classList.toggle('active', tab === 'sale');
 }
 
 // ── Lead extraction query ─────────────────────────────────────────────────────
@@ -1283,49 +1420,14 @@ async function runQuery() {
       html += '</tbody></table></div>';
     }
 
-    // Campaign table (Meta only) — collapsible campaign × date breakdown
-    var campNames = Object.keys(campaigns).sort();
-    var campHtml = '';
-    if (campNames.length) {
-      campHtml = '<div class="sep" style="margin-top:24px;">Campaign Performance (' + (isUS ? 'Social' : 'Meta') + ')</div>';
-      campHtml += '<div class="results-wrap"><table class="results" id="campTable"><thead><tr>' +
-        '<th>Campaign</th><th>Spends (' + spendSymbol + ')</th><th>IQLs</th><th>CPIQL (' + spendSymbol + ')</th>' +
-        '</tr></thead><tbody>';
-
-      var grandTotals = { spends: 0, leads: 0 };
-      campNames.forEach(function(camp, ci) {
-        var dates = Object.keys(campaigns[camp]).sort();
-        var cTotals = { spends: 0, leads: 0 };
-        dates.forEach(function(d) {
-          cTotals.leads  += campaigns[camp][d] || 0;
-          cTotals.spends += (campSpends[camp] && campSpends[camp][d]) ? campSpends[camp][d] : 0;
-        });
-        grandTotals.spends += cTotals.spends;
-        grandTotals.leads  += cTotals.leads;
-        var cCpiql = cTotals.leads > 0 && cTotals.spends > 0 ? (cTotals.spends / cTotals.leads).toFixed(2) : '—';
-
-        campHtml += '<tr class="camp-hdr" onclick="toggleCamp(' + ci + ')" style="cursor:pointer;font-weight:600;">' +
-          '<td><span id="ctoggle-' + ci + '">▼</span> ' + esc(camp) + '</td>' +
-          '<td>' + fmtSpend(cTotals.spends) + '</td>' +
-          '<td>' + cTotals.leads + '</td>' +
-          '<td>' + cCpiql + '</td></tr>';
-
-        dates.forEach(function(d) {
-          var leads  = campaigns[camp][d] || 0;
-          var spends = (campSpends[camp] && campSpends[camp][d]) ? campSpends[camp][d] : 0;
-          var cpiql  = leads > 0 && spends > 0 ? (spends / leads).toFixed(2) : '—';
-          campHtml += '<tr class="camp-date-row camp-date-' + ci + '" style="color:#555;">' +
-            '<td style="padding-left:24px;">' + esc(d) + '</td>' +
-            '<td>' + fmtSpend(spends) + '</td>' +
-            '<td>' + leads + '</td>' +
-            '<td>' + cpiql + '</td></tr>';
-        });
-      });
-
-      var grandCpiql = grandTotals.leads > 0 && grandTotals.spends > 0 ? (grandTotals.spends / grandTotals.leads).toFixed(2) : '—';
-      campHtml += '<tr style="font-weight:600;border-top:2px solid #ddd;">' +
-        '<td>Total</td><td>' + fmtSpend(grandTotals.spends) + '</td><td>' + grandTotals.leads + '</td><td>' + grandCpiql + '</td></tr>';
-      campHtml += '</tbody></table></div>';
+    // Lead Quality Metrics (India only)
+    var qualityHtml = '';
+    if (!isUS) {
+      var qQuery = generateQualityQuery();
+      if (qQuery) {
+        var qRows = await bqFetch(qQuery);
+        qualityHtml = renderQualityMetrics(qRows);
+      }
     }
 
     // Store snapshot data for Slack
@@ -1333,7 +1435,7 @@ async function runQuery() {
       ? { allDates: allDates, buckets: usBuckets, SPENDS: SPENDS, totals: usTotals, isUS: true }
       : { allDates: allDates, buckets: indiaBuckets, SPENDS: SPENDS, totals: totals, isUS: false };
 
-    document.getElementById('resultsOverall').innerHTML = html + campHtml;
+    document.getElementById('resultsOverall').innerHTML = html + qualityHtml;
     document.getElementById('resultsFacebook').innerHTML = '';
     document.getElementById('resultsCrm').innerHTML = '';
     document.getElementById('resultsOthers').innerHTML = '';
@@ -1428,6 +1530,231 @@ function toggleCamp(ci) {
 
 function copyQuery() {
   var ta = document.getElementById('queryText');
+  ta.select();
+  document.execCommand('copy');
+  var btn = event.target;
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+}
+
+// ── Lead Quality Metrics ──────────────────────────────────────────────────────
+function generateQualityQuery() {
+  var date1       = document.getElementById('leadsDate1').value;
+  var date2       = document.getElementById('leadsDate2').value;
+  var webinarType = document.getElementById('leadsWebinarType').value;
+  if (!date1) return null;
+
+  var dateLiteral = date2
+    ? "'" + date1 + "', '" + date2 + "'"
+    : "'" + date1 + "'";
+
+  return [
+    'SELECT',
+    '  CASE',
+    "    WHEN role_domain IN ('Data Science','Data Engineer','Machine Learning / AI','ML / AI','Data Engineer / Data Scientist','Business Intelligence Analyst','Data Analyst / Business Analyst','Data','Machine Learning/DeepLearning','Data Engineering') THEN 'Data'",
+    "    WHEN role_domain IS NULL OR role_domain IN ('No / Little coding experience','No Coding Experience','None of the above') THEN 'Null'",
+    "    WHEN role_domain IN ('Full Stack','Back-end','Other Software Engineers','iOS Developer','Android Developer','iOS / Android Developer','Front-end','Test Engineer / SDET / QE','QA / Testing','Software Engineer','Front-end / Full stack','Software Engineering','Software Engineering (Frontend, Fullstack, Backend, Test)','Mobile Engineering (iOS/Android)') THEN 'Software Engineer'",
+    "    WHEN role_domain IN ('Engineering Manager - any domain','Product Manager (Tech)','Technical Program Manager','Engineering Manager / Director of Engineering','Project Manager / Product Manager','Engineering Manager','Growth Product Manager','Product Marketing Manager','Tech Product Manager','Management') THEN 'Management'",
+    "    WHEN role_domain IN ('SRE / DevOps','Cyber Security','Embedded Software Engineer','Cloud Engineer','Application Packaging Engineer','AWS Cloud Solutions Architect','Cyber Security/Security Engineering','Embedded Systems','DevOps Engineer','Site Reliability Engineer','Site Reliability Engineering') THEN 'Systems'",
+    "    WHEN role_domain IN ('Core Engineering') THEN 'Core Engineering'",
+    "    ELSE 'Other'",
+    '  END AS Category,',
+    '  CASE',
+    "    WHEN work_ex IN ('0-2','0-5','3-4') THEN 'a: 0-5'",
+    "    WHEN work_ex IN ('5-8','5-10')      THEN 'b: 5-10'",
+    "    WHEN work_ex IN ('9-15','10-15')    THEN 'c: 10-15'",
+    "    WHEN work_ex IN ('16-20','15-20','15+') THEN 'd: 15-20'",
+    "    WHEN work_ex = '20+'               THEN 'e: 20+'",
+    "    ELSE 'f: Others'",
+    '  END AS Work_Ex_Category,',
+    '  COUNT(*) AS cnt',
+    '  FROM (',
+    '    SELECT',
+    '      role_domain, work_ex,',
+    '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
+    '      dupe_flag, gql_flag, webinar_type, dupe_logic,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
+    '        ORDER BY formatted_date ASC',
+    '      ) AS rnk',
+    '    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '    WHERE dupe_logic = 1',
+    '  )',
+    '  WHERE rnk = 1',
+    '    AND web_scheduled_date IN (' + dateLiteral + ')',
+    "    AND webinar_type = '" + webinarType + "'",
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    "    AND LOWER(work_ex) NOT LIKE '%student%'",
+    "    AND work_ex NOT IN ('0-2', '3-4')",
+    'GROUP BY 1, 2',
+    'ORDER BY 1, 2',
+  ].join('\n');
+}
+
+function renderQualityMetrics(rows) {
+  // rows: [Category, Work_Ex_Category, cnt]
+  var catTotals = {}, weTotals = {}, grandTotal = 0;
+  rows.forEach(function(r) {
+    var cat = String(r[0] || 'Other');
+    var we  = String(r[1] || 'f: Others');
+    var cnt = Number(r[2]) || 0;
+    catTotals[cat] = (catTotals[cat] || 0) + cnt;
+    weTotals[we]   = (weTotals[we]   || 0) + cnt;
+    grandTotal    += cnt;
+  });
+
+  function pct(n) { return grandTotal > 0 ? (n / grandTotal * 100).toFixed(1) + '%' : '—'; }
+
+  function buildTable(title, totalsObj) {
+    var keys = Object.keys(totalsObj).sort();
+    var t = '<div class="sep" style="margin-top:24px;">' + title + '</div>';
+    t += '<div class="results-wrap"><table class="results"><thead><tr>' +
+      '<th>' + title.split(' ')[0] + '</th><th>Count</th><th>% of Total</th>' +
+      '</tr></thead><tbody>';
+    keys.forEach(function(k) {
+      t += '<tr><td>' + esc(k) + '</td><td>' + totalsObj[k] + '</td><td>' + pct(totalsObj[k]) + '</td></tr>';
+    });
+    t += '<tr style="font-weight:600;"><td>Total</td><td>' + grandTotal + '</td><td>100%</td></tr>';
+    t += '</tbody></table></div>';
+    return t;
+  }
+
+  return '<div class="sep" style="margin-top:28px;">Lead Quality Metrics</div>' +
+    buildTable('Category', catTotals) +
+    buildTable('Work Ex', weTotals);
+}
+
+// ── Webinar Attendance ────────────────────────────────────────────────────────
+var attendanceQueryOpen = false;
+
+function toggleAttendanceQuery() {
+  attendanceQueryOpen = !attendanceQueryOpen;
+  document.getElementById('attendanceQueryBody').classList.toggle('hidden', !attendanceQueryOpen);
+  document.getElementById('attendanceQueryHd').classList.toggle('borderless', !attendanceQueryOpen);
+  document.getElementById('attendanceQueryToggle').textContent = attendanceQueryOpen ? '▾ hide' : '▸ show';
+}
+
+function generateAttendanceQuery() {
+  var date1       = document.getElementById('attendanceDate').value;
+  var date2       = document.getElementById('attendanceDate2').value;
+  var webinarType = document.getElementById('attendanceWebinarType').value;
+
+  if (!date1 || !webinarType) {
+    alert('Please fill in the Event Date and Webinar Type fields first.');
+    return false;
+  }
+
+  var dateLiteral = date2
+    ? "'" + date1 + "', '" + date2 + "'"
+    : "'" + date1 + "'";
+
+  var query = [
+    'WITH attendance AS (',
+    '  SELECT CAST(hubspot_id AS INT64) AS hubspot_id',
+    '  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`',
+    '  WHERE DATE(webinar_start_time, "Asia/Kolkata") IN (' + dateLiteral + ')',
+    '    AND hubspot_id IS NOT NULL',
+    '  GROUP BY hubspot_id',
+    '),',
+    'leads AS (',
+    '  SELECT',
+    '    CAST(hubspot_ID AS INT64) AS hubspot_id,',
+    '    channel,',
+    '    utm_campaign',
+    '  FROM (',
+    '    SELECT',
+    '      hubspot_ID, channel, utm_campaign, formatted_date,',
+    '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
+    '      dupe_flag, gql_flag, work_ex, webinar_type, dupe_logic,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
+    '        ORDER BY formatted_date ASC',
+    '      ) AS rnk',
+    '    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '    WHERE dupe_logic = 1',
+    '  )',
+    '  WHERE rnk = 1',
+    '    AND web_scheduled_date IN (' + dateLiteral + ')',
+    "    AND webinar_type = '" + webinarType + "'",
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    "    AND LOWER(work_ex) NOT LIKE '%student%'",
+    "    AND work_ex NOT IN ('0-2', '3-4')",
+    '  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1',
+    ')',
+    'SELECT',
+    '  l.channel,',
+    '  l.hubspot_id  AS lead_id,',
+    '  a.hubspot_id  AS attended_id',
+    'FROM leads l',
+    'LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id',
+    'ORDER BY l.channel',
+  ].join('\n');
+
+  document.getElementById('attendanceQueryText').value = query;
+  return query;
+}
+
+async function runAttendanceQuery() {
+  var query = generateAttendanceQuery();
+  if (!query) return;
+
+  var btn = document.getElementById('runAttendanceBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  document.getElementById('attendanceResults').style.display = 'none';
+
+  try {
+    var rows = await bqFetch(query);
+    // cols: channel(0), lead_id(1), attended_id(2)
+
+    function isFb(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
+    function isCrm(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
+
+    var ORDER   = ['Meta', 'CRM', 'Others'];
+    var buckets = {};
+    ORDER.forEach(function(k) { buckets[k] = { iqls: 0, attendees: 0 }; });
+
+    rows.forEach(function(r) {
+      var ch       = String(r[0] || '');
+      var attended = r[2] !== null && r[2] !== '';
+      var cat      = isFb(ch) ? 'Meta' : isCrm(ch) ? 'CRM' : 'Others';
+      buckets[cat].iqls++;
+      if (attended) buckets[cat].attendees++;
+    });
+
+    function pct(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
+
+    var summaryHtml = '<div class="sep" style="margin-top:4px;">Attendance by Channel</div>';
+    summaryHtml += '<div class="results-wrap"><table class="results"><thead><tr>' +
+      '<th>Channel</th><th>IQLs</th><th>Attendees</th><th>%</th>' +
+      '</tr></thead><tbody>';
+    var totalIqls = 0, totalAttendees = 0;
+    ORDER.forEach(function(cat) {
+      var b = buckets[cat];
+      if (!b.iqls && !b.attendees) return;
+      totalIqls      += b.iqls;
+      totalAttendees += b.attendees;
+      summaryHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td><td>' + b.attendees + '</td><td>' + pct(b.attendees, b.iqls) + '</td></tr>';
+    });
+    summaryHtml += '<tr style="font-weight:600;"><td>Total</td><td>' + totalIqls + '</td><td>' + totalAttendees + '</td><td>' + pct(totalAttendees, totalIqls) + '</td></tr>';
+    summaryHtml += '</tbody></table></div>';
+
+    document.getElementById('attendanceSummary').innerHTML = summaryHtml;
+    document.getElementById('attendanceDetail').innerHTML  = '';
+    document.getElementById('attendanceResults').style.display = '';
+  } catch (e) {
+    alert('BigQuery error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run';
+  }
+}
+
+function copyAttendanceQuery() {
+  generateAttendanceQuery();
+  var ta = document.getElementById('attendanceQueryText');
   ta.select();
   document.execCommand('copy');
   var btn = event.target;
