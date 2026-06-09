@@ -346,7 +346,7 @@ table.results tr:last-child td { border-bottom: none; }
     <button class="tab active" id="tabCreateEvent" onclick="switchTab('create')">Create Event</button>
     <button class="tab" id="tabLeads" onclick="switchTab('leads')">Leads</button>
     <button class="tab" id="tabAttendance" onclick="switchTab('attendance')">Webinar Attendance</button>
-    <button class="tab" id="tabSale" onclick="switchTab('sale')">Sales</button>
+    <button class="tab" id="tabSale" onclick="switchTab('sale')">Call Efforts</button>
   </div>
 
   <!-- ── Create Event view ──────────────────────────────────────────────── -->
@@ -639,14 +639,50 @@ table.results tr:last-child td { border-bottom: none; }
   </div>
   </div><!-- /viewAttendance -->
 
-  <!-- ── Sale view ─────────────────────────────────────────────────────── -->
+  <!-- ── Call Efforts view ─────────────────────────────────────────────── -->
   <div id="viewSale" style="display:none;">
   <div class="card">
+    <div class="card-hd clickable" id="callQueryHd" onclick="toggleCallQuery()">
+      <h2>&#9881; Query</h2>
+      <span class="toggle-btn" id="callQueryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="callQueryBody">
+      <textarea id="callQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyCallQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-hd borderless">
-      <h2>Sales</h2>
+      <h2>Call Efforts</h2>
     </div>
     <div class="card-body" style="padding-top:6px;">
-      <p style="font-size:13px;color:var(--muted);">Coming soon.</p>
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Event Date <span class="req">*</span></label>
+          <input type="date" id="callDate1">
+        </div>
+        <div class="field">
+          <label>Day 2 Date <span class="opt">(optional)</span></label>
+          <input type="date" id="callDate2">
+        </div>
+        <div class="field col2">
+          <label>Webinar Type <span class="req">*</span></label>
+          <select id="callWebinarType">
+            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
+            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
+            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-foot" style="justify-content:flex-start; margin-top:0; margin-bottom:14px;">
+        <button class="btn btn-primary" id="runCallBtn" onclick="runCallQuery()">Run</button>
+      </div>
+      <div id="callResults" style="display:none;">
+        <div id="callSummary"></div>
+      </div>
     </div>
   </div>
   </div><!-- /viewSale -->
@@ -1755,6 +1791,258 @@ async function runAttendanceQuery() {
 function copyAttendanceQuery() {
   generateAttendanceQuery();
   var ta = document.getElementById('attendanceQueryText');
+  ta.select();
+  document.execCommand('copy');
+  var btn = event.target;
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+}
+
+// ── Call Efforts ─────────────────────────────────────────────────────────────
+var callQueryOpen = false;
+
+function toggleCallQuery() {
+  callQueryOpen = !callQueryOpen;
+  document.getElementById('callQueryBody').classList.toggle('hidden', !callQueryOpen);
+  document.getElementById('callQueryHd').classList.toggle('borderless', !callQueryOpen);
+  document.getElementById('callQueryToggle').textContent = callQueryOpen ? '▾ hide' : '▸ show';
+}
+
+function generateCallQuery() {
+  var date1       = document.getElementById('callDate1').value;
+  var date2       = document.getElementById('callDate2').value;
+  var webinarType = document.getElementById('callWebinarType').value;
+
+  if (!date1) {
+    alert('Please fill in the Event Date field.');
+    return false;
+  }
+
+  var dateLiteral = date2
+    ? "'" + date1 + "', '" + date2 + "'"
+    : "'" + date1 + "'";
+
+  var query = [
+    'WITH base AS (',
+    '  SELECT',
+    '    lead_created_time AS Lead_created_time,',
+    "    DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) AS webinar_start_date,",
+    "    DATETIME(Event_Start_Date_Time, 'Asia/Kolkata') AS webinar_start_datetime,",
+    '    CASE',
+    '      WHEN Webinar_email IS NOT NULL AND Webinar_Date IS NULL',
+    "        THEN DATE(DATETIME(TIMESTAMP(Event_Start_Date_Time), 'Asia/Kolkata'))",
+    '      ELSE DATE(Webinar_Date)',
+    '    END AS webinar_attended_date,',
+    '    CASE',
+    '      WHEN Webinar_email IS NOT NULL',
+    "           AND DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) = DATE(webinar_date)",
+    "        THEN DATETIME_ADD(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata'), INTERVAL 60 MINUTE)",
+    '      WHEN Webinar_email IS NOT NULL',
+    "           AND DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) <> DATE(webinar_date)",
+    '        THEN DATETIME(',
+    '               CONCAT(',
+    '                 CAST(DATE(webinar_date) AS STRING), \' \',',
+    "                 FORMAT_DATETIME('%T', DATETIME_ADD(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata'), INTERVAL 60 MINUTE))",
+    '               )',
+    '             )',
+    '    END AS webinar_attended_datetime,',
+    '    COALESCE(',
+    '      LEAD(lead_created_time) OVER (PARTITION BY lead_email ORDER BY lead_created_time),',
+    '      DATETIME_ADD(lead_created_time, INTERVAL 1 YEAR)',
+    '    ) AS next_lead_time,',
+    '    channel,',
+    '    hubspot_id',
+    '  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '  WHERE',
+    '    DATE(DATETIME(Event_Start_Date_Time, \'Asia/Kolkata\')) IN (' + dateLiteral + ')',
+    "    AND webinar_type = '" + webinarType + "'",
+    '    AND dupe_logic = 1',
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    "    AND LOWER(work_ex) NOT LIKE '%student%'",
+    "    AND work_ex NOT IN ('0-2', '3-4')",
+    '  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_id ORDER BY lead_created_time ASC) = 1',
+    '),',
+    '',
+    'base_call AS (',
+    '  SELECT activity_datetime, email_11, call_duration',
+    '  FROM (',
+    '    SELECT',
+    '      CASE',
+    '        WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11, 12, 1, 2, 3)',
+    '        THEN DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 13 HOUR + INTERVAL 30 MINUTE',
+    '        ELSE DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 12 HOUR + INTERVAL 30 MINUTE',
+    '      END AS activity_datetime,',
+    '      hubspot_id AS email_11,',
+    '      duration AS call_duration,',
+    '      call_id,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY call_id',
+    '        ORDER BY',
+    '          CASE',
+    '            WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11, 12, 1, 2, 3)',
+    '            THEN DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 13 HOUR + INTERVAL 30 MINUTE',
+    '            ELSE DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 12 HOUR + INTERVAL 30 MINUTE',
+    '          END DESC',
+    '      ) AS rn',
+    '    FROM `ik-marketing-data.Marketing_data_new_logic.call_metadata`',
+    '    WHERE',
+    '      DATETIME(timestamp, "Asia/Kolkata") >= DATETIME \'2024-07-01\'',
+    '      AND hubspot_id IN (SELECT hubspot_id FROM base)',
+    '  )',
+    '  WHERE rn = 1',
+    '),',
+    '',
+    'base_main AS (',
+    '  SELECT',
+    '    Lead_created_time,',
+    '    hubspot_id AS lead_email,',
+    '    channel,',
+    '    next_lead_time,',
+    '    COALESCE(webinar_start_datetime, DATETIME_ADD(Lead_created_time, INTERVAL 1 YEAR)) AS webinar_start_datetime_ch,',
+    '    COALESCE(webinar_attended_datetime, DATETIME_ADD(Lead_created_time, INTERVAL 1 YEAR)) AS webinar_attended_datetime_ch',
+    '  FROM base',
+    '),',
+    '',
+    'fin AS (',
+    '  SELECT',
+    '    bm.Lead_created_time,',
+    '    bm.lead_email,',
+    '    bm.channel,',
+    '    bm.next_lead_time,',
+    '    bm.webinar_start_datetime_ch,',
+    '    bm.webinar_attended_datetime_ch,',
+    '    bc.activity_datetime,',
+    '    bc.call_duration',
+    '  FROM base_main bm',
+    '  LEFT JOIN base_call bc',
+    '    ON bm.lead_email = bc.email_11',
+    '   AND bm.Lead_created_time <= bc.activity_datetime',
+    '   AND bm.next_lead_time > bc.activity_datetime',
+    '),',
+    '',
+    'call_data AS (',
+    '  SELECT',
+    '    lead_email,',
+    '    channel,',
+    '    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN 1 END) AS total_calls_before_webinar,',
+    '    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch AND call_duration > 120 THEN 1 END) AS total_connected_calls_before_webinar,',
+    '    SUM(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN call_duration / 60.0 END) AS total_talk_time_before_webinar',
+    '  FROM fin',
+    '  GROUP BY lead_email, channel',
+    ')',
+    '',
+    'SELECT',
+    '  channel,',
+    '  COUNT(*) AS total_iqls,',
+    '  COUNTIF(total_calls_before_webinar > 0) AS iqls_called,',
+    '  SUM(total_calls_before_webinar) AS total_calls,',
+    '  SUM(total_connected_calls_before_webinar) AS total_connected_calls,',
+    '  ROUND(SUM(COALESCE(total_talk_time_before_webinar, 0)), 1) AS total_talk_time',
+    'FROM call_data',
+    'GROUP BY channel',
+    'ORDER BY channel',
+  ].join('\n');
+
+  document.getElementById('callQueryText').value = query;
+  return query;
+}
+
+async function runCallQuery() {
+  var query = generateCallQuery();
+  if (!query) return;
+
+  var btn = document.getElementById('runCallBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  document.getElementById('callResults').style.display = 'none';
+
+  try {
+    var rows = await bqFetch(query);
+    // cols: channel(0), total_iqls(1), iqls_called(2), total_calls(3), total_connected_calls(4), total_talk_time(5)
+
+    function isFbC(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
+    function isCrmC(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
+
+    var ORDER = ['Meta', 'CRM', 'Others'];
+    var buckets = {};
+    ORDER.forEach(function(k) { buckets[k] = { iqls: 0, called: 0, calls: 0, connected: 0, talkTime: 0 }; });
+
+    rows.forEach(function(r) {
+      var ch        = String(r[0] || '');
+      var iqls      = Number(r[1]) || 0;
+      var called    = Number(r[2]) || 0;
+      var calls     = Number(r[3]) || 0;
+      var connected = Number(r[4]) || 0;
+      var talkTime  = Number(r[5]) || 0;
+      var cat = isFbC(ch) ? 'Meta' : isCrmC(ch) ? 'CRM' : 'Others';
+      buckets[cat].iqls      += iqls;
+      buckets[cat].called    += called;
+      buckets[cat].calls     += calls;
+      buckets[cat].connected += connected;
+      buckets[cat].talkTime  += talkTime;
+    });
+
+    var totIqls = 0, totCalled = 0, totCalls = 0, totConnected = 0, totTalkTime = 0;
+    ORDER.forEach(function(k) {
+      totIqls += buckets[k].iqls; totCalled += buckets[k].called;
+      totCalls += buckets[k].calls; totConnected += buckets[k].connected;
+      totTalkTime += buckets[k].talkTime;
+    });
+
+    function pctC(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
+    function divC(a, b) { return b > 0 ? (a / b).toFixed(2) : '—'; }
+    function minsC(t, n) { return n > 0 && t > 0 ? (t / n).toFixed(1) + ' min' : '—'; }
+
+    var tileStyle = 'background:#f5f3ff;border-radius:10px;padding:14px 18px;text-align:center;';
+    var lblStyle  = 'font-size:11px;color:#6b7280;margin-bottom:4px;';
+    var valStyle  = 'font-size:22px;font-weight:700;color:#4f46e5;';
+    function tile(label, val) {
+      return '<div style="' + tileStyle + '"><div style="' + lblStyle + '">' + label + '</div>' +
+             '<div style="' + valStyle + '">' + val + '</div></div>';
+    }
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">' +
+      tile('Total IQLs', totIqls) +
+      tile('Avg Calls / IQL', divC(totCalls, totIqls)) +
+      tile('Coverage', pctC(totCalled, totIqls)) +
+      tile('Connectivity', pctC(totConnected, totCalls)) +
+      tile('Talk Time / IQL', minsC(totTalkTime, totIqls)) +
+      '</div>';
+
+    html += '<div class="sep" style="margin-top:4px;">Call Breakdown by Channel</div>';
+    html += '<div class="results-wrap"><table class="results"><thead><tr>' +
+      '<th>Channel</th><th>IQLs</th><th>Coverage</th><th>Avg Calls / IQL</th><th>Connectivity</th><th>Talk Time / IQL</th>' +
+      '</tr></thead><tbody>';
+    ORDER.forEach(function(cat) {
+      var b = buckets[cat];
+      if (!b.iqls) return;
+      html += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td>' +
+        '<td>' + pctC(b.called, b.iqls) + '</td>' +
+        '<td>' + divC(b.calls, b.iqls) + '</td>' +
+        '<td>' + pctC(b.connected, b.calls) + '</td>' +
+        '<td>' + minsC(b.talkTime, b.iqls) + '</td></tr>';
+    });
+    html += '<tr style="font-weight:600;"><td>Total</td><td>' + totIqls + '</td>' +
+      '<td>' + pctC(totCalled, totIqls) + '</td>' +
+      '<td>' + divC(totCalls, totIqls) + '</td>' +
+      '<td>' + pctC(totConnected, totCalls) + '</td>' +
+      '<td>' + minsC(totTalkTime, totIqls) + '</td></tr>';
+    html += '</tbody></table></div>';
+
+    document.getElementById('callSummary').innerHTML = html;
+    document.getElementById('callResults').style.display = '';
+  } catch (e) {
+    alert('BigQuery error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run';
+  }
+}
+
+function copyCallQuery() {
+  generateCallQuery();
+  var ta = document.getElementById('callQueryText');
   ta.select();
   document.execCommand('copy');
   var btn = event.target;
