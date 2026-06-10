@@ -2162,6 +2162,7 @@ function generateEmailQuery() {
     '    AND DATE(event_timestamp, "Asia/Kolkata") IN (' + dateLiteral + ')',
     "    AND event_name IN ('SENT', 'DELIVERED', 'OPEN', 'CLICK')",
     "    AND LOWER(email_name) LIKE '%reminder%'",
+    "    AND NOT REGEXP_CONTAINS(email_name, r'(?i)_eu_')",
     '),',
     '',
     '-- CTE 3: Funnel-corrected flags per lead + campaign',
