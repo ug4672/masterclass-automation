@@ -2161,6 +2161,7 @@ function generateEmailQuery() {
     '  WHERE CAST(hubspot_id AS INT64) IN (SELECT hubspot_id FROM registered_leads)',
     '    AND DATE(event_timestamp, "Asia/Kolkata") IN (' + dateLiteral + ')',
     "    AND event_name IN ('SENT', 'DELIVERED', 'OPEN', 'CLICK')",
+    "    AND LOWER(email_name) LIKE '%reminder%'",
     '),',
     '',
     '-- CTE 3: Funnel-corrected flags per lead + campaign',
