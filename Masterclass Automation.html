@@ -348,6 +348,7 @@ table.results tr:last-child td { border-bottom: none; }
     <button class="tab" id="tabLeads" onclick="switchTab('leads')">Leads</button>
     <button class="tab" id="tabAttendance" onclick="switchTab('attendance')">Webinar Attendance</button>
     <button class="tab" id="tabSale" onclick="switchTab('sale')">Call Efforts</button>
+    <button class="tab" id="tabEmail" onclick="switchTab('email')">Email Reminder</button>
   </div>
 
   <!-- ── Create Event view ──────────────────────────────────────────────── -->
@@ -687,6 +688,48 @@ table.results tr:last-child td { border-bottom: none; }
     </div>
   </div>
   </div><!-- /viewSale -->
+
+  <!-- ── Email Reminder view ────────────────────────────────────────────── -->
+  <div id="viewEmail" style="display:none;">
+  <div class="card">
+    <div class="card-hd clickable" id="emailQueryHd" onclick="toggleEmailQuery()">
+      <h2>&#9881; Query</h2>
+      <span class="toggle-btn" id="emailQueryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="emailQueryBody">
+      <textarea id="emailQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyEmailQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd borderless"><h2>Email Reminder</h2></div>
+    <div class="card-body" style="padding-top:6px;">
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Event Date <span class="req">*</span></label>
+          <input type="date" id="emailEventDate">
+        </div>
+        <div class="field col2">
+          <label>Webinar Type <span class="req">*</span></label>
+          <select id="emailWebinarType">
+            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
+            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
+            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-foot" style="justify-content:flex-start; margin-top:0; margin-bottom:14px;">
+        <button class="btn btn-primary" id="runEmailBtn" onclick="runEmailQuery()">Run</button>
+      </div>
+      <div id="emailResults" style="display:none;">
+        <div id="emailSummary"></div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /viewEmail -->
 
 </div>
 <script>
@@ -1141,10 +1184,12 @@ function switchTab(tab) {
   document.getElementById('viewLeads').style.display      = tab === 'leads'      ? '' : 'none';
   document.getElementById('viewAttendance').style.display = tab === 'attendance' ? '' : 'none';
   document.getElementById('viewSale').style.display       = tab === 'sale'       ? '' : 'none';
+  document.getElementById('viewEmail').style.display      = tab === 'email'      ? '' : 'none';
   document.getElementById('tabCreateEvent').classList.toggle('active', tab === 'create');
   document.getElementById('tabLeads').classList.toggle('active', tab === 'leads');
   document.getElementById('tabAttendance').classList.toggle('active', tab === 'attendance');
   document.getElementById('tabSale').classList.toggle('active', tab === 'sale');
+  document.getElementById('tabEmail').classList.toggle('active', tab === 'email');
 }
 
 // ── Lead extraction query ─────────────────────────────────────────────────────
@@ -2044,6 +2089,189 @@ async function runCallQuery() {
 function copyCallQuery() {
   generateCallQuery();
   var ta = document.getElementById('callQueryText');
+  ta.select();
+  document.execCommand('copy');
+  var btn = event.target;
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+}
+
+// ── Email Reminder ────────────────────────────────────────────────────────────
+var emailQueryOpen = false;
+
+function toggleEmailQuery() {
+  emailQueryOpen = !emailQueryOpen;
+  document.getElementById('emailQueryBody').classList.toggle('hidden', !emailQueryOpen);
+  document.getElementById('emailQueryHd').classList.toggle('borderless', !emailQueryOpen);
+  document.getElementById('emailQueryToggle').textContent = emailQueryOpen ? '▾ hide' : '▸ show';
+}
+
+function generateEmailQuery() {
+  var eventDate   = document.getElementById('emailEventDate').value;
+  var webinarType = document.getElementById('emailWebinarType').value;
+
+  if (!eventDate) {
+    alert('Please fill in the Event Date field.');
+    return false;
+  }
+
+  var query = [
+    '-- CTE 1: IQL leads registered for the event',
+    'WITH registered_leads AS (',
+    '  SELECT CAST(hubspot_ID AS INT64) AS hubspot_id',
+    '  FROM (',
+    '    SELECT',
+    '      hubspot_ID, formatted_date,',
+    '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
+    '      dupe_flag, gql_flag, work_ex, webinar_type, dupe_logic,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
+    '        ORDER BY formatted_date ASC',
+    '      ) AS rnk',
+    '    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '    WHERE dupe_logic = 1',
+    '  )',
+    '  WHERE rnk = 1',
+    "    AND web_scheduled_date = '" + eventDate + "'",
+    "    AND webinar_type = '" + webinarType + "'",
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    "    AND LOWER(work_ex) NOT LIKE '%student%'",
+    "    AND work_ex NOT IN ('0-2', '3-4')",
+    '  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1',
+    '),',
+    '',
+    '-- CTE 2: Email events for those leads on the event date',
+    'email_events AS (',
+    '  SELECT',
+    '    CAST(hubspot_id AS INT64) AS hubspot_id,',
+    '    email_name,',
+    '    email_campaign_id,',
+    '    event_name',
+    '  FROM `ik-marketing-data.Email.Marketing_Email_Data`',
+    '  WHERE CAST(hubspot_id AS INT64) IN (SELECT hubspot_id FROM registered_leads)',
+    "    AND DATE(event_timestamp) = '" + eventDate + "'",
+    "    AND event_name IN ('SENT', 'DELIVERED', 'OPEN', 'CLICK')",
+    '),',
+    '',
+    '-- CTE 3: Funnel-corrected flags per lead + campaign',
+    '--   CLICK  => also DELIVERED and OPEN',
+    '--   OPEN   => also DELIVERED',
+    'funnel_flags AS (',
+    '  SELECT',
+    '    hubspot_id,',
+    '    email_campaign_id,',
+    '    ANY_VALUE(email_name) AS email_name,',
+    "    MAX(CASE WHEN event_name = 'SENT'                          THEN 1 ELSE 0 END) AS is_sent,",
+    "    MAX(CASE WHEN event_name IN ('DELIVERED','OPEN','CLICK')   THEN 1 ELSE 0 END) AS is_delivered,",
+    "    MAX(CASE WHEN event_name IN ('OPEN','CLICK')               THEN 1 ELSE 0 END) AS is_opened,",
+    "    MAX(CASE WHEN event_name = 'CLICK'                         THEN 1 ELSE 0 END) AS is_clicked",
+    '  FROM email_events',
+    '  GROUP BY hubspot_id, email_campaign_id',
+    '),',
+    '',
+    '-- CTE 4: Aggregate unique hubspot_ids per email_name',
+    'aggregated AS (',
+    '  SELECT',
+    '    email_name,',
+    '    COUNT(DISTINCT CASE WHEN is_sent = 1      THEN hubspot_id END) AS sent,',
+    '    COUNT(DISTINCT CASE WHEN is_delivered = 1 THEN hubspot_id END) AS delivered,',
+    '    COUNT(DISTINCT CASE WHEN is_opened = 1    THEN hubspot_id END) AS opened,',
+    '    COUNT(DISTINCT CASE WHEN is_clicked = 1   THEN hubspot_id END) AS clicked',
+    '  FROM funnel_flags',
+    '  GROUP BY email_name',
+    ')',
+    '',
+    'SELECT',
+    '  email_name,',
+    '  sent,',
+    '  delivered,',
+    '  opened,',
+    '  clicked,',
+    '  ROUND(SAFE_DIVIDE(delivered, sent)    * 100, 1) AS delivery_rate,',
+    '  ROUND(SAFE_DIVIDE(opened, delivered)  * 100, 1) AS open_rate,',
+    '  ROUND(SAFE_DIVIDE(clicked, opened)    * 100, 1) AS click_rate',
+    'FROM aggregated',
+    'ORDER BY sent DESC',
+  ].join('\n');
+
+  document.getElementById('emailQueryText').value = query;
+  return query;
+}
+
+async function runEmailQuery() {
+  var query = generateEmailQuery();
+  if (!query) return;
+
+  var btn = document.getElementById('runEmailBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  document.getElementById('emailResults').style.display = 'none';
+
+  try {
+    var rows = await bqFetch(query);
+    // cols: email_name(0), sent(1), delivered(2), opened(3), clicked(4),
+    //       delivery_rate(5), open_rate(6), click_rate(7)
+
+    if (!rows.length) {
+      document.getElementById('emailSummary').innerHTML =
+        '<p style="color:#6b7280;padding:12px 0;">No email data found for this event date and webinar type.</p>';
+      document.getElementById('emailResults').style.display = '';
+      return;
+    }
+
+    function fmtRate(v) { return v !== null && v !== '' ? Number(v).toFixed(1) + '%' : '—'; }
+
+    var html = '<div class="results-wrap"><table class="results"><thead><tr>' +
+      '<th>Email Name</th><th>Sent</th><th>Delivered</th><th>Opened</th><th>Clicked</th>' +
+      '<th>Delivery Rate</th><th>Open Rate</th><th>Click Rate</th>' +
+      '</tr></thead><tbody>';
+
+    var totSent = 0, totDelivered = 0, totOpened = 0, totClicked = 0;
+    rows.forEach(function(r) {
+      var sent      = Number(r[1]) || 0;
+      var delivered = Number(r[2]) || 0;
+      var opened    = Number(r[3]) || 0;
+      var clicked   = Number(r[4]) || 0;
+      totSent += sent; totDelivered += delivered; totOpened += opened; totClicked += clicked;
+      html += '<tr>' +
+        '<td>' + esc(String(r[0] || '')) + '</td>' +
+        '<td>' + sent + '</td>' +
+        '<td>' + delivered + '</td>' +
+        '<td>' + opened + '</td>' +
+        '<td>' + clicked + '</td>' +
+        '<td>' + fmtRate(r[5]) + '</td>' +
+        '<td>' + fmtRate(r[6]) + '</td>' +
+        '<td>' + fmtRate(r[7]) + '</td>' +
+        '</tr>';
+    });
+
+    function safeDiv(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
+    html += '<tr style="font-weight:600;">' +
+      '<td>Total</td>' +
+      '<td>' + totSent + '</td>' +
+      '<td>' + totDelivered + '</td>' +
+      '<td>' + totOpened + '</td>' +
+      '<td>' + totClicked + '</td>' +
+      '<td>' + safeDiv(totDelivered, totSent) + '</td>' +
+      '<td>' + safeDiv(totOpened, totDelivered) + '</td>' +
+      '<td>' + safeDiv(totClicked, totOpened) + '</td>' +
+      '</tr>';
+    html += '</tbody></table></div>';
+
+    document.getElementById('emailSummary').innerHTML = html;
+    document.getElementById('emailResults').style.display = '';
+  } catch (e) {
+    alert('BigQuery error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run';
+  }
+}
+
+function copyEmailQuery() {
+  generateEmailQuery();
+  var ta = document.getElementById('emailQueryText');
   ta.select();
   document.execCommand('copy');
   var btn = event.target;
