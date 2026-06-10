@@ -2159,7 +2159,7 @@ function generateEmailQuery() {
     '    event_name',
     '  FROM `ik-marketing-data.Email.Marketing_Email_Data`',
     '  WHERE CAST(hubspot_id AS INT64) IN (SELECT hubspot_id FROM registered_leads)',
-    '    AND DATE(event_timestamp) IN (' + dateLiteral + ')',
+    '    AND DATE(event_timestamp, "Asia/Kolkata") IN (' + dateLiteral + ')',
     "    AND event_name IN ('SENT', 'DELIVERED', 'OPEN', 'CLICK')",
     '),',
     '',
