@@ -712,6 +712,10 @@ table.results tr:last-child td { border-bottom: none; }
           <label>Event Date <span class="req">*</span></label>
           <input type="date" id="emailEventDate">
         </div>
+        <div class="field">
+          <label>Day 2 Date <span class="opt">(optional)</span></label>
+          <input type="date" id="emailEventDate2">
+        </div>
         <div class="field col2">
           <label>Webinar Type <span class="req">*</span></label>
           <select id="emailWebinarType">
@@ -2108,12 +2112,17 @@ function toggleEmailQuery() {
 
 function generateEmailQuery() {
   var eventDate   = document.getElementById('emailEventDate').value;
+  var eventDate2  = document.getElementById('emailEventDate2').value;
   var webinarType = document.getElementById('emailWebinarType').value;
 
   if (!eventDate) {
     alert('Please fill in the Event Date field.');
     return false;
   }
+
+  var dateLiteral = eventDate2
+    ? "'" + eventDate + "', '" + eventDate2 + "'"
+    : "'" + eventDate + "'";
 
   var query = [
     '-- CTE 1: IQL leads registered for the event',
@@ -2132,7 +2141,7 @@ function generateEmailQuery() {
     '    WHERE dupe_logic = 1',
     '  )',
     '  WHERE rnk = 1',
-    "    AND web_scheduled_date = '" + eventDate + "'",
+    '    AND web_scheduled_date IN (' + dateLiteral + ')',
     "    AND webinar_type = '" + webinarType + "'",
     '    AND dupe_flag = 0',
     '    AND gql_flag = 0',
@@ -2141,7 +2150,7 @@ function generateEmailQuery() {
     '  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1',
     '),',
     '',
-    '-- CTE 2: Email events for those leads on the event date',
+    '-- CTE 2: Email events for those leads on the event date(s)',
     'email_events AS (',
     '  SELECT',
     '    CAST(hubspot_id AS INT64) AS hubspot_id,',
@@ -2150,7 +2159,7 @@ function generateEmailQuery() {
     '    event_name',
     '  FROM `ik-marketing-data.Email.Marketing_Email_Data`',
     '  WHERE CAST(hubspot_id AS INT64) IN (SELECT hubspot_id FROM registered_leads)',
-    "    AND DATE(event_timestamp) = '" + eventDate + "'",
+    '    AND DATE(event_timestamp) IN (' + dateLiteral + ')',
     "    AND event_name IN ('SENT', 'DELIVERED', 'OPEN', 'CLICK')",
     '),',
     '',
