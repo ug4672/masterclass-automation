@@ -347,8 +347,6 @@ table.results tr:last-child td { border-bottom: none; }
     <button class="tab active" id="tabCreateEvent" onclick="switchTab('create')">Create Event</button>
     <button class="tab" id="tabLeads" onclick="switchTab('leads')">Leads</button>
     <button class="tab" id="tabAttendance" onclick="switchTab('attendance')">Webinar Attendance</button>
-    <button class="tab" id="tabSale" onclick="switchTab('sale')">Call Efforts</button>
-    <button class="tab" id="tabEmail" onclick="switchTab('email')">Email Reminder</button>
   </div>
 
   <!-- ── Create Event view ──────────────────────────────────────────────── -->
@@ -596,13 +594,39 @@ table.results tr:last-child td { border-bottom: none; }
   <div id="viewAttendance" style="display:none;">
   <div class="card">
     <div class="card-hd clickable" id="attendanceQueryHd" onclick="toggleAttendanceQuery()">
-      <h2>&#9881; Query</h2>
+      <h2>&#9881; Attendance Query</h2>
       <span class="toggle-btn" id="attendanceQueryToggle">&#9658; show</span>
     </div>
     <div class="card-body hidden" id="attendanceQueryBody">
       <textarea id="attendanceQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
       <div class="form-foot" style="margin-top:8px;">
         <button class="btn btn-primary" onclick="copyAttendanceQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd clickable" id="callQueryHd" onclick="toggleCallQuery()">
+      <h2>&#9881; Call Efforts Query</h2>
+      <span class="toggle-btn" id="callQueryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="callQueryBody">
+      <textarea id="callQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyCallQuery()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd clickable" id="emailQueryHd" onclick="toggleEmailQuery()">
+      <h2>&#9881; Email Reminder Query</h2>
+      <span class="toggle-btn" id="emailQueryToggle">&#9658; show</span>
+    </div>
+    <div class="card-body hidden" id="emailQueryBody">
+      <textarea id="emailQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
+      <div class="form-foot" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="copyEmailQuery()">Copy</button>
       </div>
     </div>
   </div>
@@ -636,104 +660,16 @@ table.results tr:last-child td { border-bottom: none; }
       <div id="attendanceResults" style="display:none;">
         <div id="attendanceSummary"></div>
         <div id="attendanceDetail"></div>
+        <div id="callResultsInline" style="display:none;">
+          <div id="callSummaryInline"></div>
+        </div>
+        <div id="emailResultsInline" style="display:none;">
+          <div id="emailSummaryInline"></div>
+        </div>
       </div>
     </div>
   </div>
   </div><!-- /viewAttendance -->
-
-  <!-- ── Call Efforts view ─────────────────────────────────────────────── -->
-  <div id="viewSale" style="display:none;">
-  <div class="card">
-    <div class="card-hd clickable" id="callQueryHd" onclick="toggleCallQuery()">
-      <h2>&#9881; Query</h2>
-      <span class="toggle-btn" id="callQueryToggle">&#9658; show</span>
-    </div>
-    <div class="card-body hidden" id="callQueryBody">
-      <textarea id="callQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
-      <div class="form-foot" style="margin-top:8px;">
-        <button class="btn btn-primary" onclick="copyCallQuery()">Copy</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd borderless">
-      <h2>Call Efforts</h2>
-    </div>
-    <div class="card-body" style="padding-top:6px;">
-      <div class="grid" style="margin-bottom:14px;">
-        <div class="field">
-          <label>Event Date <span class="req">*</span></label>
-          <input type="date" id="callDate1">
-        </div>
-        <div class="field">
-          <label>Day 2 Date <span class="opt">(optional)</span></label>
-          <input type="date" id="callDate2">
-        </div>
-        <div class="field col2">
-          <label>Webinar Type <span class="req">*</span></label>
-          <select id="callWebinarType">
-            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
-            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
-            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-foot" style="justify-content:flex-start; margin-top:0; margin-bottom:14px;">
-        <button class="btn btn-primary" id="runCallBtn" onclick="runCallQuery()">Run</button>
-      </div>
-      <div id="callResults" style="display:none;">
-        <div id="callSummary"></div>
-      </div>
-    </div>
-  </div>
-  </div><!-- /viewSale -->
-
-  <!-- ── Email Reminder view ────────────────────────────────────────────── -->
-  <div id="viewEmail" style="display:none;">
-  <div class="card">
-    <div class="card-hd clickable" id="emailQueryHd" onclick="toggleEmailQuery()">
-      <h2>&#9881; Query</h2>
-      <span class="toggle-btn" id="emailQueryToggle">&#9658; show</span>
-    </div>
-    <div class="card-body hidden" id="emailQueryBody">
-      <textarea id="emailQueryText" rows="20" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;" readonly></textarea>
-      <div class="form-foot" style="margin-top:8px;">
-        <button class="btn btn-primary" onclick="copyEmailQuery()">Copy</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd borderless"><h2>Email Reminder</h2></div>
-    <div class="card-body" style="padding-top:6px;">
-      <div class="grid" style="margin-bottom:14px;">
-        <div class="field">
-          <label>Event Date <span class="req">*</span></label>
-          <input type="date" id="emailEventDate">
-        </div>
-        <div class="field">
-          <label>Day 2 Date <span class="opt">(optional)</span></label>
-          <input type="date" id="emailEventDate2">
-        </div>
-        <div class="field col2">
-          <label>Webinar Type <span class="req">*</span></label>
-          <select id="emailWebinarType">
-            <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
-            <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
-            <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-foot" style="justify-content:flex-start; margin-top:0; margin-bottom:14px;">
-        <button class="btn btn-primary" id="runEmailBtn" onclick="runEmailQuery()">Run</button>
-      </div>
-      <div id="emailResults" style="display:none;">
-        <div id="emailSummary"></div>
-      </div>
-    </div>
-  </div>
-  </div><!-- /viewEmail -->
 
 </div>
 <script>
@@ -1187,13 +1123,9 @@ function switchTab(tab) {
   document.getElementById('viewCreate').style.display     = tab === 'create'     ? '' : 'none';
   document.getElementById('viewLeads').style.display      = tab === 'leads'      ? '' : 'none';
   document.getElementById('viewAttendance').style.display = tab === 'attendance' ? '' : 'none';
-  document.getElementById('viewSale').style.display       = tab === 'sale'       ? '' : 'none';
-  document.getElementById('viewEmail').style.display      = tab === 'email'      ? '' : 'none';
   document.getElementById('tabCreateEvent').classList.toggle('active', tab === 'create');
   document.getElementById('tabLeads').classList.toggle('active', tab === 'leads');
   document.getElementById('tabAttendance').classList.toggle('active', tab === 'attendance');
-  document.getElementById('tabSale').classList.toggle('active', tab === 'sale');
-  document.getElementById('tabEmail').classList.toggle('active', tab === 'email');
 }
 
 // ── Lead extraction query ─────────────────────────────────────────────────────
@@ -1785,33 +1717,35 @@ function generateAttendanceQuery() {
 async function runAttendanceQuery() {
   var query = generateAttendanceQuery();
   if (!query) return;
+  var callQ  = generateCallQuery();
+  var emailQ = generateEmailQuery();
 
   var btn = document.getElementById('runAttendanceBtn');
   btn.disabled = true;
   btn.textContent = 'Running…';
   document.getElementById('attendanceResults').style.display = 'none';
 
-  try {
-    var rows = await bqFetch(query);
-    // cols: channel(0), lead_id(1), attended_id(2)
+  var [attRes, callRes, emailRes] = await Promise.allSettled([
+    bqFetch(query),
+    callQ  ? bqFetch(callQ)  : Promise.reject(new Error('no call query')),
+    emailQ ? bqFetch(emailQ) : Promise.reject(new Error('no email query'))
+  ]);
 
+  // ── Attendance ──────────────────────────────────────────────────────────
+  if (attRes.status === 'fulfilled') {
+    var rows = attRes.value;
     function isFb(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
     function isCrm(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
-
     var ORDER   = ['Meta', 'CRM', 'Others'];
     var buckets = {};
     ORDER.forEach(function(k) { buckets[k] = { iqls: 0, attendees: 0 }; });
-
     rows.forEach(function(r) {
-      var ch       = String(r[0] || '');
-      var attended = r[2] !== null && r[2] !== '';
-      var cat      = isFb(ch) ? 'Meta' : isCrm(ch) ? 'CRM' : 'Others';
+      var ch  = String(r[0] || '');
+      var cat = isFb(ch) ? 'Meta' : isCrm(ch) ? 'CRM' : 'Others';
       buckets[cat].iqls++;
-      if (attended) buckets[cat].attendees++;
+      if (r[2] !== null && r[2] !== '') buckets[cat].attendees++;
     });
-
     function pct(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
-
     var summaryHtml = '<div class="sep" style="margin-top:4px;">Attendance by Channel</div>';
     summaryHtml += '<div class="results-wrap"><table class="results"><thead><tr>' +
       '<th>Channel</th><th>IQLs</th><th>Attendees</th><th>%</th>' +
@@ -1820,22 +1754,126 @@ async function runAttendanceQuery() {
     ORDER.forEach(function(cat) {
       var b = buckets[cat];
       if (!b.iqls && !b.attendees) return;
-      totalIqls      += b.iqls;
-      totalAttendees += b.attendees;
+      totalIqls += b.iqls; totalAttendees += b.attendees;
       summaryHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td><td>' + b.attendees + '</td><td>' + pct(b.attendees, b.iqls) + '</td></tr>';
     });
     summaryHtml += '<tr style="font-weight:600;"><td>Total</td><td>' + totalIqls + '</td><td>' + totalAttendees + '</td><td>' + pct(totalAttendees, totalIqls) + '</td></tr>';
     summaryHtml += '</tbody></table></div>';
-
     document.getElementById('attendanceSummary').innerHTML = summaryHtml;
     document.getElementById('attendanceDetail').innerHTML  = '';
-    document.getElementById('attendanceResults').style.display = '';
-  } catch (e) {
-    alert('BigQuery error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Run';
+  } else {
+    document.getElementById('attendanceSummary').innerHTML =
+      '<p style="color:#ef4444;padding:12px 0;">Attendance error: ' + esc(attRes.reason.message) + '</p>';
   }
+
+  // ── Call Efforts ────────────────────────────────────────────────────────
+  if (callRes.status === 'fulfilled') {
+    var callRows = callRes.value;
+    function isFbC(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
+    function isCrmC(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
+    var CORD = ['Meta', 'CRM', 'Others'];
+    var cbuckets = {};
+    CORD.forEach(function(k) { cbuckets[k] = { iqls: 0, called: 0, calls: 0, connected: 0, talkTime: 0 }; });
+    callRows.forEach(function(r) {
+      var cat = isFbC(String(r[0] || '')) ? 'Meta' : isCrmC(String(r[0] || '')) ? 'CRM' : 'Others';
+      cbuckets[cat].iqls      += Number(r[1]) || 0;
+      cbuckets[cat].called    += Number(r[2]) || 0;
+      cbuckets[cat].calls     += Number(r[3]) || 0;
+      cbuckets[cat].connected += Number(r[4]) || 0;
+      cbuckets[cat].talkTime  += Number(r[5]) || 0;
+    });
+    var totIqls = 0, totCalled = 0, totCalls = 0, totConnected = 0, totTalkTime = 0;
+    CORD.forEach(function(k) {
+      totIqls += cbuckets[k].iqls; totCalled += cbuckets[k].called;
+      totCalls += cbuckets[k].calls; totConnected += cbuckets[k].connected;
+      totTalkTime += cbuckets[k].talkTime;
+    });
+    function pctC(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
+    function divC(a, b) { return b > 0 ? (a / b).toFixed(2) : '—'; }
+    function minsC(t, n) { return n > 0 && t > 0 ? (t / n).toFixed(1) + ' min' : '—'; }
+    var tileStyle = 'background:#f5f3ff;border-radius:10px;padding:14px 18px;text-align:center;';
+    var lblStyle  = 'font-size:11px;color:#6b7280;margin-bottom:4px;';
+    var valStyle  = 'font-size:22px;font-weight:700;color:#4f46e5;';
+    function tile(label, val) {
+      return '<div style="' + tileStyle + '"><div style="' + lblStyle + '">' + label + '</div><div style="' + valStyle + '">' + val + '</div></div>';
+    }
+    var callHtml = '<div class="sep" style="margin-top:16px;">Call Efforts</div>';
+    callHtml += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">' +
+      tile('Total IQLs', totIqls) +
+      tile('Avg Calls / IQL', divC(totCalls, totIqls)) +
+      tile('Coverage', pctC(totCalled, totIqls)) +
+      tile('Connectivity', pctC(totConnected, totCalls)) +
+      tile('Talk Time / IQL', minsC(totTalkTime, totIqls)) +
+      '</div>';
+    callHtml += '<div class="sep" style="margin-top:4px;">Call Breakdown by Channel</div>';
+    callHtml += '<div class="results-wrap"><table class="results"><thead><tr>' +
+      '<th>Channel</th><th>IQLs</th><th>Coverage</th><th>Avg Calls / IQL</th><th>Connectivity</th><th>Talk Time / IQL</th>' +
+      '</tr></thead><tbody>';
+    CORD.forEach(function(cat) {
+      var b = cbuckets[cat];
+      if (!b.iqls) return;
+      callHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td>' +
+        '<td>' + pctC(b.called, b.iqls) + '</td>' +
+        '<td>' + divC(b.calls, b.iqls) + '</td>' +
+        '<td>' + pctC(b.connected, b.calls) + '</td>' +
+        '<td>' + minsC(b.talkTime, b.iqls) + '</td></tr>';
+    });
+    callHtml += '<tr style="font-weight:600;"><td>Total</td><td>' + totIqls + '</td>' +
+      '<td>' + pctC(totCalled, totIqls) + '</td>' +
+      '<td>' + divC(totCalls, totIqls) + '</td>' +
+      '<td>' + pctC(totConnected, totCalls) + '</td>' +
+      '<td>' + minsC(totTalkTime, totIqls) + '</td></tr>';
+    callHtml += '</tbody></table></div>';
+    document.getElementById('callSummaryInline').innerHTML = callHtml;
+    document.getElementById('callResultsInline').style.display = '';
+  } else {
+    document.getElementById('callSummaryInline').innerHTML =
+      '<p style="color:#ef4444;padding:12px 0;">Call data error: ' + esc(callRes.reason.message) + '</p>';
+    document.getElementById('callResultsInline').style.display = '';
+  }
+
+  // ── Email Reminder ──────────────────────────────────────────────────────
+  if (emailRes.status === 'fulfilled') {
+    var emailRows = emailRes.value;
+    var emailHtml;
+    if (!emailRows.length) {
+      emailHtml = '<p style="color:#6b7280;padding:12px 0;">No email data found for this event.</p>';
+    } else {
+      function fmtRate(v) { return v !== null && v !== '' ? Number(v).toFixed(1) + '%' : '—'; }
+      function safeDiv(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
+      emailHtml = '<div class="sep" style="margin-top:16px;">Email Reminder</div>';
+      emailHtml += '<div class="results-wrap"><table class="results"><thead><tr>' +
+        '<th>Email Name</th><th>Sent</th><th>Delivered</th><th>Opened</th><th>Clicked</th>' +
+        '<th>Delivery Rate</th><th>Open Rate</th><th>Click Rate</th>' +
+        '</tr></thead><tbody>';
+      var totSent = 0, totDelivered = 0, totOpened = 0, totClicked = 0;
+      emailRows.forEach(function(r) {
+        var sent = Number(r[1]) || 0, delivered = Number(r[2]) || 0;
+        var opened = Number(r[3]) || 0, clicked = Number(r[4]) || 0;
+        totSent += sent; totDelivered += delivered; totOpened += opened; totClicked += clicked;
+        emailHtml += '<tr>' +
+          '<td>' + esc(String(r[0] || '')) + '</td>' +
+          '<td>' + sent + '</td><td>' + delivered + '</td><td>' + opened + '</td><td>' + clicked + '</td>' +
+          '<td>' + fmtRate(r[5]) + '</td><td>' + fmtRate(r[6]) + '</td><td>' + fmtRate(r[7]) + '</td></tr>';
+      });
+      emailHtml += '<tr style="font-weight:600;"><td>Total</td>' +
+        '<td>' + totSent + '</td><td>' + totDelivered + '</td><td>' + totOpened + '</td><td>' + totClicked + '</td>' +
+        '<td>' + safeDiv(totDelivered, totSent) + '</td>' +
+        '<td>' + safeDiv(totOpened, totDelivered) + '</td>' +
+        '<td>' + safeDiv(totClicked, totOpened) + '</td></tr>';
+      emailHtml += '</tbody></table></div>';
+    }
+    document.getElementById('emailSummaryInline').innerHTML = emailHtml;
+    document.getElementById('emailResultsInline').style.display = '';
+  } else {
+    document.getElementById('emailSummaryInline').innerHTML =
+      '<p style="color:#ef4444;padding:12px 0;">Email data error: ' + esc(emailRes.reason.message) + '</p>';
+    document.getElementById('emailResultsInline').style.display = '';
+  }
+
+  document.getElementById('attendanceResults').style.display = '';
+  btn.disabled = false;
+  btn.textContent = 'Run';
 }
 
 function copyAttendanceQuery() {
@@ -1859,9 +1897,9 @@ function toggleCallQuery() {
 }
 
 function generateCallQuery() {
-  var date1       = document.getElementById('callDate1').value;
-  var date2       = document.getElementById('callDate2').value;
-  var webinarType = document.getElementById('callWebinarType').value;
+  var date1       = document.getElementById('attendanceDate').value;
+  var date2       = document.getElementById('attendanceDate2').value;
+  var webinarType = document.getElementById('attendanceWebinarType').value;
 
   if (!date1) {
     alert('Please fill in the Event Date field.');
@@ -1998,97 +2036,6 @@ function generateCallQuery() {
   return query;
 }
 
-async function runCallQuery() {
-  var query = generateCallQuery();
-  if (!query) return;
-
-  var btn = document.getElementById('runCallBtn');
-  btn.disabled = true;
-  btn.textContent = 'Running…';
-  document.getElementById('callResults').style.display = 'none';
-
-  try {
-    var rows = await bqFetch(query);
-    // cols: channel(0), total_iqls(1), iqls_called(2), total_calls(3), total_connected_calls(4), total_talk_time(5)
-
-    function isFbC(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
-    function isCrmC(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
-
-    var ORDER = ['Meta', 'CRM', 'Others'];
-    var buckets = {};
-    ORDER.forEach(function(k) { buckets[k] = { iqls: 0, called: 0, calls: 0, connected: 0, talkTime: 0 }; });
-
-    rows.forEach(function(r) {
-      var ch        = String(r[0] || '');
-      var iqls      = Number(r[1]) || 0;
-      var called    = Number(r[2]) || 0;
-      var calls     = Number(r[3]) || 0;
-      var connected = Number(r[4]) || 0;
-      var talkTime  = Number(r[5]) || 0;
-      var cat = isFbC(ch) ? 'Meta' : isCrmC(ch) ? 'CRM' : 'Others';
-      buckets[cat].iqls      += iqls;
-      buckets[cat].called    += called;
-      buckets[cat].calls     += calls;
-      buckets[cat].connected += connected;
-      buckets[cat].talkTime  += talkTime;
-    });
-
-    var totIqls = 0, totCalled = 0, totCalls = 0, totConnected = 0, totTalkTime = 0;
-    ORDER.forEach(function(k) {
-      totIqls += buckets[k].iqls; totCalled += buckets[k].called;
-      totCalls += buckets[k].calls; totConnected += buckets[k].connected;
-      totTalkTime += buckets[k].talkTime;
-    });
-
-    function pctC(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
-    function divC(a, b) { return b > 0 ? (a / b).toFixed(2) : '—'; }
-    function minsC(t, n) { return n > 0 && t > 0 ? (t / n).toFixed(1) + ' min' : '—'; }
-
-    var tileStyle = 'background:#f5f3ff;border-radius:10px;padding:14px 18px;text-align:center;';
-    var lblStyle  = 'font-size:11px;color:#6b7280;margin-bottom:4px;';
-    var valStyle  = 'font-size:22px;font-weight:700;color:#4f46e5;';
-    function tile(label, val) {
-      return '<div style="' + tileStyle + '"><div style="' + lblStyle + '">' + label + '</div>' +
-             '<div style="' + valStyle + '">' + val + '</div></div>';
-    }
-
-    var html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">' +
-      tile('Total IQLs', totIqls) +
-      tile('Avg Calls / IQL', divC(totCalls, totIqls)) +
-      tile('Coverage', pctC(totCalled, totIqls)) +
-      tile('Connectivity', pctC(totConnected, totCalls)) +
-      tile('Talk Time / IQL', minsC(totTalkTime, totIqls)) +
-      '</div>';
-
-    html += '<div class="sep" style="margin-top:4px;">Call Breakdown by Channel</div>';
-    html += '<div class="results-wrap"><table class="results"><thead><tr>' +
-      '<th>Channel</th><th>IQLs</th><th>Coverage</th><th>Avg Calls / IQL</th><th>Connectivity</th><th>Talk Time / IQL</th>' +
-      '</tr></thead><tbody>';
-    ORDER.forEach(function(cat) {
-      var b = buckets[cat];
-      if (!b.iqls) return;
-      html += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td>' +
-        '<td>' + pctC(b.called, b.iqls) + '</td>' +
-        '<td>' + divC(b.calls, b.iqls) + '</td>' +
-        '<td>' + pctC(b.connected, b.calls) + '</td>' +
-        '<td>' + minsC(b.talkTime, b.iqls) + '</td></tr>';
-    });
-    html += '<tr style="font-weight:600;"><td>Total</td><td>' + totIqls + '</td>' +
-      '<td>' + pctC(totCalled, totIqls) + '</td>' +
-      '<td>' + divC(totCalls, totIqls) + '</td>' +
-      '<td>' + pctC(totConnected, totCalls) + '</td>' +
-      '<td>' + minsC(totTalkTime, totIqls) + '</td></tr>';
-    html += '</tbody></table></div>';
-
-    document.getElementById('callSummary').innerHTML = html;
-    document.getElementById('callResults').style.display = '';
-  } catch (e) {
-    alert('BigQuery error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Run';
-  }
-}
 
 function copyCallQuery() {
   generateCallQuery();
@@ -2111,9 +2058,9 @@ function toggleEmailQuery() {
 }
 
 function generateEmailQuery() {
-  var eventDate   = document.getElementById('emailEventDate').value;
-  var eventDate2  = document.getElementById('emailEventDate2').value;
-  var webinarType = document.getElementById('emailWebinarType').value;
+  var eventDate   = document.getElementById('attendanceDate').value;
+  var eventDate2  = document.getElementById('attendanceDate2').value;
+  var webinarType = document.getElementById('attendanceWebinarType').value;
 
   if (!eventDate) {
     alert('Please fill in the Event Date field.');
@@ -2243,75 +2190,6 @@ function generateEmailQuery() {
   return query;
 }
 
-async function runEmailQuery() {
-  var query = generateEmailQuery();
-  if (!query) return;
-
-  var btn = document.getElementById('runEmailBtn');
-  btn.disabled = true;
-  btn.textContent = 'Running…';
-  document.getElementById('emailResults').style.display = 'none';
-
-  try {
-    var rows = await bqFetch(query);
-    // cols: email_name(0), sent(1), delivered(2), opened(3), clicked(4),
-    //       delivery_rate(5), open_rate(6), click_rate(7)
-
-    if (!rows.length) {
-      document.getElementById('emailSummary').innerHTML =
-        '<p style="color:#6b7280;padding:12px 0;">No email data found for this event date and webinar type.</p>';
-      document.getElementById('emailResults').style.display = '';
-      return;
-    }
-
-    function fmtRate(v) { return v !== null && v !== '' ? Number(v).toFixed(1) + '%' : '—'; }
-
-    var html = '<div class="results-wrap"><table class="results"><thead><tr>' +
-      '<th>Email Name</th><th>Sent</th><th>Delivered</th><th>Opened</th><th>Clicked</th>' +
-      '<th>Delivery Rate</th><th>Open Rate</th><th>Click Rate</th>' +
-      '</tr></thead><tbody>';
-
-    var totSent = 0, totDelivered = 0, totOpened = 0, totClicked = 0;
-    rows.forEach(function(r) {
-      var sent      = Number(r[1]) || 0;
-      var delivered = Number(r[2]) || 0;
-      var opened    = Number(r[3]) || 0;
-      var clicked   = Number(r[4]) || 0;
-      totSent += sent; totDelivered += delivered; totOpened += opened; totClicked += clicked;
-      html += '<tr>' +
-        '<td>' + esc(String(r[0] || '')) + '</td>' +
-        '<td>' + sent + '</td>' +
-        '<td>' + delivered + '</td>' +
-        '<td>' + opened + '</td>' +
-        '<td>' + clicked + '</td>' +
-        '<td>' + fmtRate(r[5]) + '</td>' +
-        '<td>' + fmtRate(r[6]) + '</td>' +
-        '<td>' + fmtRate(r[7]) + '</td>' +
-        '</tr>';
-    });
-
-    function safeDiv(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
-    html += '<tr style="font-weight:600;">' +
-      '<td>Total</td>' +
-      '<td>' + totSent + '</td>' +
-      '<td>' + totDelivered + '</td>' +
-      '<td>' + totOpened + '</td>' +
-      '<td>' + totClicked + '</td>' +
-      '<td>' + safeDiv(totDelivered, totSent) + '</td>' +
-      '<td>' + safeDiv(totOpened, totDelivered) + '</td>' +
-      '<td>' + safeDiv(totClicked, totOpened) + '</td>' +
-      '</tr>';
-    html += '</tbody></table></div>';
-
-    document.getElementById('emailSummary').innerHTML = html;
-    document.getElementById('emailResults').style.display = '';
-  } catch (e) {
-    alert('BigQuery error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Run';
-  }
-}
 
 function copyEmailQuery() {
   generateEmailQuery();
