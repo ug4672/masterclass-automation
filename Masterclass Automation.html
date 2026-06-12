@@ -1493,14 +1493,12 @@ async function runQuery() {
       html += '</tbody></table></div>';
     }
 
-    // Lead Quality Metrics (India only)
+    // Lead Quality Metrics
     var qualityHtml = '';
-    if (!isUS) {
-      var qQuery = generateQualityQuery();
-      if (qQuery) {
-        var qRows = await bqFetch(qQuery, _queryController.signal);
-        qualityHtml = renderQualityMetrics(qRows);
-      }
+    var qQuery = generateQualityQuery();
+    if (qQuery) {
+      var qRows = await bqFetch(qQuery, _queryController.signal);
+      qualityHtml = renderQualityMetrics(qRows);
     }
 
     // Store snapshot data for Slack
@@ -1623,8 +1621,8 @@ function generateQualityQuery() {
     ? "'" + date1 + "', '" + date2 + "'"
     : "'" + date1 + "'";
 
-  return [
-    'SELECT',
+  var isUS = webinarType === 'MASTERCLASS_EVENT_AI';
+  var roleCaseLines = [
     '  CASE',
     "    WHEN role_domain IN ('Data Science','Data Engineer','Machine Learning / AI','ML / AI','Data Engineer / Data Scientist','Business Intelligence Analyst','Data Analyst / Business Analyst','Data','Machine Learning/DeepLearning','Data Engineering') THEN 'Data'",
     "    WHEN role_domain IS NULL OR role_domain IN ('No / Little coding experience','No Coding Experience','None of the above') THEN 'Null'",
@@ -1634,6 +1632,8 @@ function generateQualityQuery() {
     "    WHEN role_domain IN ('Core Engineering') THEN 'Core Engineering'",
     "    ELSE 'Other'",
     '  END AS Category,',
+  ];
+  var workExCaseLines = [
     '  CASE',
     "    WHEN work_ex IN ('0-2','0-5','3-4') THEN 'a: 0-5'",
     "    WHEN work_ex IN ('5-8','5-10')      THEN 'b: 5-10'",
@@ -1642,19 +1642,38 @@ function generateQualityQuery() {
     "    WHEN work_ex = '20+'               THEN 'e: 20+'",
     "    ELSE 'f: Others'",
     '  END AS Work_Ex_Category,',
-    '  COUNT(*) AS cnt',
-    '  FROM (',
-    '    SELECT',
-    '      role_domain, work_ex,',
-    '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
-    '      dupe_flag, gql_flag, webinar_type, dupe_logic,',
-    '      ROW_NUMBER() OVER (',
-    '        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
-    '        ORDER BY formatted_date ASC',
-    '      ) AS rnk',
-    '    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
-    '    WHERE dupe_logic = 1',
-    '  )',
+  ];
+
+  var innerQuery = isUS ? [
+    '  SELECT',
+    '    role_domain, work_ex,',
+    '    DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,',
+    '    dupe_flag, gql_flag, dupe_logic,',
+    '    ROW_NUMBER() OVER (',
+    '      PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")',
+    '      ORDER BY formatted_date ASC',
+    '    ) AS rnk',
+    '  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`',
+    '  WHERE dupe_logic = 1 AND webinar_type = "MASTERCLASS_EVENT_AI"',
+  ] : [
+    '  SELECT',
+    '    role_domain, work_ex,',
+    '    DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
+    '    dupe_flag, gql_flag, webinar_type, dupe_logic,',
+    '    ROW_NUMBER() OVER (',
+    '      PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")',
+    '      ORDER BY formatted_date ASC',
+    '    ) AS rnk',
+    '  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`',
+    '  WHERE dupe_logic = 1',
+  ];
+
+  var outerFilters = isUS ? [
+    '  WHERE rnk = 1',
+    '    AND web_scheduled_date IN (' + dateLiteral + ')',
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+  ] : [
     '  WHERE rnk = 1',
     '    AND web_scheduled_date IN (' + dateLiteral + ')',
     "    AND webinar_type = '" + webinarType + "'",
@@ -1662,9 +1681,15 @@ function generateQualityQuery() {
     '    AND gql_flag = 0',
     "    AND LOWER(work_ex) NOT LIKE '%student%'",
     "    AND work_ex NOT IN ('0-2', '3-4')",
+  ];
+
+  return ['SELECT'].concat(roleCaseLines).concat(workExCaseLines).concat([
+    '  COUNT(*) AS cnt',
+    'FROM (',
+  ]).concat(innerQuery).concat([')']).concat(outerFilters).concat([
     'GROUP BY 1, 2',
     'ORDER BY 1, 2',
-  ].join('\n');
+  ]).join('\n');
 }
 
 function renderQualityMetrics(rows) {
