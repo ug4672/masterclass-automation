@@ -16,7 +16,7 @@ PORT = int(os.environ.get('PORT', 8080))
 SESSION_SECRET  = os.environ.get('SESSION_SECRET', 'dev-only-change-in-prod')
 ALLOWED_DOMAIN  = 'interviewkickstart.com'
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
-SESSION_TTL     = 28800  # 8 hours
+SESSION_TTL     = 604800  # 7 days
 
 def _make_session(email):
     ts  = str(int(time.time()))
