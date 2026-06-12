@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -333,13 +334,29 @@ table.results tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ── Login overlay ────────────────────────────────────────────────────────── -->
+<div id="loginOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:380px;width:90%;">
+    <div style="width:52px;height:52px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px;">🎓</div>
+    <h2 style="font-size:19px;font-weight:700;color:#111827;margin-bottom:8px;">IK Masterclass Launch</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.5;">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" style="display:none;color:#dc2626;font-size:12.5px;margin-top:16px;line-height:1.4;"></p>
+  </div>
+</div>
+
+<div class="wrap" id="appWrap" style="display:none;">
 
   <div class="page-hd">
     <div class="page-hd-icon">🎓</div>
-    <div>
+    <div style="flex:1;">
       <h1>IK Masterclass Launch</h1>
       <p>Create Jira tickets, send Slack notifications, and track leads.</p>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div id="userEmail" style="font-size:11.5px;color:#6b7280;margin-bottom:5px;"></div>
+      <button class="btn btn-secondary" onclick="signOut()" style="padding:5px 13px;font-size:12px;">Sign out</button>
     </div>
   </div>
 
@@ -2195,6 +2212,76 @@ function copyEmailQuery() {
   btn.textContent = 'Copied!';
   setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
 }
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+var GOOGLE_CLIENT_ID = '1016538215063-i20h0j7f5a5g42ktql1l5cs5q429c8vb.apps.googleusercontent.com';
+
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('userEmail').textContent = email;
+}
+
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+
+async function checkAuth() {
+  try {
+    var res = await fetch('/auth/check');
+    if (res.ok) {
+      var data = await res.json();
+      showApp(data.email);
+    } else {
+      showLogin();
+    }
+  } catch (e) {
+    showLogin();
+  }
+}
+
+async function handleGoogleSignIn(response) {
+  var errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  try {
+    var res = await fetch('/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential }),
+    });
+    var data = await res.json();
+    if (res.ok) {
+      showApp(data.email);
+    } else {
+      errEl.textContent = data.error || 'Sign-in failed. Please try again.';
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = 'Sign-in failed. Please try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+async function signOut() {
+  await fetch('/auth/logout', { method: 'POST' });
+  showLogin();
+}
+
+window.onGoogleLibraryLoad = function() {
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === '__GOOGLE_CLIENT_ID__') return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleSignIn,
+    hd: 'interviewkickstart.com',
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('googleSignInBtn'),
+    { theme: 'outline', size: 'large', width: 280 }
+  );
+};
+
+checkAuth();
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 loadConfig();

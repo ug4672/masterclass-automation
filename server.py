@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Local proxy server — serves the HTML and forwards API calls to Jira/Slack/BigQuery."""
 import http.server, urllib.request, urllib.parse, urllib.error, json, os, ssl, decimal, datetime
-import threading, time
+import threading, time, hmac, hashlib
 
 GCS_BUCKET = os.environ.get('GCS_BUCKET', '')
 GCS_CONFIG_KEY = 'snapshot_config.json'
@@ -12,6 +12,40 @@ SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
 PORT = int(os.environ.get('PORT', 8080))
+
+SESSION_SECRET  = os.environ.get('SESSION_SECRET', 'dev-only-change-in-prod')
+ALLOWED_DOMAIN  = 'interviewkickstart.com'
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+SESSION_TTL     = 28800  # 8 hours
+
+def _make_session(email):
+    ts  = str(int(time.time()))
+    msg = email + '|' + ts
+    sig = hmac.new(SESSION_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+    return email + '|' + ts + '|' + sig
+
+def _verify_session(token):
+    try:
+        parts = token.split('|')
+        if len(parts) != 3:
+            return None
+        email, ts, sig = parts
+        msg      = email + '|' + ts
+        expected = hmac.new(SESSION_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        if int(time.time()) - int(ts) > SESSION_TTL:
+            return None
+        return email
+    except Exception:
+        return None
+
+def _session_email(handler):
+    for part in handler.headers.get('Cookie', '').split(';'):
+        k, _, v = part.strip().partition('=')
+        if k.strip() == 'ik_session':
+            return _verify_session(v.strip())
+    return None
 
 def json_serial(obj):
     if isinstance(obj, (datetime.date, datetime.datetime)):
@@ -26,15 +60,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._cors()
         self.end_headers()
 
+    def do_GET(self):
+        if self.path == '/auth/check':
+            email = _session_email(self)
+            if email:
+                self._json_response(200, {'ok': True, 'email': email})
+            else:
+                self._json_response(401, {'error': 'Not authenticated'})
+            return
+        super().do_GET()
+
     def do_POST(self):
+        # Public endpoints — no session required
+        if self.path == '/auth/verify':
+            self._auth_verify()
+            return
+        if self.path == '/auth/logout':
+            self._auth_logout()
+            return
+        if self.path == '/run-snapshot':  # called by Cloud Scheduler, no browser session
+            self._run_snapshot()
+            return
+        # All other endpoints require a valid session
+        if not _session_email(self):
+            self._json_response(401, {'error': 'Not authenticated'})
+            return
         if self.path.startswith('/proxy'):
             self._proxy()
         elif self.path == '/bigquery':
             self._bigquery()
         elif self.path == '/save-snapshot-config':
             self._save_snapshot_config()
-        elif self.path == '/run-snapshot':
-            self._run_snapshot()
         else:
             self.send_response(404)
             self.end_headers()
@@ -130,6 +186,41 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(200, {'ok': True})
         except Exception as e:
             self._json_response(500, {'error': str(e)})
+
+    def _auth_verify(self):
+        length = int(self.headers.get('Content-Length', 0))
+        body   = json.loads(self.rfile.read(length)) if length else {}
+        credential = body.get('credential', '')
+        if not GOOGLE_CLIENT_ID:
+            self._json_response(500, {'error': 'GOOGLE_CLIENT_ID not configured on server.'})
+            return
+        try:
+            from google.oauth2 import id_token
+            from google.auth.transport import requests as grequests
+            idinfo = id_token.verify_oauth2_token(credential, grequests.Request(), GOOGLE_CLIENT_ID)
+            email  = idinfo.get('email', '')
+            hd     = idinfo.get('hd', '')
+            if not (hd == ALLOWED_DOMAIN or email.endswith('@' + ALLOWED_DOMAIN)):
+                self._json_response(403, {'error': 'Only @interviewkickstart.com accounts are allowed.'})
+                return
+            token = _make_session(email)
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Set-Cookie',
+                'ik_session=' + token + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + str(SESSION_TTL))
+            self.end_headers()
+            self.wfile.write(json.dumps({'ok': True, 'email': email}).encode())
+        except Exception as e:
+            self._json_response(403, {'error': str(e)})
+
+    def _auth_logout(self):
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Set-Cookie', 'ik_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0')
+        self.end_headers()
+        self.wfile.write(json.dumps({'ok': True}).encode())
 
     def log_message(self, fmt, *args):
         print(f"  {args[0]} {args[1]}")
