@@ -1,0 +1,15 @@
+.gcloudignore
+.git
+.gitignore
+projects/
+gcloud auth applica/
+Zoom/
+masterclass-launch/
+split-simple/
+Masterclass Automation/
+snapshot_config.json
+Terminal Saved Output.txt
+shopify test.txt
+mutual fund scraper.py
+test2.txt
+.DS_Store
