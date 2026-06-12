@@ -1233,35 +1233,59 @@ function generateQuery() {
     ? '`ik-marketing-data.Google_Sheets.Combined_Spend_data`'
     : '`ik-marketing-data.India_Leads.Combined_India_Spend`';
 
-  var query = leadsCte.concat([
+  // US: aggregate spend at date level to avoid multiple campaign_name rows matching
+  // the same utm_campaign via LIKE, which inflates SUM(total_spend).
+  // India: keep per-campaign LIKE join (works correctly with India spend table).
+  var spendsCte = isUS ? [
     'spends AS (',
     '  SELECT',
-    '    DATE(campaign_date, ' + (isUS ? '"America/Los_Angeles"' : '"Asia/Kolkata"') + ') AS spend_date,',
+    '    DATE(campaign_date, "America/Los_Angeles") AS spend_date,',
+    '    SUM(cost_usd_) AS total_spend',
+    '  FROM `ik-marketing-data.Google_Sheets.Combined_Spend_data`',
+    '  WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")',
+    '    AND (LOWER(campaign_name) LIKE "%meta%" OR LOWER(campaign_name) LIKE "%facebook%" OR LOWER(campaign_name) LIKE "%l10x%")',
+    '  GROUP BY spend_date',
+    ')',
+  ] : [
+    'spends AS (',
+    '  SELECT',
+    '    DATE(campaign_date, "Asia/Kolkata") AS spend_date,',
     '    campaign_name,',
-    '    SUM(' + spendCost + ') AS total_spend',
-    '  FROM ' + spendTable,
+    '    SUM(cost) AS total_spend',
+    '  FROM `ik-marketing-data.India_Leads.Combined_India_Spend`',
     '  WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")',
     '    AND (LOWER(campaign_name) LIKE "%meta%" OR LOWER(campaign_name) LIKE "%facebook%" OR LOWER(campaign_name) LIKE "%l10x%")',
     '  GROUP BY spend_date, campaign_name',
     ')',
+  ];
+
+  var outerSelect = isUS ? [
     'SELECT',
     '  l.registration_date,',
     '  l.channel,',
     '  l.utm_campaign,',
     '  l.total_leads,',
-    isUS ? '  l.lead_type,' : '',
+    '  l.lead_type,',
+    '  s.total_spend',
+    'FROM leads l',
+    'LEFT JOIN spends s ON l.registration_date = s.spend_date',
+    'ORDER BY l.lead_type, l.registration_date, l.channel, l.utm_campaign',
+  ] : [
+    'SELECT',
+    '  l.registration_date,',
+    '  l.channel,',
+    '  l.utm_campaign,',
+    '  l.total_leads,',
     '  SUM(s.total_spend) AS total_spend',
     'FROM leads l',
     'LEFT JOIN spends s',
     '  ON l.registration_date = s.spend_date',
     '  AND LOWER(l.utm_campaign) LIKE CONCAT("%", LOWER(s.campaign_name), "%")',
-    isUS
-      ? 'GROUP BY l.registration_date, l.channel, l.utm_campaign, l.total_leads, l.lead_type'
-      : 'GROUP BY l.registration_date, l.channel, l.utm_campaign, l.total_leads',
-    isUS
-      ? 'ORDER BY l.lead_type, l.registration_date, l.channel, l.utm_campaign'
-      : 'ORDER BY l.registration_date, l.channel, l.utm_campaign',
-  ]).join('\n');
+    'GROUP BY l.registration_date, l.channel, l.utm_campaign, l.total_leads',
+    'ORDER BY l.registration_date, l.channel, l.utm_campaign',
+  ];
+
+  var query = leadsCte.concat(spendsCte).concat(outerSelect).join('\n');
 
   document.getElementById('queryText').value = query;
 }
@@ -1359,15 +1383,16 @@ async function runQuery() {
       var leadType = isUS ? String(row[typeIdx] || 'reg') : 'india';
 
       // Only track spends from reg rows (avoid double-counting)
+      // US: dedup by date only — SQL returns one total_spend per date (date-level aggregation)
+      // India: dedup by date+campaign — SQL returns per-campaign spend via LIKE join
       if (!isUS || leadType === 'reg') {
-        var spendKey = date + '|' + camp;
+        var spendKey = isUS ? date : (date + '|' + camp);
         if (spend && !seenSpend[spendKey]) {
           seenSpend[spendKey] = true;
           SPENDS[date] = (SPENDS[date] || 0) + spend;
-          if (!campSpends[camp]) campSpends[camp] = {};
-          campSpends[camp][date] = (campSpends[camp][date] || 0) + spend;
-          if (isUS && chKey(ch) === 'yt') {
-            ytSpends[date] = (ytSpends[date] || 0) + spend;
+          if (!isUS) {
+            if (!campSpends[camp]) campSpends[camp] = {};
+            campSpends[camp][date] = (campSpends[camp][date] || 0) + spend;
           }
         }
       }
@@ -1441,8 +1466,8 @@ async function runQuery() {
 
     var usTotals, usGqlTotals;
     if (isUS) {
-      var regResult = buildUsTable(usBuckets, allDates, ytSpends, 'Daily Registration Summary', 'CPL');
-      var gqlResult = buildUsTable(usGqlBuckets, allGqlDates, ytSpends, 'Daily GQL Summary', 'CPGQL');
+      var regResult = buildUsTable(usBuckets, allDates, SPENDS, 'Daily Registration Summary', 'CPL');
+      var gqlResult = buildUsTable(usGqlBuckets, allGqlDates, SPENDS, 'Daily GQL Summary', 'CPGQL');
       usTotals    = regResult.totals;
       usGqlTotals = gqlResult.totals;
       html = regResult.html + gqlResult.html;
