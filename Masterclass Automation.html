@@ -198,6 +198,12 @@ textarea { resize: vertical; }
   box-shadow: var(--shadow-sm);
 }
 .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+}
+.btn-danger:hover { background: #b91c1c; }
 
 .form-foot { display: flex; justify-content: flex-end; margin-top: 20px; }
 
@@ -1260,19 +1266,30 @@ function generateQuery() {
   document.getElementById('queryText').value = query;
 }
 
-async function bqFetch(query) {
+async function bqFetch(query, signal) {
   var keyFile = (document.getElementById('bqKeyFile') || {}).value || '';
   var res = await fetch('/bigquery', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: query, keyFile: keyFile.trim(), project: 'ik-marketing-data' }),
+    signal: signal || null,
   });
   var json = await res.json();
   if (!res.ok) throw new Error(json.error || 'HTTP ' + res.status);
   return json.rows;
 }
 
+var _queryController = null;
+
 async function runQuery() {
+  var btn = document.getElementById('runQueryBtn');
+
+  // Stop button clicked — abort running query
+  if (_queryController) {
+    _queryController.abort();
+    return;
+  }
+
   generateQuery();
   var query = document.getElementById('queryText').value;
   if (!query) return;
@@ -1294,13 +1311,13 @@ async function runQuery() {
     }),
   });
 
-  var btn = document.getElementById('runQueryBtn');
-  btn.disabled = true;
-  btn.textContent = 'Running…';
+  _queryController = new AbortController();
+  btn.textContent = '■ Stop';
+  btn.classList.replace('btn-primary', 'btn-danger');
   document.getElementById('queryResults').style.display = 'none';
 
   try {
-    var rows = await bqFetch(query);
+    var rows = await bqFetch(query, _queryController.signal);
     // rows: [registration_date, channel, utm_campaign, total_leads, total_spend]
 
     var isUS = document.getElementById('leadsWebinarType').value === 'MASTERCLASS_EVENT_AI';
@@ -1455,7 +1472,7 @@ async function runQuery() {
     if (!isUS) {
       var qQuery = generateQualityQuery();
       if (qQuery) {
-        var qRows = await bqFetch(qQuery);
+        var qRows = await bqFetch(qQuery, _queryController.signal);
         qualityHtml = renderQualityMetrics(qRows);
       }
     }
@@ -1472,10 +1489,12 @@ async function runQuery() {
 
     document.getElementById('queryResults').style.display = '';
   } catch (e) {
-    alert('BigQuery error: ' + e.message);
+    if (e.name !== 'AbortError') alert('BigQuery error: ' + e.message);
   } finally {
+    _queryController = null;
+    btn.textContent = 'Run';
+    btn.classList.replace('btn-danger', 'btn-primary');
     btn.disabled = false;
-    btn.textContent = 'Run in BigQuery';
   }
 }
 
@@ -1726,21 +1745,32 @@ function generateAttendanceQuery() {
   return query;
 }
 
+var _attendanceController = null;
+
 async function runAttendanceQuery() {
+  var btn = document.getElementById('runAttendanceBtn');
+
+  // Stop button clicked — abort running query
+  if (_attendanceController) {
+    _attendanceController.abort();
+    return;
+  }
+
   var query = generateAttendanceQuery();
   if (!query) return;
   var callQ  = generateCallQuery();
   var emailQ = generateEmailQuery();
 
-  var btn = document.getElementById('runAttendanceBtn');
-  btn.disabled = true;
-  btn.textContent = 'Running…';
+  _attendanceController = new AbortController();
+  var sig = _attendanceController.signal;
+  btn.textContent = '■ Stop';
+  btn.classList.replace('btn-primary', 'btn-danger');
   document.getElementById('attendanceResults').style.display = 'none';
 
   var [attRes, callRes, emailRes] = await Promise.allSettled([
-    bqFetch(query),
-    callQ  ? bqFetch(callQ)  : Promise.reject(new Error('no call query')),
-    emailQ ? bqFetch(emailQ) : Promise.reject(new Error('no email query'))
+    bqFetch(query, sig),
+    callQ  ? bqFetch(callQ, sig)  : Promise.reject(new Error('no call query')),
+    emailQ ? bqFetch(emailQ, sig) : Promise.reject(new Error('no email query'))
   ]);
 
   // ── Attendance ──────────────────────────────────────────────────────────
@@ -1884,8 +1914,10 @@ async function runAttendanceQuery() {
   }
 
   document.getElementById('attendanceResults').style.display = '';
-  btn.disabled = false;
+  _attendanceController = null;
   btn.textContent = 'Run';
+  btn.classList.replace('btn-danger', 'btn-primary');
+  btn.disabled = false;
 }
 
 function copyAttendanceQuery() {
