@@ -666,6 +666,7 @@ table.results tr:last-child td { border-bottom: none; }
         <div class="field col2">
           <label>Webinar Type <span class="req">*</span></label>
           <select id="attendanceWebinarType">
+            <option value="MASTERCLASS_EVENT_AI">MASTERCLASS_EVENT_AI (US)</option>
             <option value="MASTERCLASS_INDIA">MASTERCLASS_INDIA</option>
             <option value="MASTERCLASS_INDIA_3">MASTERCLASS_INDIA_3</option>
             <option value="MASTERCLASS_INDIA_5">MASTERCLASS_INDIA_5</option>
@@ -1723,22 +1724,47 @@ function generateAttendanceQuery() {
     ? "'" + date1 + "', '" + date2 + "'"
     : "'" + date1 + "'";
 
-  var query = [
-    'WITH attendance AS (',
-    '  SELECT CAST(hubspot_id AS INT64) AS hubspot_id',
-    '  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`',
-    '  WHERE DATE(webinar_start_time, "Asia/Kolkata") IN (' + dateLiteral + ')',
-    '    AND hubspot_id IS NOT NULL',
-    '  GROUP BY hubspot_id',
-    '),',
+  var isUS = webinarType === 'MASTERCLASS_EVENT_AI';
+  var tz   = isUS ? '"America/Los_Angeles"' : '"Asia/Kolkata"';
+
+  var leadsCte = isUS ? [
+    'leads AS (',
+    '  SELECT',
+    '    CAST(leads_hubspot_id AS INT64) AS hubspot_id,',
+    '    CASE',
+    '      WHEN LOWER(utm_campaign) LIKE "%l10x_social%" THEN "Social"',
+    '      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"__l10x__") THEN "L10X Base"',
+    '      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"youtube_l10x") THEN "YT"',
+    '      WHEN LOWER(utm_campaign) LIKE "%nibucket%" THEN "NI Base"',
+    '      WHEN LOWER(utm_campaign) LIKE "%l10x-bot%" THEN "Bot Calling"',
+    '      ELSE "Organic & Other"',
+    '    END AS channel',
+    '  FROM (',
+    '    SELECT',
+    '      leads_hubspot_id, utm_campaign, formatted_date,',
+    '      DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,',
+    '      dupe_flag, gql_flag, dupe_logic,',
+    '      ROW_NUMBER() OVER (',
+    '        PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")',
+    '        ORDER BY formatted_date ASC',
+    '      ) AS rnk',
+    '    FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`',
+    '    WHERE dupe_logic = 1 AND webinar_type = "MASTERCLASS_EVENT_AI"',
+    '  )',
+    '  WHERE rnk = 1',
+    '    AND web_scheduled_date IN (' + dateLiteral + ')',
+    '    AND dupe_flag = 0',
+    '    AND gql_flag = 0',
+    '  QUALIFY ROW_NUMBER() OVER (PARTITION BY leads_hubspot_id ORDER BY formatted_date ASC) = 1',
+    ')',
+  ] : [
     'leads AS (',
     '  SELECT',
     '    CAST(hubspot_ID AS INT64) AS hubspot_id,',
-    '    channel,',
-    '    utm_campaign',
+    '    channel',
     '  FROM (',
     '    SELECT',
-    '      hubspot_ID, channel, utm_campaign, formatted_date,',
+    '      hubspot_ID, channel, formatted_date,',
     '      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,',
     '      dupe_flag, gql_flag, work_ex, webinar_type, dupe_logic,',
     '      ROW_NUMBER() OVER (',
@@ -1757,6 +1783,17 @@ function generateAttendanceQuery() {
     "    AND work_ex NOT IN ('0-2', '3-4')",
     '  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1',
     ')',
+  ];
+
+  var query = [
+    'WITH attendance AS (',
+    '  SELECT CAST(hubspot_id AS INT64) AS hubspot_id',
+    '  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`',
+    '  WHERE DATE(webinar_start_time, ' + tz + ') IN (' + dateLiteral + ')',
+    '    AND hubspot_id IS NOT NULL',
+    '  GROUP BY hubspot_id',
+    '),',
+  ].concat(leadsCte).concat([
     'SELECT',
     '  l.channel,',
     '  l.hubspot_id  AS lead_id,',
@@ -1764,7 +1801,7 @@ function generateAttendanceQuery() {
     'FROM leads l',
     'LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id',
     'ORDER BY l.channel',
-  ].join('\n');
+  ]).join('\n');
 
   document.getElementById('attendanceQueryText').value = query;
   return query;
@@ -1783,8 +1820,9 @@ async function runAttendanceQuery() {
 
   var query = generateAttendanceQuery();
   if (!query) return;
-  var callQ  = generateCallQuery();
-  var emailQ = generateEmailQuery();
+  var isUSAtt = document.getElementById('attendanceWebinarType').value === 'MASTERCLASS_EVENT_AI';
+  var callQ  = isUSAtt ? null : generateCallQuery();
+  var emailQ = isUSAtt ? null : generateEmailQuery();
 
   _attendanceController = new AbortController();
   var sig = _attendanceController.signal;
@@ -1801,29 +1839,49 @@ async function runAttendanceQuery() {
   // ── Attendance ──────────────────────────────────────────────────────────
   if (attRes.status === 'fulfilled') {
     var rows = attRes.value;
-    function isFb(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
-    function isCrm(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
-    var ORDER   = ['Meta', 'CRM', 'Others'];
-    var buckets = {};
-    ORDER.forEach(function(k) { buckets[k] = { iqls: 0, attendees: 0 }; });
-    rows.forEach(function(r) {
-      var ch  = String(r[0] || '');
-      var cat = isFb(ch) ? 'Meta' : isCrm(ch) ? 'CRM' : 'Others';
-      buckets[cat].iqls++;
-      if (r[2] !== null && r[2] !== '') buckets[cat].attendees++;
-    });
     function pct(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '—'; }
     var summaryHtml = '<div class="sep" style="margin-top:4px;">Attendance by Channel</div>';
     summaryHtml += '<div class="results-wrap"><table class="results"><thead><tr>' +
-      '<th>Channel</th><th>IQLs</th><th>Attendees</th><th>%</th>' +
+      '<th>Channel</th><th>Regs</th><th>Attendees</th><th>%</th>' +
       '</tr></thead><tbody>';
     var totalIqls = 0, totalAttendees = 0;
-    ORDER.forEach(function(cat) {
-      var b = buckets[cat];
-      if (!b.iqls && !b.attendees) return;
-      totalIqls += b.iqls; totalAttendees += b.attendees;
-      summaryHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td><td>' + b.attendees + '</td><td>' + pct(b.attendees, b.iqls) + '</td></tr>';
-    });
+
+    if (isUSAtt) {
+      var US_ATT_ORDER = ['YT', 'L10X Base', 'Bot Calling', 'NI Base', 'Social', 'Organic & Other'];
+      var usBuckets = {};
+      US_ATT_ORDER.forEach(function(k) { usBuckets[k] = { iqls: 0, attendees: 0 }; });
+      rows.forEach(function(r) {
+        var ch = String(r[0] || 'Organic & Other');
+        if (!usBuckets[ch]) usBuckets[ch] = { iqls: 0, attendees: 0 };
+        usBuckets[ch].iqls++;
+        if (r[2] !== null && r[2] !== '') usBuckets[ch].attendees++;
+      });
+      US_ATT_ORDER.forEach(function(cat) {
+        var b = usBuckets[cat];
+        if (!b || (!b.iqls && !b.attendees)) return;
+        totalIqls += b.iqls; totalAttendees += b.attendees;
+        summaryHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td><td>' + b.attendees + '</td><td>' + pct(b.attendees, b.iqls) + '</td></tr>';
+      });
+    } else {
+      function isFb(ch)  { return /facebook|fb|\bsocial\b|meta/i.test(ch || ''); }
+      function isCrm(ch) { return /email|whatsapp|whats.?app|sms|bot.?calling/i.test(ch || ''); }
+      var ORDER   = ['Meta', 'CRM', 'Others'];
+      var buckets = {};
+      ORDER.forEach(function(k) { buckets[k] = { iqls: 0, attendees: 0 }; });
+      rows.forEach(function(r) {
+        var ch  = String(r[0] || '');
+        var cat = isFb(ch) ? 'Meta' : isCrm(ch) ? 'CRM' : 'Others';
+        buckets[cat].iqls++;
+        if (r[2] !== null && r[2] !== '') buckets[cat].attendees++;
+      });
+      ORDER.forEach(function(cat) {
+        var b = buckets[cat];
+        if (!b.iqls && !b.attendees) return;
+        totalIqls += b.iqls; totalAttendees += b.attendees;
+        summaryHtml += '<tr><td>' + cat + '</td><td>' + b.iqls + '</td><td>' + b.attendees + '</td><td>' + pct(b.attendees, b.iqls) + '</td></tr>';
+      });
+    }
+
     summaryHtml += '<tr style="font-weight:600;"><td>Total</td><td>' + totalIqls + '</td><td>' + totalAttendees + '</td><td>' + pct(totalAttendees, totalIqls) + '</td></tr>';
     summaryHtml += '</tbody></table></div>';
     document.getElementById('attendanceSummary').innerHTML = summaryHtml;
@@ -1894,8 +1952,9 @@ async function runAttendanceQuery() {
     document.getElementById('callSummaryInline').innerHTML = callHtml;
     document.getElementById('callResultsInline').style.display = '';
   } else {
-    document.getElementById('callSummaryInline').innerHTML =
-      '<p style="color:#ef4444;padding:12px 0;">Call data error: ' + esc(callRes.reason.message) + '</p>';
+    document.getElementById('callSummaryInline').innerHTML = isUSAtt
+      ? '<p style="color:#6b7280;padding:12px 0;">Call Efforts not available for US events.</p>'
+      : '<p style="color:#ef4444;padding:12px 0;">Call data error: ' + esc(callRes.reason.message) + '</p>';
     document.getElementById('callResultsInline').style.display = '';
   }
 
@@ -1933,8 +1992,9 @@ async function runAttendanceQuery() {
     document.getElementById('emailSummaryInline').innerHTML = emailHtml;
     document.getElementById('emailResultsInline').style.display = '';
   } else {
-    document.getElementById('emailSummaryInline').innerHTML =
-      '<p style="color:#ef4444;padding:12px 0;">Email data error: ' + esc(emailRes.reason.message) + '</p>';
+    document.getElementById('emailSummaryInline').innerHTML = isUSAtt
+      ? '<p style="color:#6b7280;padding:12px 0;">Email Reminder not available for US events.</p>'
+      : '<p style="color:#ef4444;padding:12px 0;">Email data error: ' + esc(emailRes.reason.message) + '</p>';
     document.getElementById('emailResultsInline').style.display = '';
   }
 
