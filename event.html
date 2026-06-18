@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event — Masterclass Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --border: #e7e5e4;
+      --border-strong: #d6d3d1;
+      --text: #18181b;
+      --text-2: #57534e;
+      --topic-ai: 217, 91%, 55%;
+      --topic-system: 25, 95%, 50%;
+      --topic-behavioral: 158, 64%, 42%;
+      --topic-data: 270, 75%, 58%;
+      --topic-ml: 330, 76%, 55%;
+      --topic-distributed: 199, 89%, 48%;
+    }
+    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: var(--bg); color: var(--text); }
+    .topic-glow { background: radial-gradient(60% 80% at 100% 0%, hsla(var(--topic), .07) 0%, transparent 60%); }
+    .topic-strip { background: linear-gradient(90deg, hsla(var(--topic), 1) 0%, hsla(var(--topic), 0) 100%); }
+    .topic-chip { color: hsl(var(--topic)); background: hsla(var(--topic), .08); }
+    .topic-fg { color: hsl(var(--topic)); }
+    .topic-fill { background: hsl(var(--topic)); }
+    .card { background: var(--surface); border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .fade-up { opacity: 0; transform: translateY(8px); animation: fadeUp .5s ease-out forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .progress-track { background: #f4f4f5; }
+    .timeline-line {
+      background-image: linear-gradient(to bottom, var(--border) 50%, transparent 0);
+      background-size: 1px 6px; background-repeat: repeat-y; background-position: 7px 0;
+    }
+    .link-row:hover { background: #f7f7f6; }
+    .funnel-row { display: grid; grid-template-columns: 110px 1fr 64px 56px; align-items: center; gap: 12px; }
+    .funnel-bar { height: 22px; border-radius: 6px; background: var(--border); position: relative; overflow: hidden; }
+    .funnel-bar > span { display: block; height: 100%; border-radius: 6px; }
+  </style>
+</head>
+<body class="min-h-screen" id="bodyEl">
+
+<!-- ─── Login overlay ─────────────────────────────────────────────────────── -->
+<div id="loginOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:380px;width:90%;">
+    <div style="width:52px;height:52px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 20px;">IK</div>
+    <h2 style="font-size:19px;font-weight:700;color:#111827;margin-bottom:8px;">Masterclass Hub</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.5;">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" style="display:none;color:#dc2626;font-size:12.5px;margin-top:16px;line-height:1.4;"></p>
+  </div>
+</div>
+
+<div id="appWrap" style="display:none;">
+
+  <!-- ─── Top Bar ──────────────────────────────────────────────────────────── -->
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
+        <div>
+          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-2 text-sm">
+        <a href="/hub.html" class="text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Hub
+        </a>
+        <span class="text-zinc-300">/</span>
+        <span id="breadcrumbTitle" class="text-zinc-900 font-medium truncate max-w-[280px]">…</span>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn" onclick="signOut()">UG</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainArea" class="max-w-7xl mx-auto px-6 pt-8 pb-12">
+    <div id="loadingState" class="text-center text-zinc-400 text-sm p-12">Loading event…</div>
+  </main>
+
+  <footer class="border-t border-zinc-200/80 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+      <div>© 2026 Interview Kickstart · Internal use</div>
+      <div><a href="/hub.html" class="hover:text-zinc-900">Back to Hub</a></div>
+    </div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+const TOPIC_VAR = {
+  ai_agents: '--topic-ai', system_design: '--topic-system', behavioral: '--topic-behavioral',
+  data: '--topic-data', ml: '--topic-ml', distributed: '--topic-distributed',
+};
+const TOPIC_LABEL = {
+  ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
+  data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
+};
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+  load();
+}
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+async function checkAuth() {
+  try { const r = await fetch('/auth/check'); if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin(); }
+  catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  const err = document.getElementById('loginError'); err.style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+}
+async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+};
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '—'; }
+function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'Asia/Kolkata' }) + ' IST' : '—'; }
+function fmtCountdown(iso) {
+  if (!iso) return '—';
+  const diffMs = new Date(iso) - new Date();
+  if (diffMs < 0) {
+    const h = Math.round(-diffMs / 3600000);
+    return h < 24 ? `Aired ${h}h ago` : `Aired ${Math.round(h/24)}d ago`;
+  }
+  const h = diffMs / 3600000;
+  if (h < 24) return `Live in ${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`;
+  return `In ${Math.floor(h/24)} days`;
+}
+function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
+function fmtMoney(n) { return n == null ? '—' : '₹' + Math.round(n).toLocaleString(); }
+function fmtPct(n)   { return n == null ? '—' : n.toFixed(1) + '%'; }
+function initials(name) { return name ? name.split(/\s+/).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase() : 'IK'; }
+function topicVar(t)   { return TOPIC_VAR[t]   || '--topic-ai'; }
+function topicLabel(t) { return TOPIC_LABEL[t] || 'General'; }
+
+// ── Data ────────────────────────────────────────────────────────────────────
+function getEventId() {
+  return new URLSearchParams(window.location.search).get('id') || '';
+}
+
+async function load() {
+  const id = getEventId();
+  if (!id) {
+    document.getElementById('mainArea').innerHTML = '<div class="p-12 text-center text-rose-600">Missing event id. <a href="/hub.html" class="underline">Back to Hub</a></div>';
+    return;
+  }
+  try {
+    const r = await fetch(`/events/${encodeURIComponent(id)}`);
+    if (r.status === 404) { document.getElementById('mainArea').innerHTML = '<div class="p-12 text-center text-zinc-500">Event not found. <a href="/hub.html" class="underline">Back to Hub</a></div>'; return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    render(d);
+  } catch (e) {
+    document.getElementById('mainArea').innerHTML = `<div class="p-12 text-center text-rose-600">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function render(data) {
+  const ev   = data.event || {};
+  const snap = data.snapshot || {};
+  const daily = data.daily || [];
+  const comp = data.comparable || [];
+
+  // Topic color theme
+  document.getElementById('bodyEl').style.setProperty('--topic', `var(${topicVar(ev.topic)})`);
+  document.getElementById('breadcrumbTitle').textContent = ev.title || ev.event_id;
+  document.title = (ev.title || 'Event') + ' — Masterclass Hub';
+
+  const totalRegs = snap.total_regs;
+  const goalP = (totalRegs != null && ev.goal_regs > 0) ? Math.min(100, 100 * totalRegs / ev.goal_regs) : null;
+  const isAired = snap.hours_to_live != null && snap.hours_to_live < 0;
+  const isUrgent = snap.hours_to_live != null && snap.hours_to_live < 24 && snap.hours_to_live > -4;
+
+  document.getElementById('mainArea').innerHTML = `
+    <!-- HERO -->
+    <article class="card rounded-2xl p-7 topic-glow fade-up">
+      <div class="absolute top-0 left-7 right-7 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="flex items-start justify-between gap-6">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-3 flex-wrap">
+            <span class="w-2 h-2 rounded-full ${isUrgent ? 'bg-rose-500 animate-pulse' : 'bg-zinc-300'}"></span>
+            <span class="text-[11px] uppercase tracking-wider font-semibold ${isUrgent ? 'text-rose-600' : 'text-zinc-500'}">${esc(fmtCountdown(ev.live_at))}</span>
+            <span class="text-zinc-300">·</span>
+            <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">${esc(topicLabel(ev.topic))}</span>
+            <span class="text-zinc-300">·</span>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">${esc(ev.country || '—')}</span>
+          </div>
+          <h1 class="text-3xl md:text-[2.1rem] font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-3xl">${esc(ev.title || '—')}</h1>
+          ${ev.summary ? `<p class="mt-3 text-zinc-600 text-sm leading-relaxed max-w-2xl">${esc(ev.summary)}</p>` : ''}
+          <div class="flex items-center gap-3 mt-6">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-sm font-semibold">${esc(initials(ev.instructor_name))}</div>
+            <div>
+              <div class="text-sm font-semibold text-zinc-900">${esc(ev.instructor_name || '—')}</div>
+              <div class="text-xs text-zinc-500">${esc(ev.instructor_role || '')}</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-3 shrink-0">
+          <div class="flex items-center gap-2">
+            ${ev.zoom_url ? `<a href="${esc(ev.zoom_url)}" target="_blank" class="px-3.5 py-2 bg-zinc-900 text-white rounded-lg text-xs font-semibold hover:bg-zinc-800 transition flex items-center gap-1.5 no-underline">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Join Zoom
+            </a>` : ''}
+            ${ev.landing_url ? `<a href="${esc(ev.landing_url)}" target="_blank" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5 no-underline">Landing ↗</a>` : ''}
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Goes live</div>
+            <div class="text-sm font-semibold text-zinc-900 mt-0.5">${esc(fmtDateTime(ev.live_at))}</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- KPI strip -->
+    <section class="grid grid-cols-4 gap-3 mt-4 fade-up">
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Final regs' : 'Registered'}</div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <div class="text-2xl font-semibold text-zinc-900">${fmtNum(totalRegs)}</div>
+          ${ev.goal_regs ? `<div class="text-xs text-zinc-500 font-medium">/ ${fmtNum(ev.goal_regs)} goal</div>` : ''}
+        </div>
+        ${goalP != null ? `<div class="mt-3 h-1 progress-track rounded-full overflow-hidden"><div class="topic-fill h-full rounded-full" style="width: ${goalP.toFixed(0)}%;"></div></div>` : ''}
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">CPIQL</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtMoney(snap.cpiql)}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ${fmtMoney(snap.meta_spend)} · ${fmtNum(snap.meta_regs)} meta IQLs</div>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Attendance' : 'Time to live'}</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${isAired ? fmtPct(snap.attendance_pct) : esc(fmtCountdown(ev.live_at))}</div>
+        ${isAired ? `<div class="text-[10px] text-zinc-500 mt-1.5">${fmtNum(snap.attendees)} of ${fmtNum(totalRegs)} attended</div>` : ''}
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Email funnel</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtNum(snap.email_sent)}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">sent · ${fmtNum(snap.email_opened)} opened · ${fmtNum(snap.email_clicked)} clicked</div>
+      </div>
+    </section>
+
+    <!-- Two-column main -->
+    <section class="grid grid-cols-12 gap-4 mt-4">
+
+      <!-- LEFT (8 cols) -->
+      <div class="col-span-12 lg:col-span-8 space-y-4">
+
+        <!-- Lead funnel -->
+        <article class="card rounded-2xl p-6 fade-up topic-glow">
+          <div class="absolute top-0 left-6 right-6 h-0.5 topic-strip rounded-b-full"></div>
+          <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Lead Funnel</h2>
+          <p class="text-xs text-zinc-500 mt-0.5 mb-5">Channel split · cumulative through ${esc(fmtDateTime(snap.snapshot_at))}</p>
+          ${renderFunnel(snap)}
+        </article>
+
+        <!-- Lead quality -->
+        <article class="card rounded-2xl p-6 fade-up">
+          <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Lead Quality</h2>
+          <p class="text-xs text-zinc-500 mt-0.5 mb-5">Role category · work experience</p>
+          ${renderQuality(snap)}
+        </article>
+
+        <!-- Attendance -->
+        <article class="card rounded-2xl p-6 fade-up">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Attendance &amp; Engagement</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">${isAired ? 'Post-event metrics' : 'Populates after the event goes live'}</p>
+            </div>
+            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100">Not yet aired</span>` : ''}
+          </div>
+          ${renderAttendance(snap, isAired)}
+        </article>
+
+        <!-- Per-day timeline -->
+        <article class="card rounded-2xl p-6 fade-up">
+          <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Daily pacing</h2>
+          <p class="text-xs text-zinc-500 mt-0.5 mb-5">${daily.length} day${daily.length===1?'':'s'} of acquisition</p>
+          ${renderDaily(daily)}
+        </article>
+      </div>
+
+      <!-- RIGHT (4 cols) -->
+      <div class="col-span-12 lg:col-span-4 space-y-4">
+        <!-- Event details -->
+        <article class="card rounded-2xl p-5 fade-up">
+          <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Event details</h3>
+          <dl class="space-y-2.5 text-xs">
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Type</dt><dd class="font-medium text-zinc-900">${esc(ev.event_type || '—')}</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Webinar type</dt><dd class="font-mono text-[10px] text-zinc-700">${esc(ev.webinar_type || '—')}</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Goes live</dt><dd class="font-medium text-zinc-900 text-right">${esc(fmtDateTime(ev.live_at))}</dd></div>
+            ${ev.day2_live_at ? `<div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Day 2</dt><dd class="font-medium text-zinc-900 text-right">${esc(fmtDateTime(ev.day2_live_at))}</dd></div>` : ''}
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Go-live date</dt><dd class="font-medium text-zinc-900">${esc(fmtDate(ev.go_live_date))}</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Country</dt><dd class="font-medium text-zinc-900">${esc(ev.country || '—')}</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Created by</dt><dd class="font-medium text-zinc-900 truncate">${esc(ev.created_by || '—')}</dd></div>
+          </dl>
+        </article>
+
+        <!-- Quick links -->
+        <article class="card rounded-2xl p-2 fade-up">
+          <div class="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Quick links</div>
+          ${ev.zoom_url    ? linkRow('Zoom — Join webinar', ev.zoom_url, 'blue') : ''}
+          ${ev.landing_url ? linkRow('Landing page', ev.landing_url, 'emerald') : ''}
+          ${ev.jira_design_key  ? linkRow('Jira — Email comms', ev.jira_design_key, 'indigo', true) : ''}
+          ${ev.jira_landing_key ? linkRow('Jira — Waiting room', ev.jira_landing_key, 'indigo', true) : ''}
+        </article>
+
+        <!-- Comparable past events -->
+        <article class="card rounded-2xl p-5 fade-up">
+          <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Comparable past events</h3>
+          <p class="text-[10px] text-zinc-500 mb-4">Same country · last 6 months</p>
+          ${comp.length === 0 ? '<div class="text-xs text-zinc-400 italic">None yet — history will populate as past events accumulate.</div>' : comp.map(compRow).join('')}
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+// ── Section renderers ──────────────────────────────────────────────────────
+function renderFunnel(s) {
+  const total = (s.meta_regs || 0) + (s.crm_regs || 0) + (s.other_regs || 0);
+  if (total === 0) return '<div class="text-xs text-zinc-400 italic py-4">No registration data yet.</div>';
+  const w = n => total > 0 ? (100 * n / total) : 0;
+  const cpiqlMeta = (s.meta_spend > 0 && s.meta_regs > 0) ? '₹' + Math.round(s.meta_spend / s.meta_regs) : '—';
+  const cpiqlOther = (s.other_spend > 0 && s.other_regs > 0) ? '₹' + Math.round(s.other_spend / s.other_regs) : 'organic';
+  return `
+    <div class="space-y-2.5">
+      <div class="funnel-row">
+        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm" style="background:#1877f2;"></span><span class="font-medium text-zinc-900">Meta</span></div>
+        <div class="funnel-bar"><span style="width: ${w(s.meta_regs || 0)}%; background:#1877f2;"></span></div>
+        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.meta_regs)}</div>
+        <div class="text-[10px] text-zinc-500 text-right">${cpiqlMeta}</div>
+      </div>
+      <div class="funnel-row">
+        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm bg-emerald-500"></span><span class="font-medium text-zinc-900">CRM</span></div>
+        <div class="funnel-bar"><span style="width: ${w(s.crm_regs || 0)}%; background:#10b981;"></span></div>
+        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.crm_regs)}</div>
+        <div class="text-[10px] text-zinc-500 text-right">organic</div>
+      </div>
+      <div class="funnel-row">
+        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm bg-zinc-400"></span><span class="font-medium text-zinc-900">Others</span></div>
+        <div class="funnel-bar"><span style="width: ${w(s.other_regs || 0)}%; background:#a1a1aa;"></span></div>
+        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.other_regs)}</div>
+        <div class="text-[10px] text-zinc-500 text-right">${cpiqlOther}</div>
+      </div>
+    </div>
+    <div class="mt-5 pt-4 border-t border-zinc-100 text-xs text-zinc-500">
+      <span class="font-semibold text-zinc-900">${fmtNum(total)}</span> total IQLs · meta spend ${fmtMoney(s.meta_spend)}
+    </div>
+  `;
+}
+
+function renderQuality(s) {
+  const roleTotal = (s.role_sde || 0) + (s.role_ml || 0) + (s.role_other || 0);
+  const weTotal   = (s.we_3_5 || 0) + (s.we_6_10 || 0) + (s.we_10p || 0);
+  if (roleTotal === 0 && weTotal === 0) return '<div class="text-xs text-zinc-400 italic">Cohort breakdown not yet snapshotted.</div>';
+  const bar = (label, val, total) => `
+    <div class="flex items-center justify-between text-xs">
+      <span class="text-zinc-700">${esc(label)}</span>
+      <div class="flex items-center gap-2 w-32">
+        <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+          <div class="topic-fill h-full" style="width: ${total > 0 ? (100 * val / total).toFixed(0) : 0}%;"></div>
+        </div>
+        <span class="font-semibold text-zinc-900 w-9 text-right">${fmtNum(val)}</span>
+      </div>
+    </div>`;
+  return `
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Role category</div>
+        <div class="space-y-2">
+          ${bar('SDE / Backend',  s.role_sde   || 0, roleTotal)}
+          ${bar('ML / Data',      s.role_ml    || 0, roleTotal)}
+          ${bar('Other',          s.role_other || 0, roleTotal)}
+        </div>
+      </div>
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Work experience</div>
+        <div class="space-y-2">
+          ${bar('3–5 years',  s.we_3_5  || 0, weTotal)}
+          ${bar('6–10 years', s.we_6_10 || 0, weTotal)}
+          ${bar('10+ years',  s.we_10p  || 0, weTotal)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAttendance(s, isAired) {
+  if (!isAired || s.attendees == null) {
+    return `<div class="grid grid-cols-3 gap-3 mt-4">
+      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
+        <div class="mt-6 text-zinc-300 text-2xl font-semibold">—</div>
+        <div class="text-[10px] text-zinc-400 mt-1">Awaits go-live</div>
+      </div>
+      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Email funnel</div>
+        <div class="mt-4 space-y-1.5 text-[10px]">
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_sent)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_delivered)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_opened)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_clicked)}</span></div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Call efforts</div>
+        <div class="mt-4 space-y-1.5 text-[10px]">
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Attempted</span><span class="font-semibold text-zinc-700">${fmtNum(s.calls_attempted)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Connected</span><span class="font-semibold text-zinc-700">${fmtNum(s.calls_connected)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Avg talk</span><span class="font-semibold text-zinc-700">${s.avg_talk_seconds != null ? Math.round(s.avg_talk_seconds/60) + 'm' + Math.round(s.avg_talk_seconds % 60) + 's' : '—'}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="grid grid-cols-3 gap-3 mt-4">
+    <div class="rounded-xl border border-zinc-200 p-4">
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
+      <div class="mt-3 text-2xl font-semibold text-zinc-900">${fmtPct(s.attendance_pct)}</div>
+      <div class="text-[10px] text-zinc-500 mt-1">${fmtNum(s.attendees)} of ${fmtNum(s.total_regs)} attended</div>
+    </div>
+    <div class="rounded-xl border border-zinc-200 p-4">
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Email funnel</div>
+      <div class="mt-3 space-y-1 text-[11px]">
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_sent)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_delivered)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_opened)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_clicked)}</span></div>
+      </div>
+    </div>
+    <div class="rounded-xl border border-zinc-200 p-4">
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Call efforts</div>
+      <div class="mt-3 space-y-1 text-[11px]">
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Attempted</span><span class="font-semibold text-zinc-900">${fmtNum(s.calls_attempted)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Connected</span><span class="font-semibold text-zinc-900">${fmtNum(s.calls_connected)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Avg talk</span><span class="font-semibold text-zinc-900">${s.avg_talk_seconds != null ? Math.round(s.avg_talk_seconds/60) + 'm ' + Math.round(s.avg_talk_seconds % 60) + 's' : '—'}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDaily(daily) {
+  if (daily.length === 0) return '<div class="text-xs text-zinc-400 italic">No daily snapshots yet.</div>';
+  const maxRegs = Math.max(...daily.map(d => d.total_regs || 0), 1);
+  const rows = daily.map(d => `
+    <div class="grid grid-cols-12 items-center gap-3 text-xs py-1.5 border-b border-zinc-50 last:border-0">
+      <div class="col-span-2 text-zinc-500">${esc(fmtDate(d.registration_date))}</div>
+      <div class="col-span-5 h-2 progress-track rounded-full overflow-hidden">
+        <div class="topic-fill h-full rounded-full" style="width: ${(100 * (d.total_regs || 0) / maxRegs).toFixed(0)}%;"></div>
+      </div>
+      <div class="col-span-2 text-right font-semibold text-zinc-900">${fmtNum(d.total_regs)}</div>
+      <div class="col-span-2 text-right text-zinc-500">${fmtMoney(d.total_spend)}</div>
+      <div class="col-span-1 text-right text-zinc-500">${d.cpiql != null ? '₹' + Math.round(d.cpiql) : '—'}</div>
+    </div>
+  `).join('');
+  return `
+    <div class="grid grid-cols-12 gap-3 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold pb-2 border-b border-zinc-100">
+      <div class="col-span-2">Date</div>
+      <div class="col-span-5">Pacing</div>
+      <div class="col-span-2 text-right">Regs</div>
+      <div class="col-span-2 text-right">Spend</div>
+      <div class="col-span-1 text-right">CPIQL</div>
+    </div>
+    ${rows}
+  `;
+}
+
+function linkRow(label, value, color, isKey) {
+  const href = isKey ? '#' : esc(value);
+  const sub  = isKey ? esc(value) : esc(value.replace(/^https?:\/\//, '').slice(0, 60));
+  return `
+    <a href="${href}" target="_blank" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg no-underline">
+      <div class="w-7 h-7 rounded-md bg-${color}-50 flex items-center justify-center">
+        <svg class="w-3.5 h-3.5 text-${color}-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-medium text-zinc-900">${esc(label)}</div>
+        <div class="text-[10px] text-zinc-500 truncate">${sub}</div>
+      </div>
+      <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>`;
+}
+
+function compRow(c) {
+  return `
+    <a href="/event.html?id=${encodeURIComponent(c.event_id)}" class="block group py-3 border-b border-zinc-100 last:border-0 no-underline">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-zinc-900 group-hover:topic-fg truncate">${esc(c.title || '—')}</div>
+          <div class="text-[10px] text-zinc-500 mt-0.5">${esc(fmtDate(c.live_at))} · ${esc(c.instructor_name || '')}</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-xs font-semibold text-zinc-900">${fmtNum(c.total_regs)}</div>
+          <div class="text-[10px] text-emerald-600">${c.attendance_pct != null ? c.attendance_pct.toFixed(0) + '% att.' : '—'}</div>
+        </div>
+      </div>
+    </a>`;
+}
+
+checkAuth();
+</script>
+</body>
+</html>

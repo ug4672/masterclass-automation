@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building AI Agents with Claude — Masterclass Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --border: #e7e5e4;
+      --border-strong: #d6d3d1;
+      --text: #18181b;
+      --text-2: #57534e;
+      --text-3: #a8a29e;
+
+      --topic-ai: 217, 91%, 55%;
+      --topic-system: 25, 95%, 50%;
+      --topic-behavioral: 158, 64%, 42%;
+      --topic-data: 270, 75%, 58%;
+      --topic-ml: 330, 76%, 55%;
+      --topic-distributed: 199, 89%, 48%;
+    }
+
+    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: var(--bg); color: var(--text); }
+
+    .topic-glow {
+      background:
+        radial-gradient(60% 80% at 100% 0%, hsla(var(--topic), .07) 0%, transparent 60%);
+    }
+    .topic-strip {
+      background: linear-gradient(90deg, hsla(var(--topic), 1) 0%, hsla(var(--topic), 0) 100%);
+    }
+    .topic-chip {
+      color: hsl(var(--topic));
+      background: hsla(var(--topic), .08);
+    }
+    .topic-bg-soft { background: hsla(var(--topic), .08); }
+    .topic-fg { color: hsl(var(--topic)); }
+    .topic-fill { background: hsl(var(--topic)); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fade-up { opacity: 0; transform: translateY(8px); animation: fadeUp .5s ease-out forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .delay-0 { animation-delay: 0ms; }
+    .delay-1 { animation-delay: 50ms; }
+    .delay-2 { animation-delay: 100ms; }
+    .delay-3 { animation-delay: 150ms; }
+    .delay-4 { animation-delay: 200ms; }
+    .delay-5 { animation-delay: 250ms; }
+    .delay-6 { animation-delay: 300ms; }
+    .delay-7 { animation-delay: 350ms; }
+
+    .progress-track { background: #f4f4f5; }
+    .scroll-hide::-webkit-scrollbar { display: none; }
+    .scroll-hide { scrollbar-width: none; }
+
+    /* Subtle dotted timeline */
+    .timeline-line {
+      background-image: linear-gradient(to bottom, var(--border) 50%, transparent 0);
+      background-size: 1px 6px;
+      background-repeat: repeat-y;
+      background-position: 7px 0;
+    }
+
+    /* Hover for compact links */
+    .link-row:hover { background: #f7f7f6; }
+
+    /* Funnel bar */
+    .funnel-row { display: grid; grid-template-columns: 110px 1fr 64px 56px; align-items: center; gap: 12px; }
+    .funnel-bar { height: 22px; border-radius: 6px; background: var(--border); position: relative; overflow: hidden; }
+    .funnel-bar > span { display: block; height: 100%; border-radius: 6px; }
+  </style>
+</head>
+<body class="min-h-screen" style="--topic: var(--topic-ai);">
+
+  <!-- ─────────────── Top Bar ─────────────── -->
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center">
+          <span class="text-white font-bold text-sm tracking-tight">IK</span>
+        </div>
+        <div>
+          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+        </div>
+      </div>
+
+      <!-- Breadcrumb in middle slot -->
+      <nav class="hidden md:flex items-center gap-2 text-sm">
+        <a href="mockup-upcoming.html" class="text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Upcoming
+        </a>
+        <span class="text-zinc-300">/</span>
+        <span class="text-zinc-900 font-medium truncate max-w-[280px]">Building AI Agents with Claude</span>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button class="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+        <button class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold">UG</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────────────── HERO ─────────────── -->
+  <section class="max-w-7xl mx-auto px-6 pt-8 pb-5 fade-up delay-0">
+    <article class="card rounded-2xl p-7 topic-glow">
+      <div class="absolute top-0 left-7 right-7 h-0.5 topic-strip rounded-b-full"></div>
+
+      <div class="flex items-start justify-between gap-6">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-rose-600">Today · Live in 2h 14m</span>
+            <span class="text-zinc-300">·</span>
+            <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">AI & Agents</span>
+            <span class="text-zinc-300">·</span>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500 flex items-center gap-1.5">
+              <span>🇮🇳</span> India
+            </span>
+          </div>
+
+          <h1 class="text-3xl md:text-[2.1rem] font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-3xl">
+            Building AI Agents with Claude &amp; the Anthropic API
+          </h1>
+
+          <p class="mt-3 text-zinc-600 text-sm leading-relaxed max-w-2xl">
+            A live walkthrough of building production-grade agents — tool use, memory, multi-step reasoning. Bring your laptop.
+          </p>
+
+          <div class="flex items-center gap-3 mt-6">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-sm font-semibold">SK</div>
+            <div>
+              <div class="text-sm font-semibold text-zinc-900">Sundeep Kumar</div>
+              <div class="text-xs text-zinc-500">Principal Engineer · Stripe · Hosted 14 masterclasses</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-3 shrink-0">
+          <div class="flex items-center gap-2">
+            <button class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Slides
+            </button>
+            <button class="px-3.5 py-2 bg-zinc-900 text-white rounded-lg text-xs font-semibold hover:bg-zinc-800 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Join Zoom
+            </button>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Goes live</div>
+            <div class="text-sm font-semibold text-zinc-900 mt-0.5">Thu, Jan 22 · 7:00 PM IST</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ─────────────── KPI strip ─────────────── -->
+  <section class="max-w-7xl mx-auto px-6 pb-6 fade-up delay-1">
+    <div class="grid grid-cols-4 gap-3">
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Registered</div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <div class="text-2xl font-semibold text-zinc-900">1,247</div>
+          <div class="text-xs text-zinc-500 font-medium">/ 1,500 goal</div>
+        </div>
+        <div class="mt-3 h-1 progress-track rounded-full overflow-hidden">
+          <div class="topic-fill h-full rounded-full" style="width: 83%;"></div>
+        </div>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">CPIQL</div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <div class="text-2xl font-semibold text-zinc-900">₹148</div>
+          <div class="text-xs text-emerald-600 font-medium">↘ 12% vs avg</div>
+        </div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ₹1.84L · 1,247 IQLs</div>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Days to go</div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <div class="text-2xl font-semibold text-zinc-900">0</div>
+          <div class="text-xs text-rose-600 font-medium">2h 14m</div>
+        </div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">Live today · 7:00 PM IST</div>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <div class="text-[11px] text-emerald-700 font-medium uppercase tracking-wide">Pacing</div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <div class="text-2xl font-semibold text-emerald-700">+12%</div>
+          <div class="text-xs text-zinc-500 font-medium">vs cohort avg</div>
+        </div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">On track to overshoot goal</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── Two-column main ─────────────── -->
+  <section class="max-w-7xl mx-auto px-6 pb-12">
+    <div class="grid grid-cols-12 gap-4">
+
+      <!-- ═════════════ LEFT COLUMN (8 cols) ═════════════ -->
+      <div class="col-span-12 lg:col-span-8 space-y-4">
+
+        <!-- LEAD FUNNEL CARD -->
+        <article class="card rounded-2xl p-6 fade-up delay-2 topic-glow">
+          <div class="absolute top-0 left-6 right-6 h-0.5 topic-strip rounded-b-full"></div>
+
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Lead Funnel</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Channel split · last sync 2 min ago</p>
+            </div>
+            <button class="text-xs font-medium text-zinc-500 hover:text-zinc-900 flex items-center gap-1">
+              View SQL
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <!-- Funnel rows -->
+          <div class="space-y-2.5">
+            <div class="funnel-row">
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-sm" style="background:#1877f2;"></span>
+                <span class="font-medium text-zinc-900">Meta</span>
+              </div>
+              <div class="funnel-bar"><span style="width: 68%; background:#1877f2;"></span></div>
+              <div class="text-sm font-semibold text-zinc-900 text-right">847</div>
+              <div class="text-[10px] text-zinc-500 text-right">₹132</div>
+            </div>
+
+            <div class="funnel-row">
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-sm bg-emerald-500"></span>
+                <span class="font-medium text-zinc-900">CRM</span>
+              </div>
+              <div class="funnel-bar"><span style="width: 22%; background:#10b981;"></span></div>
+              <div class="text-sm font-semibold text-zinc-900 text-right">276</div>
+              <div class="text-[10px] text-zinc-500 text-right">organic</div>
+            </div>
+
+            <div class="funnel-row">
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-sm bg-zinc-400"></span>
+                <span class="font-medium text-zinc-900">Others</span>
+              </div>
+              <div class="funnel-bar"><span style="width: 10%; background:#a1a1aa;"></span></div>
+              <div class="text-sm font-semibold text-zinc-900 text-right">124</div>
+              <div class="text-[10px] text-zinc-500 text-right">₹201</div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-zinc-100 flex items-center justify-between">
+            <div class="text-xs text-zinc-500">
+              <span class="font-semibold text-zinc-900">1,247</span> total IQLs · spend ₹1.84L
+            </div>
+            <button class="text-xs font-medium text-zinc-700 hover:text-zinc-900 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-zinc-50">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              Send snapshot to Slack
+            </button>
+          </div>
+        </article>
+
+        <!-- LEAD QUALITY CARD -->
+        <article class="card rounded-2xl p-6 fade-up delay-3">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Lead Quality</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Role category · work experience</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <!-- Role categories -->
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Role category</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">SDE / Backend</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 58%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">724</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">ML / Data</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 22%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">274</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">Frontend / Full-stack</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 14%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">174</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-500">Other</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="bg-zinc-300 h-full" style="width: 6%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">75</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Work experience -->
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Work experience</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">0–2 years</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 18%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">224</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">3–5 years</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 42%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">523</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">6–10 years</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 28%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">350</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-zinc-700">10+ years</span>
+                  <div class="flex items-center gap-2 w-32">
+                    <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                      <div class="topic-fill h-full" style="width: 12%;"></div>
+                    </div>
+                    <span class="font-semibold text-zinc-900 w-9 text-right">150</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ATTENDANCE CARD (empty state — event hasn't aired) -->
+        <article class="card rounded-2xl p-6 fade-up delay-4">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Attendance &amp; Engagement</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Populates after the event goes live</p>
+            </div>
+            <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100">Not yet aired</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mt-4">
+            <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance by channel</div>
+              <div class="mt-6 text-zinc-300 text-2xl font-semibold">—</div>
+              <div class="text-[10px] text-zinc-400 mt-1">Awaiting Zoom roster</div>
+            </div>
+            <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Email reminder funnel</div>
+              <div class="mt-4 space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-500">Sent</span>
+                  <span class="font-semibold text-zinc-700">1,247</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-500">Delivered</span>
+                  <span class="font-semibold text-zinc-700">1,231</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-400">Opened</span>
+                  <span class="text-zinc-300">—</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-400">Clicked</span>
+                  <span class="text-zinc-300">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Call efforts</div>
+              <div class="mt-4 space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-500">Coverage</span>
+                  <span class="font-semibold text-zinc-700">62%</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-500">Connectivity</span>
+                  <span class="font-semibold text-zinc-700">41%</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-zinc-500">Avg talk time</span>
+                  <span class="font-semibold text-zinc-700">1:42</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- TIMELINE CARD -->
+        <article class="card rounded-2xl p-6 fade-up delay-5">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Activity</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Event lifecycle</p>
+            </div>
+          </div>
+
+          <div class="relative pl-5 timeline-line space-y-4">
+            <div class="relative">
+              <div class="absolute -left-5 top-1 w-3 h-3 rounded-full bg-white border-2 topic-fill" style="border-color: hsl(var(--topic));"></div>
+              <div class="flex items-baseline justify-between">
+                <div class="text-xs font-semibold text-zinc-900">Daily snapshot sent to Slack</div>
+                <div class="text-[10px] text-zinc-500">today · 11:00 AM IST</div>
+              </div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">1,247 IQLs · ₹148 CPIQL · pacing +12%</div>
+            </div>
+
+            <div class="relative">
+              <div class="absolute -left-5 top-1 w-3 h-3 rounded-full bg-white border-2 border-zinc-300"></div>
+              <div class="flex items-baseline justify-between">
+                <div class="text-xs font-semibold text-zinc-900">Email reminder T-24h sent</div>
+                <div class="text-[10px] text-zinc-500">yesterday · 7:00 PM IST</div>
+              </div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">1,118 recipients · 982 delivered</div>
+            </div>
+
+            <div class="relative">
+              <div class="absolute -left-5 top-1 w-3 h-3 rounded-full bg-white border-2 border-zinc-300"></div>
+              <div class="flex items-baseline justify-between">
+                <div class="text-xs font-semibold text-zinc-900">Jira tickets created</div>
+                <div class="text-[10px] text-zinc-500">Jan 9 · 3:42 PM</div>
+              </div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">
+                <a href="#" class="text-zinc-700 hover:underline">MC-1247</a> · Design ·
+                <a href="#" class="text-zinc-700 hover:underline">MC-1248</a> · Landing page
+              </div>
+            </div>
+
+            <div class="relative">
+              <div class="absolute -left-5 top-1 w-3 h-3 rounded-full bg-white border-2 border-zinc-300"></div>
+              <div class="flex items-baseline justify-between">
+                <div class="text-xs font-semibold text-zinc-900">Event launched</div>
+                <div class="text-[10px] text-zinc-500">Jan 9 · 3:41 PM · by Utkarsh Gupta</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- ═════════════ RIGHT COLUMN (4 cols) ═════════════ -->
+      <div class="col-span-12 lg:col-span-4 space-y-4">
+
+        <!-- EVENT DETAILS (collapsed by default look) -->
+        <article class="card rounded-2xl p-5 fade-up delay-2">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-semibold text-zinc-900 tracking-tight uppercase tracking-wider">Event details</h3>
+            <button class="text-zinc-400 hover:text-zinc-700">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+
+          <dl class="space-y-2.5 text-xs">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-zinc-500">Type</dt>
+              <dd class="font-medium text-zinc-900">Masterclass</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-zinc-500">Webinar type</dt>
+              <dd class="font-mono text-[10px] text-zinc-700">MASTERCLASS_INDIA</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-zinc-500">Goes live</dt>
+              <dd class="font-medium text-zinc-900 text-right">Thu Jan 22 · 7:00 PM IST</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-zinc-500">Go-live date</dt>
+              <dd class="font-medium text-zinc-900">Jan 9, 2026</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-zinc-500">Country</dt>
+              <dd class="font-medium text-zinc-900">India 🇮🇳</dd>
+            </div>
+          </dl>
+
+          <div class="mt-4 pt-3 border-t border-zinc-100">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1.5">Summary</div>
+            <p class="text-xs text-zinc-600 leading-relaxed line-clamp-3">
+              Production-grade agent patterns using Claude's tool-use API. Covers planning loops, memory architectures, error recovery, and cost-aware orchestration. Hands-on.
+            </p>
+            <button class="text-[11px] font-medium topic-fg mt-2 hover:underline">Show full summary</button>
+          </div>
+        </article>
+
+        <!-- QUICK LINKS -->
+        <article class="card rounded-2xl p-2 fade-up delay-3">
+          <div class="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Quick links</div>
+
+          <a href="#" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg">
+            <div class="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 11.513H0v6.84a4.105 4.105 0 0 0 4.105 4.105h11.57V15.62a4.105 4.105 0 0 0-4.104-4.107M22.293 1.543L17.5 5.2v11.6l4.793 3.66c.31.24.795.022.795-.381V1.917c0-.4-.486-.62-.795-.374"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-zinc-900">Zoom — Join webinar</div>
+              <div class="text-[10px] text-zinc-500 truncate">us02web.zoom.us/j/8472619934</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+
+          <a href="#" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg">
+            <div class="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-zinc-900">Landing page</div>
+              <div class="text-[10px] text-zinc-500 truncate">in.interviewkickstart.com/event/...</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+
+          <a href="#" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg">
+            <div class="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-zinc-900">Jira — Design ticket</div>
+              <div class="text-[10px] text-zinc-500 truncate">MC-1247 · In review</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+
+          <a href="#" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg">
+            <div class="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-zinc-900">Jira — Landing ticket</div>
+              <div class="text-[10px] text-zinc-500 truncate">MC-1248 · Done</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+
+          <a href="#" class="link-row flex items-center gap-3 px-3 py-2 rounded-lg opacity-50 pointer-events-none">
+            <div class="w-7 h-7 rounded-md bg-zinc-100 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-zinc-500">Recording</div>
+              <div class="text-[10px] text-zinc-400">Available after event</div>
+            </div>
+          </a>
+        </article>
+
+        <!-- COMPARABLE PAST EVENTS -->
+        <article class="card rounded-2xl p-5 fade-up delay-4">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider">Comparable past events</h3>
+              <p class="text-[10px] text-zinc-500 mt-0.5">Same topic · same country · last 6 months</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <a href="#" class="block group">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-medium text-zinc-900 group-hover:topic-fg truncate">LLM Eval & Prompt Engineering</div>
+                  <div class="text-[10px] text-zinc-500 mt-0.5">Dec 18 · Sundeep K.</div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-semibold text-zinc-900">1,438</div>
+                  <div class="text-[10px] text-emerald-600">31% att.</div>
+                </div>
+              </div>
+            </a>
+
+            <div class="h-px bg-zinc-100"></div>
+
+            <a href="#" class="block group">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-medium text-zinc-900 group-hover:topic-fg truncate">RAG Systems in Production</div>
+                  <div class="text-[10px] text-zinc-500 mt-0.5">Nov 27 · Anita M.</div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-semibold text-zinc-900">1,102</div>
+                  <div class="text-[10px] text-emerald-600">28% att.</div>
+                </div>
+              </div>
+            </a>
+
+            <div class="h-px bg-zinc-100"></div>
+
+            <a href="#" class="block group">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-medium text-zinc-900 group-hover:topic-fg truncate">Vector Databases Deep Dive</div>
+                  <div class="text-[10px] text-zinc-500 mt-0.5">Oct 30 · Sundeep K.</div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-semibold text-zinc-900">896</div>
+                  <div class="text-[10px] text-amber-600">22% att.</div>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <button class="mt-4 w-full text-[11px] font-medium text-zinc-700 hover:text-zinc-900 py-2 rounded-lg border border-zinc-200 hover:bg-zinc-50">
+            See full history →
+          </button>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── Footer ─────────────── -->
+  <footer class="border-t border-zinc-200/80 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+      <div>© 2026 Interview Kickstart · Internal use</div>
+      <div class="flex items-center gap-4">
+        <span>Press <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-0.5 font-mono text-[10px]">?</kbd> for shortcuts</span>
+        <a href="#" class="hover:text-zinc-900">Feedback</a>
+        <a href="#" class="hover:text-zinc-900">Docs</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

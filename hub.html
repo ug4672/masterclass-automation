@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masterclass Hub — Interview Kickstart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --border: #e7e5e4;
+      --border-strong: #d6d3d1;
+      --text: #18181b;
+      --text-2: #57534e;
+      --text-3: #a8a29e;
+      --topic-ai: 217, 91%, 55%;
+      --topic-system: 25, 95%, 50%;
+      --topic-behavioral: 158, 64%, 42%;
+      --topic-data: 270, 75%, 58%;
+      --topic-ml: 330, 76%, 55%;
+      --topic-distributed: 199, 89%, 48%;
+    }
+    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: var(--bg); color: var(--text); }
+    .topic-glow { background: radial-gradient(60% 80% at 100% 0%, hsla(var(--topic), .07) 0%, transparent 60%); }
+    .topic-strip { background: linear-gradient(90deg, hsla(var(--topic), 1) 0%, hsla(var(--topic), 0) 100%); }
+    .topic-chip { color: hsl(var(--topic)); background: hsla(var(--topic), .08); }
+    .topic-fill { background: hsl(var(--topic)); }
+    .card { background: var(--surface); border: 1px solid var(--border); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; position: relative; overflow: hidden; }
+    .card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: 0 12px 24px -12px rgba(0,0,0,.08), 0 4px 8px -4px rgba(0,0,0,.04); }
+    .fade-up { opacity: 0; transform: translateY(8px); animation: fadeUp .5s ease-out forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .progress-track { background: #f4f4f5; }
+    .scroll-hide::-webkit-scrollbar { display: none; }
+    .scroll-hide { scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ─── Login overlay ─────────────────────────────────────────────────────── -->
+<div id="loginOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:380px;width:90%;">
+    <div style="width:52px;height:52px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px;color:#fff;font-weight:700;">IK</div>
+    <h2 style="font-size:19px;font-weight:700;color:#111827;margin-bottom:8px;">Masterclass Hub</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.5;">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" style="display:none;color:#dc2626;font-size:12.5px;margin-top:16px;line-height:1.4;"></p>
+  </div>
+</div>
+
+<!-- ─── App ──────────────────────────────────────────────────────────────── -->
+<div id="appWrap" style="display:none;">
+
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
+        <div>
+          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+        </div>
+      </div>
+
+      <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1">
+        <button id="tabUpcoming" onclick="switchTab('upcoming')" class="px-4 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm">On the way</button>
+        <button id="tabAired" onclick="switchTab('aired')" class="px-4 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900">Recently aired</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="/Masterclass%20Automation.html" class="flex items-center gap-1.5 bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition no-underline">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New masterclass
+        </a>
+        <div class="relative">
+          <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
+          <div id="userMenu" class="hidden absolute right-0 top-11 bg-white border border-zinc-200 rounded-lg shadow-lg p-1 w-56 z-50">
+            <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-100" id="userEmail">—</div>
+            <a href="/Masterclass%20Automation.html?settings=1" class="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Settings (legacy)</a>
+            <a href="/Masterclass%20Automation.html" class="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Old tabbed UI</a>
+            <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="max-w-7xl mx-auto px-6 pt-10 pb-5 fade-up">
+    <h1 id="pageHeading" class="text-xl font-semibold text-zinc-900 tracking-tight">Upcoming masterclasses</h1>
+    <p id="pageSubheading" class="text-sm text-zinc-500 mt-1 inline-flex items-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      <span>Live data · synced with daily snapshot</span>
+    </p>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 pb-6 fade-up">
+    <div id="kpiStrip" class="grid grid-cols-4 gap-3"></div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 pb-6">
+    <div id="bentoArea" class="grid grid-cols-3 grid-rows-2 gap-4" style="min-height: 440px;"></div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 pt-2 pb-12">
+    <div id="smallCardsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+  <footer class="border-t border-zinc-200/80 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+      <div>© 2026 Interview Kickstart · Internal use</div>
+      <div class="flex items-center gap-4"><a href="/Masterclass%20Automation.html" class="hover:text-zinc-900">Legacy UI</a></div>
+    </div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+const TOPIC_VAR = {
+  ai_agents: '--topic-ai', system_design: '--topic-system', behavioral: '--topic-behavioral',
+  data: '--topic-data', ml: '--topic-ml', distributed: '--topic-distributed',
+};
+const TOPIC_LABEL = {
+  ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
+  data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
+};
+
+let currentStatus = 'upcoming';
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('userEmail').textContent = email;
+  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+  load();
+}
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+async function checkAuth() {
+  try {
+    const r = await fetch('/auth/check');
+    if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
+  } catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+}
+async function signOut() {
+  await fetch('/auth/logout', { method: 'POST' });
+  showLogin();
+}
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+};
+function toggleMenu() {
+  document.getElementById('userMenu').classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
+    document.getElementById('userMenu')?.classList.add('hidden');
+  }
+});
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone: 'Asia/Kolkata' }) + ' IST';
+}
+function fmtCountdown(iso) {
+  if (!iso) return '—';
+  const diffMs = new Date(iso) - new Date();
+  if (diffMs < 0) {
+    const hAgo = Math.round(-diffMs / 3600000);
+    return hAgo < 24 ? `Aired ${hAgo}h ago` : `Aired ${Math.round(hAgo/24)}d ago`;
+  }
+  const h = diffMs / 3600000;
+  if (h < 24) return `Live in ${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`;
+  return `In ${Math.floor(h/24)} days`;
+}
+function fmtNum(n) {
+  if (n == null) return '—';
+  if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return Math.round(n).toLocaleString();
+}
+function fmtMoney(n) { return n == null ? '—' : '₹' + Math.round(n).toLocaleString(); }
+function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
+function initials(name) {
+  if (!name) return 'IK';
+  return name.split(/\s+/).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase();
+}
+function topicVar(t)   { return TOPIC_VAR[t]   || '--topic-ai'; }
+function topicLabel(t) { return TOPIC_LABEL[t] || 'General'; }
+
+function goalPct(ev) {
+  const t = ev.snapshot?.total_regs, g = ev.goal_regs;
+  return (t != null && g > 0) ? Math.min(100, 100 * t / g) : null;
+}
+
+// Crude pacing: behind if regs/goal < 0.5 with <72h to live; else neutral.
+// (Refine in v2 with go_live_date for proper time-elapsed math.)
+function pacing(ev) {
+  const s = ev.snapshot || {};
+  if (s.total_regs == null || ev.goal_regs == null || !ev.goal_regs) return null;
+  const ratio = s.total_regs / ev.goal_regs;
+  const hrs   = s.hours_to_live;
+  if (hrs == null) return null;
+  if (hrs < 0) return null;
+  if (hrs < 72 && ratio < 0.5) return { label: '↘ behind', color: 'rose' };
+  if (ratio >= 0.8) return { label: '↗ on pace', color: 'emerald' };
+  return { label: '— neutral', color: 'zinc' };
+}
+
+// ── Data ────────────────────────────────────────────────────────────────────
+async function load() {
+  document.getElementById('bentoArea').innerHTML = '<div class="col-span-3 row-span-2 p-8 text-center text-zinc-400 text-sm">Loading…</div>';
+  try {
+    const r = await fetch(`/events?status=${currentStatus}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    render(d.events || []);
+  } catch (e) {
+    document.getElementById('bentoArea').innerHTML = `<div class="col-span-3 row-span-2 p-8 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+    document.getElementById('smallCardsArea').innerHTML = '';
+  }
+}
+
+function render(events) {
+  renderKpi(events);
+  renderBento(events.slice(0, 3));
+  renderSmall(events.slice(3));
+  document.getElementById('pageSubheading').innerHTML =
+    `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block mr-2"></span>${events.length} ${currentStatus === 'upcoming' ? 'on the way' : 'aired recently'} · live data`;
+}
+
+function renderKpi(events) {
+  const total = events.length;
+  const totalRegs = events.reduce((s,e) => s + (e.snapshot?.total_regs || 0), 0);
+  const goalSum  = events.reduce((s,e) => s + (e.goal_regs || 0), 0);
+  const goalP    = goalSum > 0 ? (100 * totalRegs / goalSum) : null;
+  const aired    = events.filter(e => e.snapshot?.attendance_pct != null);
+  const avgAtt   = aired.length ? aired.reduce((s,e) => s + e.snapshot.attendance_pct, 0) / aired.length : null;
+  const att      = events.filter(e => pacing(e)?.color === 'rose').length;
+
+  document.getElementById('kpiStrip').innerHTML = `
+    <div class="bg-white border border-zinc-200 rounded-xl p-4">
+      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${currentStatus === 'upcoming' ? 'On the way' : 'Aired'}</div>
+      <div class="mt-2 text-2xl font-semibold text-zinc-900">${total}</div>
+    </div>
+    <div class="bg-white border border-zinc-200 rounded-xl p-4">
+      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Total regs</div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <div class="text-2xl font-semibold text-zinc-900">${fmtNum(totalRegs)}</div>
+        ${goalP != null ? `<div class="text-xs text-emerald-600 font-medium">↗ ${goalP.toFixed(0)}% of goal</div>` : ''}
+      </div>
+    </div>
+    <div class="bg-white border border-zinc-200 rounded-xl p-4">
+      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Avg attendance</div>
+      <div class="mt-2 text-2xl font-semibold text-zinc-900">${avgAtt != null ? avgAtt.toFixed(1) + '%' : '—'}</div>
+    </div>
+    <div class="${att > 0 ? 'bg-rose-50 border-rose-200' : 'bg-white border-zinc-200'} border rounded-xl p-4">
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full ${att > 0 ? 'bg-rose-500' : 'bg-zinc-300'}"></span>
+        <div class="text-[11px] ${att > 0 ? 'text-rose-700' : 'text-zinc-500'} font-medium uppercase tracking-wide">Need attention</div>
+      </div>
+      <div class="mt-2 text-2xl font-semibold ${att > 0 ? 'text-rose-700' : 'text-zinc-900'}">${att}</div>
+    </div>`;
+}
+
+function renderBento(top3) {
+  const el = document.getElementById('bentoArea');
+  if (top3.length === 0) {
+    el.innerHTML = `<div class="col-span-3 row-span-2 p-12 text-center text-zinc-500 bg-white border border-dashed border-zinc-200 rounded-2xl">
+      <div class="text-base font-medium mb-1">No ${currentStatus === 'upcoming' ? 'upcoming' : 'aired'} events</div>
+      <div class="text-xs">Create one from the “New masterclass” button.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = heroCard(top3[0]) + (top3[1] ? medCard(top3[1]) : '<div></div>') + (top3[2] ? medCard(top3[2]) : '<div></div>');
+}
+
+function heroCard(ev) {
+  const s = ev.snapshot || {};
+  const urgent = s.hours_to_live != null && s.hours_to_live < 24 && s.hours_to_live > -4;
+  const goalP  = goalPct(ev);
+  return `
+    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
+       class="card rounded-2xl col-span-2 row-span-2 p-7 cursor-pointer block no-underline topic-glow"
+       style="--topic: var(${topicVar(ev.topic)});">
+      <div class="absolute top-0 left-7 right-7 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="relative h-full flex flex-col">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full ${urgent ? 'bg-rose-500' : 'bg-zinc-300'}"></span>
+            <span class="text-[11px] uppercase tracking-wider font-semibold ${urgent ? 'text-rose-600' : 'text-zinc-500'}">${esc(fmtCountdown(ev.live_at))}</span>
+          </div>
+          <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">${esc(topicLabel(ev.topic))}</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-2xl">${esc(ev.title)}</h2>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-3 mt-8 mb-6">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-sm font-semibold">${esc(initials(ev.instructor_name))}</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-900">${esc(ev.instructor_name || '—')}</div>
+            <div class="text-xs text-zinc-500">${esc(ev.instructor_role || '')}</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-8 pt-5 border-t border-zinc-100">
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Live at</div>
+            <div class="text-sm font-medium text-zinc-900 mt-1">${esc(fmtDateTime(ev.live_at))}</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Final regs' : 'Registered'}</div>
+            <div class="text-sm font-medium text-zinc-900 mt-1">${fmtNum(s.total_regs)}${ev.goal_regs ? ` <span class="text-zinc-500">/ ${fmtNum(ev.goal_regs)}</span>` : ''}</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Attendance' : 'CPIQL'}</div>
+            <div class="text-sm font-medium text-zinc-900 mt-1">${currentStatus === 'aired' ? fmtPct(s.attendance_pct) : fmtMoney(s.cpiql)}</div>
+          </div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function medCard(ev) {
+  const s = ev.snapshot || {};
+  return `
+    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
+       class="card rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
+       style="--topic: var(${topicVar(ev.topic)});">
+      <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="flex items-center justify-between mb-3">
+        <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">${esc(topicLabel(ev.topic))}</span>
+        <span class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">${esc(fmtCountdown(ev.live_at))}</span>
+      </div>
+      <h3 class="text-base font-semibold leading-snug text-zinc-900 tracking-tight">${esc(ev.title)}</h3>
+      <div class="flex items-center gap-2 mt-5 pt-4 border-t border-zinc-100">
+        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 via-orange-500 to-rose-500 flex items-center justify-center text-white text-[10px] font-semibold">${esc(initials(ev.instructor_name))}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-zinc-900 truncate">${esc(ev.instructor_name || '—')}</div>
+          <div class="text-[10px] text-zinc-500 truncate">${esc(ev.instructor_role || '')}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-zinc-900">${fmtNum(s.total_regs)}</div>
+          <div class="text-[10px] text-zinc-500">${currentStatus === 'aired' ? 'final' : 'regs'}</div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function renderSmall(rest) {
+  const el = document.getElementById('smallCardsArea');
+  if (rest.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = rest.map(smallCard).join('');
+}
+
+function smallCard(ev) {
+  const s = ev.snapshot || {};
+  const goalP = goalPct(ev);
+  const p     = pacing(ev);
+  return `
+    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
+       class="card rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
+       style="--topic: var(${topicVar(ev.topic)}); ${p?.color === 'rose' ? 'border-color: rgb(254 205 211);' : ''}">
+      <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="flex items-center justify-between mb-3">
+        <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">${esc(topicLabel(ev.topic))}</span>
+        <span class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">${esc(fmtDate(ev.live_at))} · ${esc(ev.country || '')}</span>
+      </div>
+      <h3 class="text-base font-semibold leading-snug text-zinc-900 tracking-tight mb-4">${esc(ev.title)}</h3>
+      ${goalP != null ? `
+      <div class="mb-4">
+        <div class="flex items-baseline justify-between mb-1.5">
+          <div class="text-xs"><span class="font-semibold text-zinc-900">${fmtNum(s.total_regs)}</span><span class="text-zinc-500"> / ${fmtNum(ev.goal_regs)}</span></div>
+          ${p ? `<div class="text-[10px] font-medium text-${p.color}-600">${esc(p.label)}</div>` : ''}
+        </div>
+        <div class="h-1 progress-track rounded-full overflow-hidden">
+          <div class="${p?.color === 'rose' ? 'bg-rose-500' : 'topic-fill'} h-full" style="width: ${goalP.toFixed(0)}%;"></div>
+        </div>
+      </div>` : ''}
+      <div class="flex items-center gap-2 pt-4 border-t border-zinc-100">
+        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-600 flex items-center justify-center text-white text-[9px] font-semibold">${esc(initials(ev.instructor_name))}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[11px] font-medium text-zinc-900 truncate">${esc(ev.instructor_name || '—')}</div>
+          <div class="text-[10px] text-zinc-500 truncate">${esc(ev.instructor_role || '')}</div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function switchTab(status) {
+  if (currentStatus === status) return;
+  currentStatus = status;
+  document.getElementById('tabUpcoming').className = 'px-4 py-1.5 rounded-md font-medium text-sm ' + (status === 'upcoming' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
+  document.getElementById('tabAired').className    = 'px-4 py-1.5 rounded-md font-medium text-sm ' + (status === 'aired'    ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
+  document.getElementById('pageHeading').textContent = status === 'upcoming' ? 'Upcoming masterclasses' : 'Recently aired';
+  load();
+}
+
+checkAuth();
+</script>
+</body>
+</html>
