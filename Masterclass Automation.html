@@ -337,6 +337,88 @@ table.results tr:last-child td { border-bottom: none; }
   padding: 1px 5px;
   border-radius: 4px;
 }
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  body { padding: 16px 12px 56px; }
+  .wrap { max-width: 100%; }
+
+  /* Header: stack avatar + title vertically over user/signout row */
+  .page-hd {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .page-hd > div:nth-child(2) { flex: 1 1 auto; min-width: 0; }
+  .page-hd > div:nth-child(3) {
+    text-align: left !important;
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+  }
+  .page-hd > div:nth-child(3) > div { margin-bottom: 0 !important; }
+  .page-hd h1 { font-size: 17px; }
+  .page-hd p { font-size: 12px; }
+
+  /* Tabs: equal columns but smaller text to fit "Webinar Attendance" */
+  .tabs { padding: 4px; margin-bottom: 14px; }
+  .tab {
+    font-size: 11.5px;
+    padding: 8px 4px;
+    letter-spacing: -0.2px;
+  }
+
+  /* Cards */
+  .card { margin-bottom: 12px; border-radius: 10px; }
+  .card-hd { padding: 12px 14px; }
+  .card-body { padding: 14px; }
+  .card-hd h2 { font-size: 12.5px; }
+
+  /* Form: single column on small screens */
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  /* col2 already spans full grid, so single column is automatic */
+
+  /* Slightly bigger touch targets on inputs */
+  input[type="text"], input[type="email"], input[type="url"],
+  input[type="password"], input[type="date"], input[type="time"],
+  textarea, select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  select { padding-right: 32px; }
+
+  /* Buttons: full width on mobile */
+  .form-foot {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .form-foot .btn { width: 100%; justify-content: center; padding: 11px 16px; }
+
+  /* Steps: shrink padding */
+  .step { padding: 10px 12px; font-size: 12.5px; gap: 10px; }
+
+  /* Section separators: tighter */
+  .sep { margin: 16px 0 10px; }
+
+  /* SQL query textareas — easier to scroll horizontally on phone */
+  textarea[readonly] { font-size: 11px !important; }
+
+  /* Results: keep table scrollable; meta info smaller */
+  .results-meta { font-size: 11.5px; }
+  table.results td, table.results th { padding: 6px 10px; font-size: 11.5px; }
+}
+
+/* Very narrow phones */
+@media (max-width: 380px) {
+  .tab { font-size: 10.5px; padding: 8px 2px; }
+  .page-hd-icon { width: 36px; height: 36px; font-size: 18px; }
+}
 </style>
 </head>
 <body>
@@ -759,10 +841,11 @@ function onEventTypeChange() {
 
 // ── Status steps ─────────────────────────────────────────────────────────────
 var STEPS = [
-  { id: 'j1', label: 'Jira — Email comms & banners' },
-  { id: 'j2', label: 'Jira — Waiting room & background images' },
-  { id: 'sp', label: 'Slack — Performance team lead' },
-  { id: 'sc', label: 'Slack — CRM team lead' },
+  { id: 'j1',   label: 'Jira — Email comms & banners' },
+  { id: 'j2',   label: 'Jira — Waiting room & background images' },
+  { id: 'save', label: 'Save event to BigQuery' },
+  { id: 'sp',   label: 'Slack — Performance team lead' },
+  { id: 'sc',   label: 'Slack — CRM team lead' },
 ];
 
 function initSteps() {
@@ -1071,6 +1154,40 @@ async function handleSubmit() {
     setStep('j2', 'fail', esc(e.message));
     btn.disabled = false;
     return;
+  }
+
+  // Persist event to BigQuery (non-blocking — Slack DMs still fire if save fails)
+  setStep('save', 'busy');
+  try {
+    var payload = {
+      title:          f.title,
+      eventType:      eventType,
+      country:        f.country,
+      webinarType:    f.webinarType,
+      liveAt:         (f.mcDate  && f.mcTime) ? (f.mcDate  + 'T' + f.mcTime + ':00+05:30') : null,
+      day2LiveAt:     (f.mcDate2 && f.mcTime) ? (f.mcDate2 + 'T' + f.mcTime + ':00+05:30') : null,
+      goLiveDate:     f.date,
+      landingUrl:     f.landingUrl,
+      instructorName: f.speaker,
+      summary:        f.summary,
+      designNotes:    f.design,
+      jiraDesignKey:  j1.key,
+      jiraLandingKey: j2.key,
+    };
+    var saveResp = await fetch('/events', {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(payload),
+      credentials: 'include',
+    });
+    if (!saveResp.ok) {
+      var errText = await saveResp.text();
+      throw new Error('HTTP ' + saveResp.status + ': ' + errText.slice(0, 200));
+    }
+    var saveData = await saveResp.json();
+    setStep('save', 'ok', 'event_id: <code>' + esc(saveData.event_id) + '</code>');
+  } catch (e) {
+    setStep('save', 'fail', esc(e.message));
   }
 
   // Slack DM: Performance team lead
