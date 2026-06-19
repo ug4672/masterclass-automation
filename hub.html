@@ -4,77 +4,64 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masterclass Hub — Interview Kickstart</title>
+  <script>tailwind = { config: { darkMode: 'class' } };
+    // Apply theme before render to avoid a white flash on dark-mode load.
+    (function() {
+      const t = localStorage.getItem('ik_theme') || 'light';
+      if (t === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #fafaf9;
-      --surface: #ffffff;
-      --border: #e7e5e4;
-      --border-strong: #d6d3d1;
-      --text: #18181b;
-      --text-2: #57534e;
-      --text-3: #a8a29e;
-      --topic-ai: 217, 91%, 55%;
-      --topic-system: 25, 95%, 50%;
-      --topic-behavioral: 158, 64%, 42%;
-      --topic-data: 270, 75%, 58%;
-      --topic-ml: 330, 76%, 55%;
-      --topic-distributed: 199, 89%, 48%;
-    }
-    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background: var(--bg); color: var(--text); }
-    .topic-glow { background: radial-gradient(60% 80% at 100% 0%, hsla(var(--topic), .07) 0%, transparent 60%); }
-    .topic-strip { background: linear-gradient(90deg, hsla(var(--topic), 1) 0%, hsla(var(--topic), 0) 100%); }
-    .topic-chip { color: hsl(var(--topic)); background: hsla(var(--topic), .08); }
-    .topic-fill { background: hsl(var(--topic)); }
-    .card { background: var(--surface); border: 1px solid var(--border); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; position: relative; overflow: hidden; }
-    .card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: 0 12px 24px -12px rgba(0,0,0,.08), 0 4px 8px -4px rgba(0,0,0,.04); }
-    .fade-up { opacity: 0; transform: translateY(8px); animation: fadeUp .5s ease-out forwards; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .progress-track { background: #f4f4f5; }
-    .scroll-hide::-webkit-scrollbar { display: none; }
-    .scroll-hide { scrollbar-width: none; }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="min-h-screen">
 
 <!-- ─── Login overlay ─────────────────────────────────────────────────────── -->
-<div id="loginOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:380px;width:90%;">
-    <div style="width:52px;height:52px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px;color:#fff;font-weight:700;">IK</div>
-    <h2 style="font-size:19px;font-weight:700;color:#111827;margin-bottom:8px;">Masterclass Hub</h2>
-    <p style="font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.5;">Sign in with your IK Google account to continue</p>
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">IK</div>
+    <h2 class="login-title">Masterclass Hub</h2>
+    <p class="login-sub">Sign in with your IK Google account to continue</p>
     <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
-    <p id="loginError" style="display:none;color:#dc2626;font-size:12.5px;margin-top:16px;line-height:1.4;"></p>
+    <p id="loginError" class="login-error"></p>
   </div>
 </div>
 
 <!-- ─── App ──────────────────────────────────────────────────────────────── -->
 <div id="appWrap" style="display:none;">
 
+  <!-- Global header (shared across pages — keep in sync with event.html / months.html). -->
   <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
-      <div class="flex items-center gap-2.5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
         <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
-        <div>
+        <div class="hidden sm:block">
           <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
           <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
         </div>
-      </div>
+      </a>
 
-      <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1">
-        <button id="tabUpcoming" onclick="switchTab('upcoming')" class="px-4 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm">On the way</button>
-        <button id="tabAired" onclick="switchTab('aired')" class="px-4 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900">Recently aired</button>
-      </div>
+      <nav class="flex items-center gap-1 text-sm">
+        <a href="/hub.html"    class="nav-link nav-link-active px-3 py-1.5 rounded-md font-medium whitespace-nowrap">Hub</a>
+        <a href="/months.html" class="nav-link px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
+        <a href="/compare.html" class="nav-link px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
+      </nav>
 
-      <div class="flex items-center gap-2">
-        <a href="/Masterclass%20Automation.html" class="flex items-center gap-1.5 bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition no-underline">
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center bg-zinc-100 rounded-lg p-0.5 gap-0.5" id="countrySwitcher">
+          <button onclick="setCountry('IN')" id="ctryIN" class="px-2.5 py-1 rounded-md text-xs font-semibold">IN</button>
+          <button onclick="setCountry('US')" id="ctryUS" class="px-2.5 py-1 rounded-md text-xs font-semibold">US</button>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
+        </button>
+        <a href="/Masterclass%20Automation.html" class="hidden sm:flex items-center gap-1.5 bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition no-underline">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New masterclass
+          New
         </a>
         <div class="relative">
           <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
@@ -89,28 +76,32 @@
     </div>
   </header>
 
-  <section class="max-w-7xl mx-auto px-6 pt-10 pb-5 fade-up">
-    <h1 id="pageHeading" class="text-xl font-semibold text-zinc-900 tracking-tight">Upcoming masterclasses</h1>
-    <p id="pageSubheading" class="text-sm text-zinc-500 mt-1 inline-flex items-center gap-2">
-      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-      <span>Live data · synced with daily snapshot</span>
-    </p>
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 fade-up">
+    <div class="flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        <h1 id="pageHeading" class="text-xl font-semibold text-zinc-900 tracking-tight">Upcoming masterclasses</h1>
+        <p class="text-sm text-zinc-500 mt-1 inline-flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>Live data · synced with daily snapshot</span>
+        </p>
+      </div>
+      <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1">
+        <button id="tabUpcoming" onclick="switchTab('upcoming')" class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm whitespace-nowrap">Upcoming</button>
+        <button id="tabAired" onclick="switchTab('aired')" class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Past</button>
+      </div>
+    </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-6 pb-6 fade-up">
-    <div id="kpiStrip" class="grid grid-cols-4 gap-3"></div>
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
+    <div id="bentoArea" class="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:min-h-[440px]"></div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-6 pb-6">
-    <div id="bentoArea" class="grid grid-cols-3 grid-rows-2 gap-4" style="min-height: 440px;"></div>
-  </section>
-
-  <section class="max-w-7xl mx-auto px-6 pt-2 pb-12">
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-12">
     <div id="smallCardsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </section>
 
   <footer class="border-t border-zinc-200/80 bg-white">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
       <div>© 2026 Interview Kickstart · Internal use</div>
       <div class="flex items-center gap-4"><a href="/Masterclass%20Automation.html" class="hover:text-zinc-900">Legacy UI</a></div>
     </div>
@@ -130,7 +121,40 @@ const TOPIC_LABEL = {
   data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
 };
 
-let currentStatus = 'upcoming';
+let currentStatus  = 'upcoming';
+let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const btn  = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+}
+
+function applyCountryButtons() {
+  const on  = 'bg-white text-zinc-900 shadow-sm';
+  const off = 'text-zinc-500 hover:text-zinc-900';
+  const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
+  if (!inEl) return;
+  const base = 'px-2.5 py-1 rounded-md text-xs font-semibold ';
+  inEl.className = base + (currentCountry === 'IN' ? on : off);
+  usEl.className = base + (currentCountry === 'US' ? on : off);
+}
+function setCountry(c) {
+  if (currentCountry === c) return;
+  currentCountry = c;
+  localStorage.setItem('ik_country', c);
+  applyCountryButtons();
+  load();
+}
+function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 function showApp(email) {
@@ -203,7 +227,10 @@ function fmtNum(n) {
   if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
   return Math.round(n).toLocaleString();
 }
-function fmtMoney(n) { return n == null ? '—' : '₹' + Math.round(n).toLocaleString(); }
+function fmtMoney(n, sym) { return n == null ? '—' : (sym || '₹') + Math.round(n).toLocaleString(); }
+function isUSCountry(c) { const s = (c || '').toLowerCase(); return s === 'us' || s === 'usa'; }
+function moneySym(c) { return isUSCountry(c) ? '$' : '₹'; }
+function cplLabel(c)  { return isUSCountry(c) ? 'CPGQL' : 'CPIQL'; }
 function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
 function initials(name) {
   if (!name) return 'IK';
@@ -233,64 +260,43 @@ function pacing(ev) {
 
 // ── Data ────────────────────────────────────────────────────────────────────
 async function load() {
-  document.getElementById('bentoArea').innerHTML = '<div class="col-span-3 row-span-2 p-8 text-center text-zinc-400 text-sm">Loading…</div>';
+  document.getElementById('bentoArea').innerHTML = '<div class="lg:col-span-3 lg:row-span-2 p-8 text-center text-zinc-400 text-sm">Loading…</div>';
   try {
-    const r = await fetch(`/events?status=${currentStatus}`);
+    const r = await fetch(`/events?status=${currentStatus}&country=${encodeURIComponent(countryParam())}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     render(d.events || []);
   } catch (e) {
-    document.getElementById('bentoArea').innerHTML = `<div class="col-span-3 row-span-2 p-8 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+    document.getElementById('bentoArea').innerHTML = `<div class="lg:col-span-3 lg:row-span-2 p-8 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
     document.getElementById('smallCardsArea').innerHTML = '';
   }
 }
 
+let lastEvents = [];
+let selectedIds = new Set();
+let sortKey = 'live_at', sortDir = 'desc';
+
 function render(events) {
-  renderKpi(events);
-  renderBento(events.slice(0, 3));
-  renderSmall(events.slice(3));
-  document.getElementById('pageSubheading').innerHTML =
-    `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block mr-2"></span>${events.length} ${currentStatus === 'upcoming' ? 'on the way' : 'aired recently'} · live data`;
-}
-
-function renderKpi(events) {
-  const total = events.length;
-  const totalRegs = events.reduce((s,e) => s + (e.snapshot?.total_regs || 0), 0);
-  const goalSum  = events.reduce((s,e) => s + (e.goal_regs || 0), 0);
-  const goalP    = goalSum > 0 ? (100 * totalRegs / goalSum) : null;
-  const aired    = events.filter(e => e.snapshot?.attendance_pct != null);
-  const avgAtt   = aired.length ? aired.reduce((s,e) => s + e.snapshot.attendance_pct, 0) / aired.length : null;
-  const att      = events.filter(e => pacing(e)?.color === 'rose').length;
-
-  document.getElementById('kpiStrip').innerHTML = `
-    <div class="bg-white border border-zinc-200 rounded-xl p-4">
-      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${currentStatus === 'upcoming' ? 'On the way' : 'Aired'}</div>
-      <div class="mt-2 text-2xl font-semibold text-zinc-900">${total}</div>
-    </div>
-    <div class="bg-white border border-zinc-200 rounded-xl p-4">
-      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Total regs</div>
-      <div class="mt-2 flex items-baseline gap-1.5">
-        <div class="text-2xl font-semibold text-zinc-900">${fmtNum(totalRegs)}</div>
-        ${goalP != null ? `<div class="text-xs text-emerald-600 font-medium">↗ ${goalP.toFixed(0)}% of goal</div>` : ''}
-      </div>
-    </div>
-    <div class="bg-white border border-zinc-200 rounded-xl p-4">
-      <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Avg attendance</div>
-      <div class="mt-2 text-2xl font-semibold text-zinc-900">${avgAtt != null ? avgAtt.toFixed(1) + '%' : '—'}</div>
-    </div>
-    <div class="${att > 0 ? 'bg-rose-50 border-rose-200' : 'bg-white border-zinc-200'} border rounded-xl p-4">
-      <div class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full ${att > 0 ? 'bg-rose-500' : 'bg-zinc-300'}"></span>
-        <div class="text-[11px] ${att > 0 ? 'text-rose-700' : 'text-zinc-500'} font-medium uppercase tracking-wide">Need attention</div>
-      </div>
-      <div class="mt-2 text-2xl font-semibold ${att > 0 ? 'text-rose-700' : 'text-zinc-900'}">${att}</div>
-    </div>`;
+  lastEvents = events;
+  const bento = document.getElementById('bentoArea');
+  if (currentStatus === 'upcoming') {
+    // Restore bento grid layout when switching back from Past.
+    bento.className = 'grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:min-h-[440px]';
+    renderBento(events.slice(0, 3));
+    renderSmall(events.slice(3));
+  } else {
+    // Past view → sortable table with multi-select.
+    // Drop the bento grid classes so the table can take full width and natural height.
+    bento.className = '';
+    bento.innerHTML = '';
+    renderPastTable(events);
+  }
 }
 
 function renderBento(top3) {
   const el = document.getElementById('bentoArea');
   if (top3.length === 0) {
-    el.innerHTML = `<div class="col-span-3 row-span-2 p-12 text-center text-zinc-500 bg-white border border-dashed border-zinc-200 rounded-2xl">
+    el.innerHTML = `<div class="lg:col-span-3 lg:row-span-2 p-12 text-center text-zinc-500 bg-white border border-dashed border-zinc-200 rounded-2xl">
       <div class="text-base font-medium mb-1">No ${currentStatus === 'upcoming' ? 'upcoming' : 'aired'} events</div>
       <div class="text-xs">Create one from the “New masterclass” button.</div>
     </div>`;
@@ -305,9 +311,9 @@ function heroCard(ev) {
   const goalP  = goalPct(ev);
   return `
     <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card rounded-2xl col-span-2 row-span-2 p-7 cursor-pointer block no-underline topic-glow"
+       class="card card-hover rounded-2xl lg:col-span-2 lg:row-span-2 p-5 sm:p-7 cursor-pointer block no-underline topic-glow"
        style="--topic: var(${topicVar(ev.topic)});">
-      <div class="absolute top-0 left-7 right-7 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="absolute top-0 left-5 right-5 sm:left-7 sm:right-7 h-0.5 topic-strip rounded-b-full"></div>
       <div class="relative h-full flex flex-col">
         <div class="flex items-center justify-between mb-5">
           <div class="flex items-center gap-2">
@@ -316,7 +322,7 @@ function heroCard(ev) {
           </div>
           <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">${esc(topicLabel(ev.topic))}</span>
         </div>
-        <h2 class="text-3xl md:text-4xl font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-2xl">${esc(ev.title)}</h2>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-2xl">${esc(ev.title)}</h2>
         <div class="flex-1"></div>
         <div class="flex items-center gap-3 mt-8 mb-6">
           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-sm font-semibold">${esc(initials(ev.instructor_name))}</div>
@@ -325,7 +331,7 @@ function heroCard(ev) {
             <div class="text-xs text-zinc-500">${esc(ev.instructor_role || '')}</div>
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-8 pt-5 border-t border-zinc-100">
+        <div class="grid grid-cols-3 gap-3 sm:gap-8 pt-5 border-t border-zinc-100">
           <div>
             <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Live at</div>
             <div class="text-sm font-medium text-zinc-900 mt-1">${esc(fmtDateTime(ev.live_at))}</div>
@@ -335,8 +341,8 @@ function heroCard(ev) {
             <div class="text-sm font-medium text-zinc-900 mt-1">${fmtNum(s.total_regs)}${ev.goal_regs ? ` <span class="text-zinc-500">/ ${fmtNum(ev.goal_regs)}</span>` : ''}</div>
           </div>
           <div>
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Attendance' : 'CPIQL'}</div>
-            <div class="text-sm font-medium text-zinc-900 mt-1">${currentStatus === 'aired' ? fmtPct(s.attendance_pct) : fmtMoney(s.cpiql)}</div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Attendance' : cplLabel(ev.country)}</div>
+            <div class="text-sm font-medium text-zinc-900 mt-1">${currentStatus === 'aired' ? fmtPct(s.attendance_pct) : fmtMoney(s.cpiql, moneySym(ev.country))}</div>
           </div>
         </div>
       </div>
@@ -347,7 +353,7 @@ function medCard(ev) {
   const s = ev.snapshot || {};
   return `
     <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
+       class="card card-hover rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
        style="--topic: var(${topicVar(ev.topic)});">
       <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
       <div class="flex items-center justify-between mb-3">
@@ -381,7 +387,7 @@ function smallCard(ev) {
   const p     = pacing(ev);
   return `
     <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
+       class="card card-hover rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
        style="--topic: var(${topicVar(ev.topic)}); ${p?.color === 'rose' ? 'border-color: rgb(254 205 211);' : ''}">
       <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
       <div class="flex items-center justify-between mb-3">
@@ -409,15 +415,165 @@ function smallCard(ev) {
     </a>`;
 }
 
+// ── Past table (multi-select + sort + Compare action) ──────────────────────
+function renderPastTable(events) {
+  document.getElementById('smallCardsArea').innerHTML = '';
+  if (events.length === 0) {
+    document.getElementById('bentoArea').innerHTML = `
+      <div class="card rounded-2xl p-12 text-center text-zinc-500">
+        <div class="text-sm font-medium text-zinc-900 mb-1">No past ${currentCountry === 'US' ? 'US' : 'India'} events yet</div>
+        <div class="text-xs">Past masterclasses will appear here once they air.</div>
+      </div>`;
+    return;
+  }
+  const sorted = sortEvents(events.slice());
+
+  const sortIcon = (key) => {
+    const isActive = sortKey === key;
+    if (!isActive) return `<svg class="w-3 h-3 text-zinc-300 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+    return sortDir === 'asc'
+      ? `<svg class="w-3 h-3 text-zinc-700 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>`
+      : `<svg class="w-3 h-3 text-zinc-700 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+  };
+  const headerCell = (key, label, align) => {
+    const isActive = sortKey === key;
+    return `<button onclick="toggleSort('${key}')" class="text-[10px] uppercase tracking-wider font-semibold inline-flex items-center ${align==='right'?'justify-end w-full':''} ${isActive ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}">${esc(label)}${sortIcon(key)}</button>`;
+  };
+
+  // Topic dot uses the same color tokens as the bento cards — keeps Past visually connected to the rest of the app.
+  const topicDot = (topic) => `<span class="inline-block w-1.5 h-1.5 rounded-full shrink-0" style="background: hsl(var(${topicVar(topic)}));"></span>`;
+
+  // 4px accent column up front, then checkbox, then content. Tighter than v1 but
+  // legible at 1280px and degrades to horizontal scroll below ~720px.
+  const colTpl = '4px 32px 100px minmax(200px,2.6fr) minmax(120px,1.3fr) 96px 96px 88px';
+  const headRow = `
+    <div class="grid items-center gap-3 px-4 sm:px-5 py-2.5 border-b border-zinc-200 bg-zinc-50/60" style="grid-template-columns:${colTpl};">
+      <div></div>
+      <div><input type="checkbox" id="selectAllCk" onchange="toggleSelectAll(this.checked)" class="w-3.5 h-3.5 rounded border-zinc-300 cursor-pointer"/></div>
+      <div>${headerCell('live_at', 'Date')}</div>
+      <div>${headerCell('title', 'Event')}</div>
+      <div>${headerCell('instructor', 'Instructor')}</div>
+      <div>${headerCell('regs', leadLabelForCountry(), 'right')}</div>
+      <div>${headerCell('cpl', cplLabelForCountry(), 'right')}</div>
+      <div>${headerCell('att', 'Att %', 'right')}</div>
+    </div>`;
+
+  const rows = sorted.map(ev => {
+    const s = ev.snapshot || {};
+    const isSel = selectedIds.has(ev.event_id);
+    const rowBg = isSel ? 'bg-zinc-50' : 'hover:bg-zinc-50/60';
+    return `
+      <div class="grid items-center gap-3 px-4 sm:px-5 py-3 border-b border-zinc-100 last:border-0 transition-colors ${rowBg}" style="grid-template-columns:${colTpl};">
+        <div class="h-full" style="background: hsl(var(${topicVar(ev.topic)}) / .8);"></div>
+        <div><input type="checkbox" data-id="${esc(ev.event_id)}" onchange="toggleSelect('${esc(ev.event_id)}', this.checked)" ${isSel ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-zinc-300 cursor-pointer"/></div>
+        <div class="text-xs text-zinc-500 tabular-nums whitespace-nowrap">${esc(fmtDate(ev.live_at))}</div>
+        <div class="min-w-0 flex items-center gap-2">
+          ${topicDot(ev.topic)}
+          <div class="min-w-0">
+            <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="text-sm font-medium text-zinc-900 hover:topic-fg no-underline truncate block leading-tight">${esc(ev.title || ev.event_id)}</a>
+            ${ev.series ? `<div class="text-[10px] text-zinc-500 truncate mt-0.5">${esc(ev.series)}</div>` : ''}
+          </div>
+        </div>
+        <div class="text-xs text-zinc-600 truncate">${esc(ev.instructor_name || '—')}</div>
+        <div class="text-right text-sm font-semibold text-zinc-900 tabular-nums">${fmtNum(s.total_regs)}</div>
+        <div class="text-right text-sm text-zinc-700 tabular-nums">${fmtMoneyForCountry(s.cpiql)}</div>
+        <div class="text-right text-sm text-zinc-700 tabular-nums">${s.attendance_pct != null ? s.attendance_pct.toFixed(1) + '%' : '—'}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('bentoArea').innerHTML = `
+    <div class="card rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <div class="min-w-[820px]">
+          ${headRow}
+          ${rows}
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 text-[11px] text-zinc-500 flex items-center justify-between px-1">
+      <span>${sorted.length} event${sorted.length===1?'':'s'}</span>
+      <span class="hidden sm:inline">Tip: click a column header to sort. Select 2+ rows to compare.</span>
+    </div>`;
+  renderCompareBar();
+}
+
+function sortEvents(events) {
+  const dir = sortDir === 'asc' ? 1 : -1;
+  const get = ev => {
+    const s = ev.snapshot || {};
+    switch (sortKey) {
+      case 'live_at':    return ev.live_at ? new Date(ev.live_at).getTime() : 0;
+      case 'title':      return (ev.title || '').toLowerCase();
+      case 'instructor': return (ev.instructor_name || '').toLowerCase();
+      case 'regs':       return s.total_regs || 0;
+      case 'cpl':        return s.cpiql || 0;
+      case 'att':        return s.attendance_pct || 0;
+    }
+    return 0;
+  };
+  return events.sort((a, b) => {
+    const va = get(a), vb = get(b);
+    if (va < vb) return -1 * dir;
+    if (va > vb) return  1 * dir;
+    return 0;
+  });
+}
+
+function toggleSort(key) {
+  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = key; sortDir = 'desc'; }
+  renderPastTable(lastEvents);
+}
+
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  renderCompareBar();
+}
+function toggleSelectAll(checked) {
+  if (checked) lastEvents.forEach(e => selectedIds.add(e.event_id));
+  else selectedIds.clear();
+  renderPastTable(lastEvents);
+}
+
+function renderCompareBar() {
+  const n = selectedIds.size;
+  let bar = document.getElementById('compareBar');
+  if (n < 2) { if (bar) bar.remove(); return; }
+  const html = `
+    <div id="compareBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-zinc-900 text-white rounded-full shadow-lg px-5 py-2.5 flex items-center gap-3 text-sm">
+      <span class="font-medium">${n} selected</span>
+      <button onclick="clearSelection()" class="text-zinc-400 hover:text-white text-xs">clear</button>
+      <a href="/compare.html?ids=${Array.from(selectedIds).map(encodeURIComponent).join(',')}" class="bg-white text-zinc-900 rounded-full px-3 py-1 text-xs font-semibold hover:bg-zinc-100 no-underline">Compare →</a>
+    </div>`;
+  if (bar) bar.outerHTML = html; else document.body.insertAdjacentHTML('beforeend', html);
+}
+function clearSelection() {
+  selectedIds.clear();
+  renderPastTable(lastEvents);
+}
+
+function leadLabelForCountry() { return currentCountry === 'US' ? 'GQLs' : 'IQLs'; }
+function cplLabelForCountry()  { return currentCountry === 'US' ? 'CPGQL' : 'CPIQL'; }
+function fmtMoneyForCountry(n) {
+  if (n == null) return '—';
+  const sym = currentCountry === 'US' ? '$' : '₹';
+  return sym + Math.round(n).toLocaleString();
+}
+
 function switchTab(status) {
   if (currentStatus === status) return;
   currentStatus = status;
-  document.getElementById('tabUpcoming').className = 'px-4 py-1.5 rounded-md font-medium text-sm ' + (status === 'upcoming' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
-  document.getElementById('tabAired').className    = 'px-4 py-1.5 rounded-md font-medium text-sm ' + (status === 'aired'    ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
+  selectedIds.clear();
+  renderCompareBar();
+  const base = 'px-3 py-1.5 rounded-md font-medium text-sm whitespace-nowrap ';
+  document.getElementById('tabUpcoming').className = base + (status === 'upcoming' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
+  document.getElementById('tabAired').className    = base + (status === 'aired'    ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
   document.getElementById('pageHeading').textContent = status === 'upcoming' ? 'Upcoming masterclasses' : 'Recently aired';
   load();
 }
 
+applyCountryButtons();
+applyTheme();
 checkAuth();
 </script>
 </body>

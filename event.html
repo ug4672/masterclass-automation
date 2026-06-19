@@ -4,57 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Event — Masterclass Hub</title>
+  <script>tailwind = { config: { darkMode: 'class' } };
+    (function() { if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark'); })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #fafaf9;
-      --surface: #ffffff;
-      --border: #e7e5e4;
-      --border-strong: #d6d3d1;
-      --text: #18181b;
-      --text-2: #57534e;
-      --topic-ai: 217, 91%, 55%;
-      --topic-system: 25, 95%, 50%;
-      --topic-behavioral: 158, 64%, 42%;
-      --topic-data: 270, 75%, 58%;
-      --topic-ml: 330, 76%, 55%;
-      --topic-distributed: 199, 89%, 48%;
-    }
-    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background: var(--bg); color: var(--text); }
-    .topic-glow { background: radial-gradient(60% 80% at 100% 0%, hsla(var(--topic), .07) 0%, transparent 60%); }
-    .topic-strip { background: linear-gradient(90deg, hsla(var(--topic), 1) 0%, hsla(var(--topic), 0) 100%); }
-    .topic-chip { color: hsl(var(--topic)); background: hsla(var(--topic), .08); }
-    .topic-fg { color: hsl(var(--topic)); }
-    .topic-fill { background: hsl(var(--topic)); }
-    .card { background: var(--surface); border: 1px solid var(--border); position: relative; overflow: hidden; }
-    .fade-up { opacity: 0; transform: translateY(8px); animation: fadeUp .5s ease-out forwards; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .progress-track { background: #f4f4f5; }
-    .timeline-line {
-      background-image: linear-gradient(to bottom, var(--border) 50%, transparent 0);
-      background-size: 1px 6px; background-repeat: repeat-y; background-position: 7px 0;
-    }
-    .link-row:hover { background: #f7f7f6; }
-    .funnel-row { display: grid; grid-template-columns: 110px 1fr 64px 56px; align-items: center; gap: 12px; }
-    .funnel-bar { height: 22px; border-radius: 6px; background: var(--border); position: relative; overflow: hidden; }
-    .funnel-bar > span { display: block; height: 100%; border-radius: 6px; }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="min-h-screen" id="bodyEl">
 
 <!-- ─── Login overlay ─────────────────────────────────────────────────────── -->
-<div id="loginOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:380px;width:90%;">
-    <div style="width:52px;height:52px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 20px;">IK</div>
-    <h2 style="font-size:19px;font-weight:700;color:#111827;margin-bottom:8px;">Masterclass Hub</h2>
-    <p style="font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.5;">Sign in with your IK Google account to continue</p>
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">IK</div>
+    <h2 class="login-title">Masterclass Hub</h2>
+    <p class="login-sub">Sign in with your IK Google account to continue</p>
     <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
-    <p id="loginError" style="display:none;color:#dc2626;font-size:12.5px;margin-top:16px;line-height:1.4;"></p>
+    <p id="loginError" class="login-error"></p>
   </div>
 </div>
 
@@ -62,34 +31,35 @@
 
   <!-- ─── Top Bar ──────────────────────────────────────────────────────────── -->
   <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
-      <div class="flex items-center gap-2.5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
         <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
-        <div>
+        <div class="hidden sm:block">
           <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
           <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
         </div>
-      </div>
-      <nav class="hidden md:flex items-center gap-2 text-sm">
-        <a href="/hub.html" class="text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-          Hub
-        </a>
-        <span class="text-zinc-300">/</span>
-        <span id="breadcrumbTitle" class="text-zinc-900 font-medium truncate max-w-[280px]">…</span>
+      </a>
+      <nav class="flex items-center gap-1 text-sm">
+        <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
+        <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
+        <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
       </nav>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
+        </button>
         <button class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn" onclick="signOut()">UG</button>
       </div>
     </div>
   </header>
 
-  <main id="mainArea" class="max-w-7xl mx-auto px-6 pt-8 pb-12">
+  <main id="mainArea" class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-12">
+    <!-- Breadcrumb shows up once the event loads; the load() function rewrites this whole area. -->
     <div id="loadingState" class="text-center text-zinc-400 text-sm p-12">Loading event…</div>
   </main>
 
   <footer class="border-t border-zinc-200/80 bg-white">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
       <div>© 2026 Interview Kickstart · Internal use</div>
       <div><a href="/hub.html" class="hover:text-zinc-900">Back to Hub</a></div>
     </div>
@@ -108,6 +78,20 @@ const TOPIC_LABEL = {
   ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
   data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
 };
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const btn  = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+}
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 function showApp(email) {
@@ -155,7 +139,14 @@ function fmtCountdown(iso) {
   return `In ${Math.floor(h/24)} days`;
 }
 function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
-function fmtMoney(n) { return n == null ? '—' : '₹' + Math.round(n).toLocaleString(); }
+function fmtMoney(n, sym) { return n == null ? '—' : (sym || '₹') + Math.round(n).toLocaleString(); }
+function isUSCountry(c) { const s = (c || '').toLowerCase(); return s === 'us' || s === 'usa'; }
+function leadLabel(c, opts) {
+  // India tracks IQLs; US tracks GQLs. CPIQL / CPGQL likewise.
+  return isUSCountry(c) ? (opts?.long ? 'GQLs' : 'GQL') : (opts?.long ? 'IQLs' : 'IQL');
+}
+function cplLabel(c) { return isUSCountry(c) ? 'CPGQL' : 'CPIQL'; }
+function moneySym(c) { return isUSCountry(c) ? '$' : '₹'; }
 function fmtPct(n)   { return n == null ? '—' : n.toFixed(1) + '%'; }
 function initials(name) { return name ? name.split(/\s+/).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase() : 'IK'; }
 function topicVar(t)   { return TOPIC_VAR[t]   || '--topic-ai'; }
@@ -187,11 +178,8 @@ function render(data) {
   const ev   = data.event || {};
   const snap = data.snapshot || {};
   const daily = data.daily || [];
-  const comp = data.comparable || [];
-
   // Topic color theme
   document.getElementById('bodyEl').style.setProperty('--topic', `var(${topicVar(ev.topic)})`);
-  document.getElementById('breadcrumbTitle').textContent = ev.title || ev.event_id;
   document.title = (ev.title || 'Event') + ' — Masterclass Hub';
 
   const totalRegs = snap.total_regs;
@@ -199,11 +187,22 @@ function render(data) {
   const isAired = snap.hours_to_live != null && snap.hours_to_live < 0;
   const isUrgent = snap.hours_to_live != null && snap.hours_to_live < 24 && snap.hours_to_live > -4;
 
+  const monthSlug = ev.live_at ? new Date(ev.live_at).toISOString().slice(0, 7) : null;
+  const monthLabel = ev.live_at ? new Date(ev.live_at).toLocaleString('en-US', { month: 'short', year: 'numeric' }) : null;
+
   document.getElementById('mainArea').innerHTML = `
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-1.5 text-xs text-zinc-500 mb-4 flex-wrap">
+      <a href="/hub.html" class="hover:text-zinc-900">Hub</a>
+      ${monthSlug ? `<span class="text-zinc-300">/</span><a href="/months.html?month=${monthSlug}&country=${encodeURIComponent(ev.country || '')}" class="hover:text-zinc-900">${esc(monthLabel)}</a>` : ''}
+      <span class="text-zinc-300">/</span>
+      <span class="text-zinc-900 font-medium truncate">${esc(ev.title || ev.event_id)}</span>
+    </nav>
+
     <!-- HERO -->
-    <article class="card rounded-2xl p-7 topic-glow fade-up">
-      <div class="absolute top-0 left-7 right-7 h-0.5 topic-strip rounded-b-full"></div>
-      <div class="flex items-start justify-between gap-6">
+    <article class="card rounded-2xl p-5 sm:p-7 topic-glow fade-up">
+      <div class="absolute top-0 left-5 right-5 sm:left-7 sm:right-7 h-0.5 topic-strip rounded-b-full"></div>
+      <div class="flex flex-col md:flex-row items-start md:justify-between gap-4 md:gap-6">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-3 flex-wrap">
             <span class="w-2 h-2 rounded-full ${isUrgent ? 'bg-rose-500 animate-pulse' : 'bg-zinc-300'}"></span>
@@ -223,8 +222,8 @@ function render(data) {
             </div>
           </div>
         </div>
-        <div class="flex flex-col items-end gap-3 shrink-0">
-          <div class="flex items-center gap-2">
+        <div class="flex flex-row md:flex-col items-start md:items-end justify-between gap-3 shrink-0 w-full md:w-auto">
+          <div class="flex items-center gap-2 flex-wrap">
             ${ev.zoom_url ? `<a href="${esc(ev.zoom_url)}" target="_blank" class="px-3.5 py-2 bg-zinc-900 text-white rounded-lg text-xs font-semibold hover:bg-zinc-800 transition flex items-center gap-1.5 no-underline">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Join Zoom
@@ -232,7 +231,7 @@ function render(data) {
             ${ev.landing_url ? `<a href="${esc(ev.landing_url)}" target="_blank" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5 no-underline">Landing ↗</a>` : ''}
           </div>
           <div class="text-right">
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Goes live</div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${isAired ? 'Aired on' : 'Goes live'}</div>
             <div class="text-sm font-semibold text-zinc-900 mt-0.5">${esc(fmtDateTime(ev.live_at))}</div>
           </div>
         </div>
@@ -240,9 +239,9 @@ function render(data) {
     </article>
 
     <!-- KPI strip -->
-    <section class="grid grid-cols-4 gap-3 mt-4 fade-up">
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 fade-up">
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
-        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Final regs' : 'Registered'}</div>
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Final ' + leadLabel(ev.country, {long:true}) : leadLabel(ev.country, {long:true}) + ' registered'}</div>
         <div class="mt-2 flex items-baseline gap-1.5">
           <div class="text-2xl font-semibold text-zinc-900">${fmtNum(totalRegs)}</div>
           ${ev.goal_regs ? `<div class="text-xs text-zinc-500 font-medium">/ ${fmtNum(ev.goal_regs)} goal</div>` : ''}
@@ -250,19 +249,14 @@ function render(data) {
         ${goalP != null ? `<div class="mt-3 h-1 progress-track rounded-full overflow-hidden"><div class="topic-fill h-full rounded-full" style="width: ${goalP.toFixed(0)}%;"></div></div>` : ''}
       </div>
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
-        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">CPIQL</div>
-        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtMoney(snap.cpiql)}</div>
-        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ${fmtMoney(snap.meta_spend)} · ${fmtNum(snap.meta_regs)} meta IQLs</div>
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${cplLabel(ev.country)}</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtMoney(snap.cpiql, moneySym(ev.country))}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ${fmtMoney(snap.meta_spend, moneySym(ev.country))} · ${fmtNum(snap.meta_regs)} paid ${leadLabel(ev.country, {long:true})}</div>
       </div>
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
         <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Attendance' : 'Time to live'}</div>
         <div class="mt-2 text-2xl font-semibold text-zinc-900">${isAired ? fmtPct(snap.attendance_pct) : esc(fmtCountdown(ev.live_at))}</div>
         ${isAired ? `<div class="text-[10px] text-zinc-500 mt-1.5">${fmtNum(snap.attendees)} of ${fmtNum(totalRegs)} attended</div>` : ''}
-      </div>
-      <div class="bg-white border border-zinc-200 rounded-xl p-4">
-        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Email funnel</div>
-        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtNum(snap.email_sent)}</div>
-        <div class="text-[10px] text-zinc-500 mt-1.5">sent · ${fmtNum(snap.email_opened)} opened · ${fmtNum(snap.email_clicked)} clicked</div>
       </div>
     </section>
 
@@ -277,7 +271,7 @@ function render(data) {
           <div class="absolute top-0 left-6 right-6 h-0.5 topic-strip rounded-b-full"></div>
           <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Lead Funnel</h2>
           <p class="text-xs text-zinc-500 mt-0.5 mb-5">Channel split · cumulative through ${esc(fmtDateTime(snap.snapshot_at))}</p>
-          ${renderFunnel(snap)}
+          ${renderFunnel(snap, ev)}
         </article>
 
         <!-- Lead quality -->
@@ -303,7 +297,7 @@ function render(data) {
         <article class="card rounded-2xl p-6 fade-up">
           <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Daily pacing</h2>
           <p class="text-xs text-zinc-500 mt-0.5 mb-5">${daily.length} day${daily.length===1?'':'s'} of acquisition</p>
-          ${renderDaily(daily)}
+          ${renderDaily(daily, ev)}
         </article>
       </div>
 
@@ -315,7 +309,7 @@ function render(data) {
           <dl class="space-y-2.5 text-xs">
             <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Type</dt><dd class="font-medium text-zinc-900">${esc(ev.event_type || '—')}</dd></div>
             <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Webinar type</dt><dd class="font-mono text-[10px] text-zinc-700">${esc(ev.webinar_type || '—')}</dd></div>
-            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Goes live</dt><dd class="font-medium text-zinc-900 text-right">${esc(fmtDateTime(ev.live_at))}</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">${isAired ? 'Aired on' : 'Goes live'}</dt><dd class="font-medium text-zinc-900 text-right">${esc(fmtDateTime(ev.live_at))}</dd></div>
             ${ev.day2_live_at ? `<div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Day 2</dt><dd class="font-medium text-zinc-900 text-right">${esc(fmtDateTime(ev.day2_live_at))}</dd></div>` : ''}
             <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Go-live date</dt><dd class="font-medium text-zinc-900">${esc(fmtDate(ev.go_live_date))}</dd></div>
             <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">Country</dt><dd class="font-medium text-zinc-900">${esc(ev.country || '—')}</dd></div>
@@ -328,15 +322,17 @@ function render(data) {
           <div class="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Quick links</div>
           ${ev.zoom_url    ? linkRow('Zoom — Join webinar', ev.zoom_url, 'blue') : ''}
           ${ev.landing_url ? linkRow('Landing page', ev.landing_url, 'emerald') : ''}
+          ${ev.slides_url  ? linkRow('Slides / Deck', ev.slides_url, 'amber') : ''}
+          ${ev.yt_url      ? linkRow('YouTube — Live', ev.yt_url, 'rose') : ''}
           ${ev.jira_design_key  ? linkRow('Jira — Email comms', ev.jira_design_key, 'indigo', true) : ''}
           ${ev.jira_landing_key ? linkRow('Jira — Waiting room', ev.jira_landing_key, 'indigo', true) : ''}
         </article>
 
-        <!-- Comparable past events -->
+        <!-- Compare with… -->
         <article class="card rounded-2xl p-5 fade-up">
-          <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Comparable past events</h3>
-          <p class="text-[10px] text-zinc-500 mb-4">Same country · last 6 months</p>
-          ${comp.length === 0 ? '<div class="text-xs text-zinc-400 italic">None yet — history will populate as past events accumulate.</div>' : comp.map(compRow).join('')}
+          <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Compare</h3>
+          <a href="/compare.html?ids=${encodeURIComponent(ev.event_id)}${ev.series ? '&open=picker&series=' + encodeURIComponent(ev.series) : '&open=picker'}" class="block text-center py-3 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition no-underline">Compare with…</a>
+          ${ev.series ? `<p class="text-[10px] text-zinc-500 mt-2.5">Picker pre-filtered to <span class="font-medium text-zinc-700">${esc(ev.series)}</span></p>` : ''}
         </article>
       </div>
     </section>
@@ -344,78 +340,110 @@ function render(data) {
 }
 
 // ── Section renderers ──────────────────────────────────────────────────────
-function renderFunnel(s) {
-  const total = (s.meta_regs || 0) + (s.crm_regs || 0) + (s.other_regs || 0);
+function renderFunnel(s, ev) {
+  const sym = moneySym(ev && ev.country);
+  const lead = leadLabel(ev && ev.country, {long:true});
+  const lanes = isUSCountry(ev && ev.country)
+    ? [
+        // US: 6 channel buckets from utm_campaign classification.
+        ['YT',         s.us_yt_regs         || 0, '#ef4444'],
+        ['Social',     s.us_social_regs     || 0, '#1877f2'],
+        ['L10X Email', s.us_l10x_email_regs || 0, '#10b981'],
+        ['L10X Bot',   s.us_l10x_bot_regs   || 0, '#8b5cf6'],
+        ['NI Base',    s.us_ni_base_regs    || 0, '#f59e0b'],
+        ['Other',      s.us_other_regs      || 0, '#a1a1aa'],
+      ]
+    : [
+        ['Meta',   s.meta_regs  || 0, '#1877f2'],
+        ['CRM',    s.crm_regs   || 0, '#10b981'],
+        ['Others', s.other_regs || 0, '#a1a1aa'],
+      ];
+  const total = lanes.reduce((a, [, n]) => a + n, 0);
   if (total === 0) return '<div class="text-xs text-zinc-400 italic py-4">No registration data yet.</div>';
   const w = n => total > 0 ? (100 * n / total) : 0;
-  const cpiqlMeta = (s.meta_spend > 0 && s.meta_regs > 0) ? '₹' + Math.round(s.meta_spend / s.meta_regs) : '—';
-  const cpiqlOther = (s.other_spend > 0 && s.other_regs > 0) ? '₹' + Math.round(s.other_spend / s.other_regs) : 'organic';
+  const cplPaid  = (s.meta_spend > 0 && s.meta_regs > 0)
+    ? sym + Math.round(s.meta_spend / s.meta_regs) : '—';
+  const rows = lanes.map(([label, n, color], i) => {
+    // CPL annotation only on the "paid" lane; rest read "organic".
+    const isPaidLane = isUSCountry(ev && ev.country)
+      ? (label === 'YT' || label === 'Social')
+      : (label === 'Meta');
+    const annot = isPaidLane ? cplPaid : 'organic';
+    return `
+      <div class="funnel-row">
+        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm" style="background:${color};"></span><span class="font-medium text-zinc-900">${esc(label)}</span></div>
+        <div class="funnel-bar"><span style="width: ${w(n)}%; background:${color};"></span></div>
+        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(n)}</div>
+        <div class="text-[10px] text-zinc-500 text-right">${annot}</div>
+      </div>`;
+  }).join('');
   return `
-    <div class="space-y-2.5">
-      <div class="funnel-row">
-        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm" style="background:#1877f2;"></span><span class="font-medium text-zinc-900">Meta</span></div>
-        <div class="funnel-bar"><span style="width: ${w(s.meta_regs || 0)}%; background:#1877f2;"></span></div>
-        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.meta_regs)}</div>
-        <div class="text-[10px] text-zinc-500 text-right">${cpiqlMeta}</div>
-      </div>
-      <div class="funnel-row">
-        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm bg-emerald-500"></span><span class="font-medium text-zinc-900">CRM</span></div>
-        <div class="funnel-bar"><span style="width: ${w(s.crm_regs || 0)}%; background:#10b981;"></span></div>
-        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.crm_regs)}</div>
-        <div class="text-[10px] text-zinc-500 text-right">organic</div>
-      </div>
-      <div class="funnel-row">
-        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm bg-zinc-400"></span><span class="font-medium text-zinc-900">Others</span></div>
-        <div class="funnel-bar"><span style="width: ${w(s.other_regs || 0)}%; background:#a1a1aa;"></span></div>
-        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(s.other_regs)}</div>
-        <div class="text-[10px] text-zinc-500 text-right">${cpiqlOther}</div>
-      </div>
-    </div>
+    <div class="space-y-2.5">${rows}</div>
     <div class="mt-5 pt-4 border-t border-zinc-100 text-xs text-zinc-500">
-      <span class="font-semibold text-zinc-900">${fmtNum(total)}</span> total IQLs · meta spend ${fmtMoney(s.meta_spend)}
+      <span class="font-semibold text-zinc-900">${fmtNum(total)}</span> total ${lead} · paid spend ${fmtMoney(s.meta_spend, sym)}
     </div>
   `;
 }
 
 function renderQuality(s) {
-  const roleTotal = (s.role_sde || 0) + (s.role_ml || 0) + (s.role_other || 0);
-  const weTotal   = (s.we_3_5 || 0) + (s.we_6_10 || 0) + (s.we_10p || 0);
+  // Bucket labels match the legacy Leads section. role_ml stores "Data";
+  // we_3_5 stores "0-5" — column names are misleading but kept for back-compat.
+  const roleBuckets = [
+    ['Data',              s.role_ml         || 0],
+    ['Software Engineer', s.role_sde        || 0],
+    ['Management',        s.role_management || 0],
+    ['Systems',           s.role_systems    || 0],
+    ['Null',              s.role_null       || 0],
+    ['Other',             s.role_other      || 0],
+  ];
+  const weBuckets = [
+    ['0–5 years',   s.we_3_5    || 0],
+    ['5–10 years',  s.we_6_10   || 0],
+    ['10–15 years', s.we_10_15  || 0],
+    ['15–20 years', s.we_15_20  || 0],
+    ['20+ years',   s.we_20p    || 0],
+    ['Other',       s.we_other  || 0],
+  ];
+  const roleTotal = roleBuckets.reduce((a, [, n]) => a + n, 0);
+  const weTotal   = weBuckets.reduce((a, [, n]) => a + n, 0);
   if (roleTotal === 0 && weTotal === 0) return '<div class="text-xs text-zinc-400 italic">Cohort breakdown not yet snapshotted.</div>';
-  const bar = (label, val, total) => `
-    <div class="flex items-center justify-between text-xs">
-      <span class="text-zinc-700">${esc(label)}</span>
-      <div class="flex items-center gap-2 w-32">
-        <div class="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
-          <div class="topic-fill h-full" style="width: ${total > 0 ? (100 * val / total).toFixed(0) : 0}%;"></div>
+  const bar = (label, val, total) => {
+    const pct = total > 0 ? (100 * val / total) : 0;
+    return `
+    <div class="flex items-center justify-between text-xs gap-3">
+      <span class="text-zinc-700 truncate">${esc(label)}</span>
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-24 h-1.5 progress-track rounded-full overflow-hidden">
+          <div class="topic-fill h-full" style="width: ${pct.toFixed(0)}%;"></div>
         </div>
-        <span class="font-semibold text-zinc-900 w-9 text-right">${fmtNum(val)}</span>
+        <span class="font-semibold text-zinc-900 w-12 text-right tabular-nums">${pct.toFixed(1)}%</span>
       </div>
     </div>`;
+  };
+  // Hide empty buckets (Null role and 0-5 work_ex are usually 0).
+  // Percentages stay relative to the full total so they remain accurate.
+  const roleVisible = roleBuckets.filter(([, n]) => n > 0);
+  const weVisible   = weBuckets.filter(([, n]) => n > 0);
   return `
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div>
         <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Role category</div>
         <div class="space-y-2">
-          ${bar('SDE / Backend',  s.role_sde   || 0, roleTotal)}
-          ${bar('ML / Data',      s.role_ml    || 0, roleTotal)}
-          ${bar('Other',          s.role_other || 0, roleTotal)}
+          ${roleVisible.map(([l, n]) => bar(l, n, roleTotal)).join('')}
         </div>
       </div>
       <div>
         <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">Work experience</div>
         <div class="space-y-2">
-          ${bar('3–5 years',  s.we_3_5  || 0, weTotal)}
-          ${bar('6–10 years', s.we_6_10 || 0, weTotal)}
-          ${bar('10+ years',  s.we_10p  || 0, weTotal)}
+          ${weVisible.map(([l, n]) => bar(l, n, weTotal)).join('')}
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderAttendance(s, isAired) {
   if (!isAired || s.attendees == null) {
-    return `<div class="grid grid-cols-3 gap-3 mt-4">
+    return `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
       <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
         <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
         <div class="mt-6 text-zinc-300 text-2xl font-semibold">—</div>
@@ -440,7 +468,7 @@ function renderAttendance(s, isAired) {
       </div>
     </div>`;
   }
-  return `<div class="grid grid-cols-3 gap-3 mt-4">
+  return `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
     <div class="rounded-xl border border-zinc-200 p-4">
       <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
       <div class="mt-3 text-2xl font-semibold text-zinc-900">${fmtPct(s.attendance_pct)}</div>
@@ -466,27 +494,28 @@ function renderAttendance(s, isAired) {
   </div>`;
 }
 
-function renderDaily(daily) {
+function renderDaily(daily, ev) {
   if (daily.length === 0) return '<div class="text-xs text-zinc-400 italic">No daily snapshots yet.</div>';
+  const sym = moneySym(ev && ev.country);
   const maxRegs = Math.max(...daily.map(d => d.total_regs || 0), 1);
   const rows = daily.map(d => `
-    <div class="grid grid-cols-12 items-center gap-3 text-xs py-1.5 border-b border-zinc-50 last:border-0">
-      <div class="col-span-2 text-zinc-500">${esc(fmtDate(d.registration_date))}</div>
-      <div class="col-span-5 h-2 progress-track rounded-full overflow-hidden">
+    <div class="grid grid-cols-12 items-center gap-2 sm:gap-3 text-xs py-1.5 border-b border-zinc-50 last:border-0">
+      <div class="col-span-3 sm:col-span-2 text-zinc-500 whitespace-nowrap">${esc(fmtDate(d.registration_date))}</div>
+      <div class="col-span-4 sm:col-span-5 h-2 progress-track rounded-full overflow-hidden">
         <div class="topic-fill h-full rounded-full" style="width: ${(100 * (d.total_regs || 0) / maxRegs).toFixed(0)}%;"></div>
       </div>
-      <div class="col-span-2 text-right font-semibold text-zinc-900">${fmtNum(d.total_regs)}</div>
-      <div class="col-span-2 text-right text-zinc-500">${fmtMoney(d.total_spend)}</div>
-      <div class="col-span-1 text-right text-zinc-500">${d.cpiql != null ? '₹' + Math.round(d.cpiql) : '—'}</div>
+      <div class="col-span-3 sm:col-span-2 text-right font-semibold text-zinc-900 tabular-nums">${fmtNum(d.total_regs)}</div>
+      <div class="hidden sm:block sm:col-span-2 text-right text-zinc-500 tabular-nums">${fmtMoney(d.total_spend, sym)}</div>
+      <div class="col-span-2 sm:col-span-1 text-right text-zinc-500 tabular-nums">${d.cpiql != null ? sym + Math.round(d.cpiql) : '—'}</div>
     </div>
   `).join('');
   return `
-    <div class="grid grid-cols-12 gap-3 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold pb-2 border-b border-zinc-100">
-      <div class="col-span-2">Date</div>
-      <div class="col-span-5">Pacing</div>
-      <div class="col-span-2 text-right">Regs</div>
-      <div class="col-span-2 text-right">Spend</div>
-      <div class="col-span-1 text-right">CPIQL</div>
+    <div class="grid grid-cols-12 gap-2 sm:gap-3 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold pb-2 border-b border-zinc-100">
+      <div class="col-span-3 sm:col-span-2">Date</div>
+      <div class="col-span-4 sm:col-span-5">Pacing</div>
+      <div class="col-span-3 sm:col-span-2 text-right">${leadLabel(ev && ev.country, {long:true})}</div>
+      <div class="hidden sm:block sm:col-span-2 text-right">Spend</div>
+      <div class="col-span-2 sm:col-span-1 text-right">${cplLabel(ev && ev.country)}</div>
     </div>
     ${rows}
   `;
@@ -508,22 +537,7 @@ function linkRow(label, value, color, isKey) {
     </a>`;
 }
 
-function compRow(c) {
-  return `
-    <a href="/event.html?id=${encodeURIComponent(c.event_id)}" class="block group py-3 border-b border-zinc-100 last:border-0 no-underline">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-zinc-900 group-hover:topic-fg truncate">${esc(c.title || '—')}</div>
-          <div class="text-[10px] text-zinc-500 mt-0.5">${esc(fmtDate(c.live_at))} · ${esc(c.instructor_name || '')}</div>
-        </div>
-        <div class="text-right shrink-0">
-          <div class="text-xs font-semibold text-zinc-900">${fmtNum(c.total_regs)}</div>
-          <div class="text-[10px] text-emerald-600">${c.attendance_pct != null ? c.attendance_pct.toFixed(0) + '% att.' : '—'}</div>
-        </div>
-      </div>
-    </a>`;
-}
-
+applyTheme();
 checkAuth();
 </script>
 </body>

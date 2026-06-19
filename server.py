@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Local proxy server — serves the HTML and forwards API calls to Jira/Slack/BigQuery."""
 import http.server, urllib.request, urllib.parse, urllib.error, json, os, re, ssl, decimal, datetime
-import threading, time, hmac, hashlib
+import threading, time, hmac, hashlib, zoneinfo
+from concurrent.futures import ThreadPoolExecutor
 
 GCS_BUCKET = os.environ.get('GCS_BUCKET', '')
 GCS_CONFIG_KEY = 'snapshot_config.json'
@@ -132,6 +133,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._get_event(path[len('/events/'):])
             return
+        if path == '/months':
+            if not _session_email(self):
+                self._json_response(401, {'error': 'Not authenticated'})
+                return
+            self._list_months(p)
+            return
+        if path == '/series':
+            if not _session_email(self):
+                self._json_response(401, {'error': 'Not authenticated'})
+                return
+            self._list_series(p)
+            return
         super().do_GET()
 
     def do_POST(self):
@@ -142,7 +155,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/auth/logout':
             self._auth_logout()
             return
-        if self.path == '/run-snapshot':  # called by Cloud Scheduler, no browser session
+        if self.path.startswith('/run-snapshot'):  # called by Cloud Scheduler, no browser session
             self._run_snapshot()
             return
         # All other endpoints require a valid session
@@ -166,11 +179,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Accept')
 
-    def _json_response(self, status, data):
+    def _json_response(self, status, data, extra_headers=None):
         body = json.dumps(data, default=json_serial).encode()
         self.send_response(status)
         self._cors()
         self.send_header('Content-Type', 'application/json')
+        for k, v in (extra_headers or {}).items():
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
@@ -242,6 +257,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         qs      = urllib.parse.parse_qs(parsed_url.query)
         status  = qs.get('status', ['upcoming'])[0]
         country = qs.get('country', [None])[0]
+        ids_csv = qs.get('ids', [None])[0]
         try:
             limit = min(int(qs.get('limit', ['50'])[0]), 200)
         except ValueError:
@@ -249,13 +265,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         where  = ["COALESCE(e.status, 'upcoming') != 'archived'"]
         params = []
-        if status == 'upcoming':
-            where.append("e.live_at > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 4 HOUR)")
-        elif status == 'aired':
-            where.append("e.live_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 4 HOUR)")
-        if country:
-            where.append("e.country = @country")
-            params.append(bigquery.ScalarQueryParameter('country', 'STRING', country))
+        if ids_csv:
+            # When ids are supplied, status/country filters are ignored — the caller knows
+            # what it wants (typically the Compare workspace passing a deep-link).
+            id_list = [i for i in ids_csv.split(',') if i]
+            where = ["e.event_id IN UNNEST(@ids)"]
+            params.append(bigquery.ArrayQueryParameter('ids', 'STRING', id_list))
+            limit = max(limit, len(id_list))
+        else:
+            if status == 'upcoming':
+                where.append("e.live_at > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 4 HOUR)")
+            elif status == 'aired':
+                where.append("e.live_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 4 HOUR)")
+            if country:
+                where.append("e.country = @country")
+                params.append(bigquery.ScalarQueryParameter('country', 'STRING', country))
 
         order = 'ASC' if status == 'upcoming' else 'DESC'
         query = f"""
@@ -265,12 +289,18 @@ WITH latest_snap AS (
   QUALIFY ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY snapshot_at DESC) = 1
 )
 SELECT
-  e.event_id, e.title, e.topic, e.event_type, e.country, e.webinar_type,
-  e.live_at, e.day2_live_at, e.go_live_date, e.landing_url,
+  e.event_id, e.title, e.topic, e.event_type, e.country, e.webinar_type, e.series,
+  e.live_at, e.day2_live_at, e.go_live_date, e.landing_url, e.slides_url, e.yt_url, e.zoom_url,
   e.instructor_name, e.instructor_role, e.goal_regs, e.status,
   s.total_regs, s.meta_regs, s.crm_regs, s.other_regs,
   s.meta_spend, s.cpiql, s.attendees, s.attendance_pct,
-  s.hours_to_live, s.snapshot_at
+  s.hours_to_live, s.snapshot_at,
+  s.email_sent, s.email_delivered, s.email_opened, s.email_clicked,
+  s.calls_attempted, s.calls_connected, s.avg_talk_seconds,
+  s.role_sde, s.role_ml, s.role_management, s.role_systems, s.role_null, s.role_other,
+  s.we_3_5, s.we_6_10, s.we_10_15, s.we_15_20, s.we_20p, s.we_other,
+  s.us_yt_regs, s.us_social_regs, s.us_l10x_email_regs, s.us_l10x_bot_regs,
+  s.us_ni_base_regs, s.us_other_regs
 FROM `{BQ_APP_PROJECT}.events.event` e
 LEFT JOIN latest_snap s USING (event_id)
 WHERE {' AND '.join(where)}
@@ -285,15 +315,149 @@ LIMIT {limit}"""
             return
 
         events = []
+        snap_keys = ('total_regs', 'meta_regs', 'crm_regs', 'other_regs', 'meta_spend',
+                     'cpiql', 'attendees', 'attendance_pct', 'hours_to_live', 'snapshot_at',
+                     'email_sent', 'email_delivered', 'email_opened', 'email_clicked',
+                     'calls_attempted', 'calls_connected', 'avg_talk_seconds',
+                     'role_sde', 'role_ml', 'role_management', 'role_systems', 'role_null', 'role_other',
+                     'we_3_5', 'we_6_10', 'we_10_15', 'we_15_20', 'we_20p', 'we_other',
+                     'us_yt_regs', 'us_social_regs', 'us_l10x_email_regs', 'us_l10x_bot_regs',
+                     'us_ni_base_regs', 'us_other_regs')
         for r in rows:
             d = _row_to_dict(r)
-            # Reshape: separate snapshot block from event metadata
-            snap_keys = ('total_regs', 'meta_regs', 'crm_regs', 'other_regs', 'meta_spend',
-                         'cpiql', 'attendees', 'attendance_pct', 'hours_to_live', 'snapshot_at')
             ev = {k: v for k, v in d.items() if k not in snap_keys}
             ev['snapshot'] = {k: d.get(k) for k in snap_keys}
             events.append(ev)
         self._json_response(200, {'events': events})
+
+    def _list_series(self, parsed_url):
+        from google.cloud import bigquery
+        qs      = urllib.parse.parse_qs(parsed_url.query)
+        country = qs.get('country', ['India'])[0]
+        params  = [bigquery.ScalarQueryParameter('country', 'STRING', country)]
+        query = f"""
+SELECT series, COUNT(*) AS n
+FROM `{BQ_APP_PROJECT}.events.event`
+WHERE series IS NOT NULL
+  AND country = @country
+  AND COALESCE(status, 'upcoming') != 'archived'
+GROUP BY series
+ORDER BY MAX(live_at) DESC"""
+        try:
+            client = bigquery.Client(project=BQ_APP_PROJECT)
+            rows   = list(client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=params)).result())
+        except Exception as e:
+            self._json_response(500, {'error': str(e)})
+            return
+        self._json_response(200, {'series': [{'name': r['series'], 'count': int(r['n'])} for r in rows]},
+                            extra_headers={'Cache-Control': 'private, max-age=120'})
+
+    def _list_months(self, parsed_url):
+        """Aggregate per-event-month for one country, from Jan 2026 onward.
+        Returns one row per month with all metrics (Acquisition + Engagement + Quality +
+        Calls), plus a nested list of per-event rows for inline drill-down. The frontend
+        picks which metric tab to surface.
+
+        Month bucket = event's local-timezone live_at (IST for India, PT for US) — NOT
+        lead registration date.
+
+        Blended CPL = sum(spend) / sum(paid_regs) across the month, which is more honest
+        than averaging per-event CPLs of wildly different volumes."""
+        from google.cloud import bigquery
+        qs      = urllib.parse.parse_qs(parsed_url.query)
+        country = qs.get('country', ['India'])[0]
+        series  = qs.get('series', [None])[0]
+        tz      = 'America/Los_Angeles' if country.lower() in ('us', 'usa') else 'Asia/Kolkata'
+        params  = [bigquery.ScalarQueryParameter('country', 'STRING', country)]
+        where   = ["e.country = @country",
+                   "e.live_at >= TIMESTAMP '2026-01-01 00:00:00'",
+                   "COALESCE(e.status, 'upcoming') != 'archived'"]
+        if series:
+            where.append("e.series = @series")
+            params.append(bigquery.ScalarQueryParameter('series', 'STRING', series))
+
+        where_clause = ' AND '.join(where)
+        events_query = f"""
+WITH latest AS (
+  SELECT * FROM `{BQ_APP_PROJECT}.history.event_snapshot`
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY snapshot_at DESC) = 1
+)
+SELECT
+  FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(e.live_at, '{tz}'), MONTH)) AS month_slug,
+  e.event_id, e.title, e.instructor_name, e.series, e.live_at,
+  s.total_regs, s.meta_regs, s.crm_regs, s.other_regs, s.meta_spend, s.cpiql,
+  s.attendees, s.attendance_pct,
+  s.email_sent, s.email_delivered, s.email_opened, s.email_clicked,
+  s.calls_attempted, s.calls_connected, s.avg_talk_seconds,
+  s.role_sde, s.role_ml, s.role_management, s.role_systems, s.role_null, s.role_other,
+  s.we_3_5, s.we_6_10, s.we_10_15, s.we_15_20, s.we_20p, s.we_other,
+  s.us_yt_regs, s.us_social_regs, s.us_l10x_email_regs, s.us_l10x_bot_regs,
+  s.us_ni_base_regs, s.us_other_regs
+FROM `{BQ_APP_PROJECT}.events.event` e
+LEFT JOIN latest s USING (event_id)
+WHERE {where_clause}
+ORDER BY e.live_at DESC"""
+        try:
+            client = bigquery.Client(project=BQ_APP_PROJECT)
+            rows   = list(client.query(events_query, job_config=bigquery.QueryJobConfig(query_parameters=params)).result())
+        except Exception as e:
+            self._json_response(500, {'error': str(e)})
+            return
+
+        events = [_row_to_dict(r) for r in rows]
+        # Aggregate to monthly rows in Python — simpler than two BQ queries, fast for
+        # ~30 events × ~12 months. Reuses the same row data both for the headline
+        # table and for the per-event drill-down (frontend just groups by month_slug).
+        by_month = {}
+        for ev in events:
+            ms = ev.get('month_slug')
+            if not ms:
+                continue
+            m = by_month.setdefault(ms, {
+                'month_slug': ms, 'events': 0,
+                'total_regs': 0, 'meta_regs': 0, 'crm_regs': 0, 'other_regs': 0,
+                'meta_spend': 0.0, 'attendees': 0,
+                'email_sent': 0, 'email_delivered': 0, 'email_opened': 0, 'email_clicked': 0,
+                'calls_attempted': 0, 'calls_connected': 0, 'talk_seconds_total': 0.0,
+                'role_sde': 0, 'role_ml': 0, 'role_management': 0, 'role_systems': 0, 'role_null': 0, 'role_other': 0,
+                'we_3_5': 0, 'we_6_10': 0, 'we_10_15': 0, 'we_15_20': 0, 'we_20p': 0, 'we_other': 0,
+                'us_yt_regs': 0, 'us_social_regs': 0, 'us_l10x_email_regs': 0,
+                'us_l10x_bot_regs': 0, 'us_ni_base_regs': 0, 'us_other_regs': 0,
+                'event_ids': [],
+            })
+            m['events'] += 1
+            m['event_ids'].append(ev['event_id'])
+            sum_keys = ('total_regs', 'meta_regs', 'crm_regs', 'other_regs', 'meta_spend',
+                        'attendees', 'email_sent', 'email_delivered', 'email_opened', 'email_clicked',
+                        'calls_attempted', 'calls_connected',
+                        'role_sde', 'role_ml', 'role_management', 'role_systems', 'role_null', 'role_other',
+                        'we_3_5', 'we_6_10', 'we_10_15', 'we_15_20', 'we_20p', 'we_other',
+                        'us_yt_regs', 'us_social_regs', 'us_l10x_email_regs',
+                        'us_l10x_bot_regs', 'us_ni_base_regs', 'us_other_regs')
+            for k in sum_keys:
+                v = ev.get(k)
+                if v is not None:
+                    m[k] += float(v) if k == 'meta_spend' else int(v)
+            # Talk seconds = avg_talk × connected (weighted reconstruction)
+            if ev.get('avg_talk_seconds') is not None and ev.get('calls_connected') is not None:
+                m['talk_seconds_total'] += float(ev['avg_talk_seconds']) * int(ev['calls_connected'])
+
+        # Derived ratios per month
+        for m in by_month.values():
+            m['cpl_blended']      = (m['meta_spend'] / m['meta_regs']) if m['meta_regs'] > 0 else None
+            m['attendance_pct']   = (100.0 * m['attendees'] / m['total_regs']) if m['total_regs'] > 0 else None
+            m['email_open_pct']   = (100.0 * m['email_opened']   / m['email_sent']) if m['email_sent']   > 0 else None
+            m['email_click_pct']  = (100.0 * m['email_clicked']  / m['email_sent']) if m['email_sent']   > 0 else None
+            m['call_connect_pct'] = (100.0 * m['calls_connected'] / m['calls_attempted']) if m['calls_attempted'] > 0 else None
+            m['avg_talk_seconds'] = (m['talk_seconds_total'] / m['calls_connected']) if m['calls_connected'] > 0 else None
+
+        months_out = sorted(by_month.values(), key=lambda m: m['month_slug'], reverse=True)
+        self._json_response(200, {
+            'country': country,
+            'series':  series,
+            'months':  months_out,
+            'events':  events,  # drill-down data (per-event-within-month)
+        }, extra_headers={'Cache-Control': 'private, max-age=60'})
 
     def _get_event(self, event_id):
         from google.cloud import bigquery
@@ -304,58 +468,38 @@ LIMIT {limit}"""
             client = bigquery.Client(project=BQ_APP_PROJECT)
             param  = [bigquery.ScalarQueryParameter('eid', 'STRING', event_id)]
 
-            ev_rows = list(client.query(
-                f"SELECT * FROM `{BQ_APP_PROJECT}.events.event` WHERE event_id = @eid",
-                job_config=bigquery.QueryJobConfig(query_parameters=param),
-            ).result())
-            if not ev_rows:
-                self._json_response(404, {'error': 'Event not found'})
-                return
-            event = _row_to_dict(ev_rows[0])
+            def run(sql, params):
+                return list(client.query(sql, job_config=bigquery.QueryJobConfig(query_parameters=params)).result())
 
-            snap_rows = list(client.query(
-                f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_snapshot`
-                    WHERE event_id = @eid
-                    ORDER BY snapshot_at DESC LIMIT 1""",
-                job_config=bigquery.QueryJobConfig(query_parameters=param),
-            ).result())
+            with ThreadPoolExecutor(max_workers=3) as ex:
+                ev_fut = ex.submit(run,
+                    f"SELECT * FROM `{BQ_APP_PROJECT}.events.event` WHERE event_id = @eid", param)
+                snap_fut = ex.submit(run,
+                    f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_snapshot`
+                        WHERE event_id = @eid
+                        ORDER BY snapshot_at DESC LIMIT 1""", param)
+                daily_fut = ex.submit(run,
+                    f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_daily`
+                        WHERE event_id = @eid
+                        QUALIFY ROW_NUMBER() OVER (PARTITION BY registration_date ORDER BY snapshot_at DESC) = 1
+                        ORDER BY registration_date""", param)
+
+                ev_rows = ev_fut.result()
+                if not ev_rows:
+                    self._json_response(404, {'error': 'Event not found'})
+                    return
+                event      = _row_to_dict(ev_rows[0])
+                snap_rows  = snap_fut.result()
+                daily_rows = daily_fut.result()
+
             snapshot = _row_to_dict(snap_rows[0]) if snap_rows else None
-
-            daily_rows = list(client.query(
-                f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_daily`
-                    WHERE event_id = @eid
-                    QUALIFY ROW_NUMBER() OVER (PARTITION BY registration_date ORDER BY snapshot_at DESC) = 1
-                    ORDER BY registration_date""",
-                job_config=bigquery.QueryJobConfig(query_parameters=param),
-            ).result())
-            daily = [_row_to_dict(r) for r in daily_rows]
-
-            comp_param = param + [bigquery.ScalarQueryParameter('country', 'STRING', event.get('country') or '')]
-            comp_rows = list(client.query(
-                f"""WITH latest AS (
-                  SELECT *
-                  FROM `{BQ_APP_PROJECT}.history.event_snapshot`
-                  QUALIFY ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY snapshot_at DESC) = 1
-                )
-                SELECT e.event_id, e.title, e.instructor_name, e.live_at, e.topic,
-                       s.total_regs, s.attendance_pct
-                FROM `{BQ_APP_PROJECT}.events.event` e
-                LEFT JOIN latest s USING (event_id)
-                WHERE e.event_id != @eid
-                  AND e.country = @country
-                  AND e.live_at < CURRENT_TIMESTAMP()
-                  AND COALESCE(e.status, 'upcoming') != 'archived'
-                ORDER BY e.live_at DESC LIMIT 3""",
-                job_config=bigquery.QueryJobConfig(query_parameters=comp_param),
-            ).result())
-            comparable = [_row_to_dict(r) for r in comp_rows]
+            daily    = [_row_to_dict(r) for r in daily_rows]
 
             self._json_response(200, {
                 'event': event,
                 'snapshot': snapshot,
                 'daily': daily,
-                'comparable': comparable,
-            })
+            }, extra_headers={'Cache-Control': 'private, max-age=60'})
         except Exception as e:
             self._json_response(500, {'error': str(e)})
 
@@ -382,6 +526,8 @@ LIMIT {limit}"""
                 'go_live_date':     body.get('goLiveDate') or None,
                 'landing_url':      body.get('landingUrl') or None,
                 'zoom_url':         body.get('zoomUrl') or None,
+                'slides_url':       body.get('slidesUrl') or None,
+                'yt_url':           body.get('ytUrl') or None,
                 'instructor_name':  body.get('instructorName') or None,
                 'instructor_role':  body.get('instructorRole') or None,
                 'summary':          body.get('summary') or None,
@@ -419,8 +565,10 @@ LIMIT {limit}"""
 
     def _run_snapshot(self):
         try:
-            _do_snapshot()
-            self._json_response(200, {'ok': True})
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            days_back = int(qs.get('days_back', ['14'])[0])
+            _do_snapshot(days_back=days_back)
+            self._json_response(200, {'ok': True, 'days_back': days_back})
         except Exception as e:
             self._json_response(500, {'error': str(e)})
 
@@ -547,10 +695,11 @@ def send_slack_dm(token, user_id, text):
     if not ch.get('ok'): raise Exception(ch.get('error'))
     post('https://slack.com/api/chat.postMessage', {'channel': ch['channel']['id'], 'text': text})
 
-def _do_snapshot():
+def _do_snapshot(days_back=14):
     """Two independent paths: (1) legacy Slack DM from snapshot_config;
     (2) per-event BQ snapshot writes to history.event_daily + history.event_snapshot.
-    Failure of one doesn't block the other."""
+    Failure of one doesn't block the other. days_back widens the active-event window
+    for backfilling older events."""
     errors = []
     try:
         _snapshot_to_slack()
@@ -558,7 +707,7 @@ def _do_snapshot():
         errors.append(f'slack: {e}')
         print(f'  [snapshot/slack] error: {e}')
     try:
-        _snapshot_events_to_bq()
+        _snapshot_events_to_bq(days_back=days_back)
     except Exception as e:
         errors.append(f'bq: {e}')
         print(f'  [snapshot/bq] error: {e}')
@@ -617,29 +766,29 @@ ORDER BY l.registration_date, l.channel, l.utm_campaign"""
 _RE_META = re.compile(r'facebook|fb', re.I)
 _RE_CRM  = re.compile(r'email|whatsapp|whats.?app', re.I)
 
-def _snapshot_events_to_bq():
+def _snapshot_events_to_bq(days_back=14):
     """For each active event, query lead funnel and write rows to
-    history.event_daily (per registration_date) + history.event_snapshot (cumulative)."""
+    history.event_daily (per registration_date) + history.event_snapshot (cumulative).
+    days_back controls the past-event lookback (default 14d); pass a larger value
+    via /run-snapshot?days_back=N to backfill older events."""
     from google.cloud import bigquery
     client  = bigquery.Client(project=BQ_APP_PROJECT)
     now     = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
     now_iso = now.isoformat().replace('+00:00', 'Z')
 
-    # Active = within 14d past or 60d future of live_at, not archived, has webinar_type
     events = list(client.query(f"""
         SELECT event_id, country, webinar_type, live_at, day2_live_at
         FROM `{BQ_APP_PROJECT}.events.event`
         WHERE COALESCE(status, 'upcoming') != 'archived'
           AND webinar_type IS NOT NULL
           AND live_at IS NOT NULL
-          AND live_at BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 14 DAY)
+          AND live_at BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {int(days_back)} DAY)
                           AND TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 60 DAY)
     """).result())
 
     print(f'  [snapshot/bq] {len(events)} active event(s)')
 
-    daily_rows = []
-    snap_rows  = []
+    # Insert per-event so partial progress survives timeouts/errors.
     for ev in events:
         try:
             result = _build_event_snapshot(client, ev, now, now_iso)
@@ -647,30 +796,28 @@ def _snapshot_events_to_bq():
                 print(f'  [snapshot/bq] {ev.event_id}: country={ev.country} not supported yet, skipping')
                 continue
             d, s = result
-            daily_rows.extend(d)
-            snap_rows.append(s)
+            if d:
+                errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_daily', d)
+                if errs: print(f'  [snapshot/bq] {ev.event_id} event_daily errors: {errs}')
+            errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_snapshot', [s])
+            if errs: print(f'  [snapshot/bq] {ev.event_id} event_snapshot errors: {errs}')
             print(f'  [snapshot/bq] {ev.event_id}: {len(d)} daily row(s), total_regs={s["total_regs"]}')
         except Exception as e:
             print(f'  [snapshot/bq] {ev.event_id}: error: {e}')
 
-    if daily_rows:
-        errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_daily', daily_rows)
-        if errs:
-            print(f'  [snapshot/bq] event_daily insert errors: {errs}')
-    if snap_rows:
-        errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_snapshot', snap_rows)
-        if errs:
-            print(f'  [snapshot/bq] event_snapshot insert errors: {errs}')
-
 def _build_event_snapshot(client, ev, now, now_iso):
-    """Returns (daily_rows, snapshot_row) for one event, or None if country unsupported.
+    """Dispatch to country-specific builder. Each returns (daily_rows, snapshot_row)
+    or None if country unsupported. Each per-event query is wrapped in try/except
+    so a single failure doesn't blank out the whole row."""
+    c = (ev.country or '').lower()
+    if c == 'india':
+        return _build_event_snapshot_india(client, ev, now, now_iso)
+    if c in ('us', 'usa'):
+        return _build_event_snapshot_us(client, ev, now, now_iso)
+    return None
 
-    v2 (India only): runs 4 queries per event — leads/spends, cohort role+work_ex,
-    attendance from Zoom, call efforts, email reminder funnel. Each post-event query
-    is wrapped in try/except so a single failure doesn't blank out the whole row."""
+def _build_event_snapshot_india(client, ev, now, now_iso):
     from google.cloud import bigquery
-    if (ev.country or '').lower() != 'india':
-        return None
 
     live_dates = []
     for d in [ev.live_at, ev.day2_live_at]:
@@ -762,8 +909,11 @@ ORDER BY l.registration_date, l.channel"""
     # ─── 2. Cohort (role category + work_ex) ──────────────────────────────────
     cohort = _safe_query(_query_cohort_india, src_client, date_literal, wt_param,
                          label=f'cohort/{ev.event_id}',
-                         default={'role_sde': None, 'role_ml': None, 'role_fe': None, 'role_other': None,
-                                  'we_0_2': None, 'we_3_5': None, 'we_6_10': None, 'we_10p': None})
+                         default={'role_sde': None, 'role_ml': None, 'role_fe': None,
+                                  'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
+                                  'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
+                                  'we_10_15': None, 'we_15_20': None, 'we_20p': None,
+                                  'we_other': None, 'we_10p': None})
 
     # ─── 3. Attendance from Zoom roster ───────────────────────────────────────
     attendance = _safe_query(_query_attendance_india, src_client, date_literal, wt_param,
@@ -837,18 +987,33 @@ WHERE rnk = 1
 GROUP BY 1, 2"""
     rows = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
 
-    out = {'role_sde': 0, 'role_ml': 0, 'role_fe': None, 'role_other': 0,
-           'we_0_2': 0, 'we_3_5': 0, 'we_6_10': 0, 'we_10p': 0}
+    out = {'role_sde': 0, 'role_ml': 0, 'role_fe': None,
+           'role_management': 0, 'role_systems': 0, 'role_null': 0, 'role_other': 0,
+           'we_0_2': 0, 'we_3_5': 0, 'we_6_10': 0,
+           'we_10_15': 0, 'we_15_20': 0, 'we_20p': 0, 'we_other': 0, 'we_10p': 0}
+    # Map source labels → schema columns. role_ml stores "Data"; we_3_5 stores "0-5".
+    # Names kept for back-compat — see CONTEXT.md.
+    role_map = {
+        'Software Engineer': 'role_sde',
+        'Data':              'role_ml',
+        'Management':        'role_management',
+        'Systems':           'role_systems',
+        'Null':              'role_null',
+        'Other':             'role_other',
+    }
+    we_map = {
+        'a05':   'we_3_5',
+        'b510':  'we_6_10',
+        'c1015': 'we_10_15',
+        'd1520': 'we_15_20',
+        'e20p':  'we_20p',
+        'other': 'we_other',
+    }
     for r in rows:
-        cat = r['category']
-        we  = r['we_bucket']
         cnt = int(r['cnt'] or 0)
-        if   cat == 'Software Engineer': out['role_sde']   += cnt
-        elif cat == 'Data':              out['role_ml']    += cnt
-        else:                            out['role_other'] += cnt
-        if   we == 'a05':                out['we_3_5']  += cnt   # 0-2 / 3-4 filtered out; only 5 remains
-        elif we == 'b510':               out['we_6_10'] += cnt
-        elif we in ('c1015', 'd1520', 'e20p'): out['we_10p'] += cnt
+        if (col := role_map.get(r['category'])): out[col] += cnt
+        if (col := we_map.get(r['we_bucket'])):  out[col] += cnt
+        if r['we_bucket'] in ('c1015', 'd1520', 'e20p'): out['we_10p'] += cnt
     return out
 
 def _query_attendance_india(src_client, date_literal, wt_param):
@@ -1038,10 +1203,254 @@ FROM funnel"""
         'email_clicked':   int(r[0]['clicked']   or 0),
     }
 
+# ─── USA snapshot path ───────────────────────────────────────────────────────
+# Uses Marketing_data_new_logic.Bq_data_Alumni (leads) + Google_Sheets.Combined_Spend_data
+# (Meta spend, USD). PT timezone. webinar_type is always MASTERCLASS_EVENT_AI.
+# Calls + email funnel are not wired for US — legacy tool didn't have them either.
+
+_PT_TZ = zoneinfo.ZoneInfo('America/Los_Angeles')
+
+def _build_event_snapshot_us(client, ev, now, now_iso):
+    from google.cloud import bigquery
+    live_dates = []
+    for d in [ev.live_at, ev.day2_live_at]:
+        if d is None: continue
+        if isinstance(d, datetime.datetime):
+            aware = d if d.tzinfo else d.replace(tzinfo=datetime.timezone.utc)
+            live_dates.append(aware.astimezone(_PT_TZ).date())
+        else:
+            live_dates.append(d)
+    if not live_dates:
+        return [], _cumulative_snapshot_row(ev.event_id, {}, ev.live_at, now, now_iso)
+
+    date_literal = ', '.join(f"DATE '{d.isoformat()}'" for d in live_dates)
+    src_client   = bigquery.Client(project='ik-marketing-data')
+    wt_param     = [bigquery.ScalarQueryParameter('wt', 'STRING', ev.webinar_type)]
+
+    # ─── 1. Leads + spends — qualified (dupe_flag=0, gql_flag=0) ──────────────
+    query = f"""
+WITH base AS (
+  SELECT
+    formatted_date, utm_campaign,
+    DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,
+    CASE
+      WHEN LOWER(utm_campaign) LIKE "%l10x_social%"               THEN "Social"
+      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"__l10x__")      THEN "L10X_Email"
+      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"youtube_l10x")  THEN "YT"
+      WHEN LOWER(utm_campaign) LIKE "%nibucket%"                  THEN "NI_Base"
+      WHEN LOWER(utm_campaign) LIKE "%l10x-bot%"                  THEN "L10X_Bot"
+      ELSE "Other"
+    END AS channel_bucket,
+    leads_hubspot_id, dupe_flag, gql_flag, dupe_logic,
+    ROW_NUMBER() OVER (
+      PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")
+      ORDER BY formatted_date ASC
+    ) AS rnk
+  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+  WHERE webinar_type = @wt AND dupe_logic = 1
+),
+leads AS (
+  SELECT DATE(formatted_date) AS registration_date, channel_bucket, COUNT(*) AS total_leads
+  FROM base
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND dupe_flag = 0 AND gql_flag = 0
+  GROUP BY registration_date, channel_bucket
+),
+spends AS (
+  SELECT DATE(campaign_date, "America/Los_Angeles") AS spend_date,
+         SUM(cost_usd_) AS total_spend
+  FROM `ik-marketing-data.Google_Sheets.Combined_Spend_data`
+  WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")
+    AND (LOWER(campaign_name) LIKE "%meta%" OR LOWER(campaign_name) LIKE "%facebook%" OR LOWER(campaign_name) LIKE "%l10x%")
+  GROUP BY spend_date
+)
+SELECT l.registration_date, l.channel_bucket, l.total_leads, s.total_spend
+FROM leads l LEFT JOIN spends s ON l.registration_date = s.spend_date
+ORDER BY l.registration_date, l.channel_bucket"""
+
+    from google.cloud import bigquery as _bq
+    rows = list(src_client.query(query, job_config=_bq.QueryJobConfig(query_parameters=wt_param)).result())
+
+    # US channel → schema bucket mapping:
+    #   meta_regs   ← Social + YT          (paid acquisition)
+    #   crm_regs    ← L10X_Email + L10X_Bot
+    #   other_regs  ← NI_Base + Other
+    # meta_spend is total US spend per date (the source query already filters to
+    # meta-flavored spend rows). Spend is in USD, not INR — the UI shows the ₹ symbol
+    # via fmtMoney; a label tweak for US is a follow-up.
+    daily = {}
+    spend_seen = set()
+    us_totals = {
+        'us_yt_regs': 0, 'us_social_regs': 0,
+        'us_l10x_email_regs': 0, 'us_l10x_bot_regs': 0,
+        'us_ni_base_regs': 0, 'us_other_regs': 0,
+    }
+    for r in rows:
+        d = r['registration_date'].isoformat() if r['registration_date'] else None
+        if not d: continue
+        ch    = r['channel_bucket'] or ''
+        count = float(r['total_leads'] or 0)
+        spend = float(r['total_spend'] or 0)
+
+        b = daily.setdefault(d, {
+            'meta_regs': 0.0, 'meta_spend': 0.0,
+            'crm_regs': 0.0,
+            'other_regs': 0.0, 'other_spend': 0.0,
+        })
+        if spend and d not in spend_seen:
+            spend_seen.add(d)
+            b['meta_spend'] += spend
+        # Existing 3-bucket mapping into India-shaped schema (kept for back-compat
+        # with the daily curve renderer + listing query).
+        if   ch in ('Social', 'YT'):           b['meta_regs']  += count
+        elif ch in ('L10X_Email', 'L10X_Bot'): b['crm_regs']   += count
+        else:                                  b['other_regs'] += count
+        # US-specific 6-bucket totals (used by the event-page funnel for US events).
+        col = {'YT': 'us_yt_regs', 'Social': 'us_social_regs',
+               'L10X_Email': 'us_l10x_email_regs', 'L10X_Bot': 'us_l10x_bot_regs',
+               'NI_Base': 'us_ni_base_regs'}.get(ch, 'us_other_regs')
+        us_totals[col] += int(count)
+
+    daily_rows = []
+    for d, b in sorted(daily.items()):
+        total_regs  = b['meta_regs'] + b['crm_regs'] + b['other_regs']
+        total_spend = b['meta_spend'] + b['other_spend']
+        cpiql       = (b['meta_spend'] / b['meta_regs']) if b['meta_regs'] > 0 else None
+        daily_rows.append({
+            'event_id':          ev.event_id,
+            'registration_date': d,
+            'snapshot_at':       now_iso,
+            'meta_regs':         int(b['meta_regs']),
+            'meta_spend':        b['meta_spend'],
+            'crm_regs':          int(b['crm_regs']),
+            'other_regs':        int(b['other_regs']),
+            'other_spend':       b['other_spend'],
+            'total_regs':        int(total_regs),
+            'total_spend':       total_spend,
+            'cpiql':             cpiql,
+            'extras':            None,
+        })
+
+    # ─── 2. Cohort (role + work_ex) ────────────────────────────────────────────
+    cohort = _safe_query(_query_cohort_us, src_client, date_literal, wt_param,
+                         label=f'cohort/{ev.event_id}',
+                         default={'role_sde': None, 'role_ml': None, 'role_fe': None,
+                                  'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
+                                  'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
+                                  'we_10_15': None, 'we_15_20': None, 'we_20p': None,
+                                  'we_other': None, 'we_10p': None})
+
+    # ─── 3. Attendance from Zoom ──────────────────────────────────────────────
+    attendance = _safe_query(_query_attendance_us, src_client, date_literal, wt_param,
+                             label=f'attendance/{ev.event_id}',
+                             default={'attendees': None, 'attendance_pct': None})
+
+    snap_row = _cumulative_snapshot_row(ev.event_id, daily, ev.live_at, now, now_iso,
+                                        cohort=cohort, attendance=attendance, extra=us_totals)
+    return daily_rows, snap_row
+
+def _query_cohort_us(src_client, date_literal, wt_param):
+    """US cohort. Same role/work_ex CASE buckets as India, but on Bq_data_Alumni,
+    PT timezone, no work_ex student/0-2/3-4 filter (US doesn't filter cohort)."""
+    from google.cloud import bigquery
+    q = f"""
+SELECT
+  CASE
+    WHEN role_domain IN ('Data Science','Data Engineer','Machine Learning / AI','ML / AI','Data Engineer / Data Scientist','Business Intelligence Analyst','Data Analyst / Business Analyst','Data','Machine Learning/DeepLearning','Data Engineering') THEN 'Data'
+    WHEN role_domain IS NULL OR role_domain IN ('No / Little coding experience','No Coding Experience','None of the above') THEN 'Null'
+    WHEN role_domain IN ('Full Stack','Back-end','Other Software Engineers','iOS Developer','Android Developer','iOS / Android Developer','Front-end','Test Engineer / SDET / QE','QA / Testing','Software Engineer','Front-end / Full stack','Software Engineering','Software Engineering (Frontend, Fullstack, Backend, Test)','Mobile Engineering (iOS/Android)','Core Engineering') THEN 'Software Engineer'
+    WHEN role_domain IN ('Engineering Manager - any domain','Product Manager (Tech)','Technical Program Manager','Engineering Manager / Director of Engineering','Project Manager / Product Manager','Engineering Manager','Growth Product Manager','Product Marketing Manager','Tech Product Manager','Management') THEN 'Management'
+    WHEN role_domain IN ('SRE / DevOps','Cyber Security','Embedded Software Engineer','Cloud Engineer','Application Packaging Engineer','AWS Cloud Solutions Architect','Cyber Security/Security Engineering','Embedded Systems','DevOps Engineer','Site Reliability Engineer','Site Reliability Engineering') THEN 'Systems'
+    ELSE 'Other'
+  END AS category,
+  CASE
+    WHEN work_ex IN ('0-2','0-5','3-4') THEN 'a05'
+    WHEN work_ex IN ('5-8','5-10')      THEN 'b510'
+    WHEN work_ex IN ('9-15','10-15')    THEN 'c1015'
+    WHEN work_ex IN ('16-20','15-20','15+') THEN 'd1520'
+    WHEN work_ex = '20+'               THEN 'e20p'
+    ELSE 'other'
+  END AS we_bucket,
+  COUNT(*) AS cnt
+FROM (
+  SELECT role_domain, work_ex,
+    DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,
+    dupe_flag, gql_flag, dupe_logic,
+    ROW_NUMBER() OVER (
+      PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")
+      ORDER BY formatted_date ASC
+    ) AS rnk
+  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+  WHERE dupe_logic = 1 AND webinar_type = @wt
+)
+WHERE rnk = 1
+  AND web_scheduled_date IN ({date_literal})
+  AND dupe_flag = 0 AND gql_flag = 0
+GROUP BY 1, 2"""
+    rows = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    out = {'role_sde': 0, 'role_ml': 0, 'role_fe': None,
+           'role_management': 0, 'role_systems': 0, 'role_null': 0, 'role_other': 0,
+           'we_0_2': 0, 'we_3_5': 0, 'we_6_10': 0,
+           'we_10_15': 0, 'we_15_20': 0, 'we_20p': 0, 'we_other': 0, 'we_10p': 0}
+    role_map = {'Software Engineer': 'role_sde', 'Data': 'role_ml',
+                'Management': 'role_management', 'Systems': 'role_systems',
+                'Null': 'role_null', 'Other': 'role_other'}
+    we_map = {'a05': 'we_3_5', 'b510': 'we_6_10', 'c1015': 'we_10_15',
+              'd1520': 'we_15_20', 'e20p': 'we_20p', 'other': 'we_other'}
+    for r in rows:
+        cnt = int(r['cnt'] or 0)
+        if (col := role_map.get(r['category'])): out[col] += cnt
+        if (col := we_map.get(r['we_bucket'])):  out[col] += cnt
+        if r['we_bucket'] in ('c1015', 'd1520', 'e20p'): out['we_10p'] += cnt
+    return out
+
+def _query_attendance_us(src_client, date_literal, wt_param):
+    """US attendance — qualified IQLs from Bq_data_Alumni joined to Zoom roster
+    by hubspot_id, filtered to PT date matching live_at."""
+    from google.cloud import bigquery
+    q = f"""
+WITH attendance AS (
+  SELECT CAST(hubspot_id AS INT64) AS hubspot_id
+  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`
+  WHERE DATE(webinar_start_time, "America/Los_Angeles") IN ({date_literal})
+    AND hubspot_id IS NOT NULL
+  GROUP BY hubspot_id
+),
+leads AS (
+  SELECT CAST(leads_hubspot_id AS INT64) AS hubspot_id
+  FROM (
+    SELECT leads_hubspot_id, formatted_date,
+      DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,
+      dupe_flag, gql_flag, dupe_logic,
+      ROW_NUMBER() OVER (
+        PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+    WHERE dupe_logic = 1 AND webinar_type = @wt
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND dupe_flag = 0 AND gql_flag = 0
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY leads_hubspot_id ORDER BY formatted_date ASC) = 1
+)
+SELECT COUNT(*) AS total_leads,
+       COUNTIF(a.hubspot_id IS NOT NULL) AS attendees
+FROM leads l LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id"""
+    r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    if not r:
+        return {'attendees': None, 'attendance_pct': None}
+    total    = int(r[0]['total_leads'] or 0)
+    attended = int(r[0]['attendees'] or 0)
+    pct      = (100.0 * attended / total) if total > 0 else None
+    return {'attendees': attended, 'attendance_pct': pct}
+
 def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
-                              cohort=None, attendance=None, call_data=None, email=None):
+                              cohort=None, attendance=None, call_data=None, email=None,
+                              extra=None):
     """Sum daily buckets to a single point-in-time snapshot row, merging in
-    cohort + attendance + calls + email metrics if available."""
+    cohort + attendance + calls + email + extra (country-specific) metrics if available."""
     meta_regs   = sum(b['meta_regs']   for b in daily.values())
     meta_spend  = sum(b['meta_spend']  for b in daily.values())
     crm_regs    = sum(b['crm_regs']    for b in daily.values())
@@ -1068,11 +1477,17 @@ def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
         'attendees': None, 'attendance_pct': None,
         'email_sent': None, 'email_delivered': None, 'email_opened': None, 'email_clicked': None,
         'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None,
-        'role_sde': None, 'role_ml': None, 'role_fe': None, 'role_other': None,
-        'we_0_2': None, 'we_3_5': None, 'we_6_10': None, 'we_10p': None,
+        'role_sde': None, 'role_ml': None, 'role_fe': None,
+        'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
+        'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
+        'we_10_15': None, 'we_15_20': None, 'we_20p': None,
+        'we_other': None, 'we_10p': None,
+        'us_yt_regs': None, 'us_social_regs': None,
+        'us_l10x_email_regs': None, 'us_l10x_bot_regs': None,
+        'us_ni_base_regs': None, 'us_other_regs': None,
         'extras': None,
     }
-    for partial in (cohort, attendance, call_data, email):
+    for partial in (cohort, attendance, call_data, email, extra):
         if partial:
             row.update(partial)
     return row

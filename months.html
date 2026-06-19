@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Months — Masterclass Hub</title>
+  <script>tailwind = { config: { darkMode: 'class' } };
+    (function() { if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark'); })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="min-h-screen">
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">IK</div>
+    <h2 class="login-title">Masterclass Hub</h2>
+    <p class="login-sub">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" class="login-error"></p>
+  </div>
+</div>
+
+<div id="appWrap" style="display:none;">
+
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
+        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
+        <div class="hidden sm:block">
+          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+        </div>
+      </a>
+      <nav class="flex items-center gap-1 text-sm">
+        <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
+        <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium shadow-sm whitespace-nowrap">Months</a>
+        <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
+      </nav>
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center bg-zinc-100 rounded-lg p-0.5 gap-0.5">
+          <button onclick="setCountry('IN')" id="ctryIN" class="px-2.5 py-1 rounded-md text-xs font-semibold">IN</button>
+          <button onclick="setCountry('US')" id="ctryUS" class="px-2.5 py-1 rounded-md text-xs font-semibold">US</button>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
+        </button>
+        <div class="relative">
+          <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
+          <div id="userMenu" class="hidden absolute right-0 top-11 bg-white border border-zinc-200 rounded-lg shadow-lg p-1 w-56 z-50">
+            <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-100" id="userEmail">—</div>
+            <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 fade-up">
+    <div class="flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        <h1 class="text-xl font-semibold text-zinc-900 tracking-tight">Months</h1>
+        <p class="text-sm text-zinc-500 mt-1">Month-over-month · bucketed by event live date · from Jan 2026.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500 font-medium">Series</label>
+        <select id="seriesFilter" onchange="onSeriesChange()" class="text-sm border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-zinc-300">
+          <option value="">All events</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
+    <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1 w-fit mx-auto overflow-x-auto scroll-hide">
+      <button id="tabAcquisition" onclick="setTab('acquisition')" class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm whitespace-nowrap">Acquisition</button>
+      <button id="tabEngagement"  onclick="setTab('engagement')"  class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Engagement</button>
+      <button id="tabQuality"     onclick="setTab('quality')"     class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Quality</button>
+      <button id="tabCalls"       onclick="setTab('calls')"       class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Calls</button>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+    <div id="tableArea" class="card rounded-2xl overflow-hidden">
+      <div class="p-12 text-center text-zinc-400 text-sm">Loading…</div>
+    </div>
+  </section>
+
+  <footer class="border-t border-zinc-200/80 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+      <div>© 2026 Interview Kickstart · Internal use</div>
+      <div><a href="/hub.html" class="hover:text-zinc-900">Hub</a></div>
+    </div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+
+let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+const params = new URLSearchParams(location.search);
+let currentTab    = params.get('tab') || 'acquisition';
+let currentSeries = params.get('series') || '';
+let expandedMonth = params.get('month') || null;
+let lastData      = null;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
+function isUS() { return currentCountry === 'US'; }
+function moneySym() { return isUS() ? '$' : '₹'; }
+function fmtMoney(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
+function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
+function fmtSecs(s) { if (s == null) return '—'; const m = Math.floor(s/60); return m + 'm ' + Math.round(s%60) + 's'; }
+function leadLabel() { return isUS() ? 'GQLs' : 'IQLs'; }
+function cplLabel()  { return isUS() ? 'CPGQL' : 'CPIQL'; }
+function countryParam() { return isUS() ? 'US' : 'India'; }
+function monthDisplay(slug) {
+  if (!slug) return '—';
+  const [y, m] = slug.split('-');
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+function eventDateShort(iso) {
+  return iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+}
+function syncURL() {
+  const p = new URLSearchParams();
+  p.set('tab', currentTab);
+  if (currentSeries) p.set('series', currentSeries);
+  if (expandedMonth) p.set('month', expandedMonth);
+  history.replaceState(null, '', '?' + p.toString());
+}
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const btn  = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+}
+
+function applyCountryButtons() {
+  const on  = 'bg-white text-zinc-900 shadow-sm';
+  const off = 'text-zinc-500 hover:text-zinc-900';
+  const base = 'px-2.5 py-1 rounded-md text-xs font-semibold ';
+  document.getElementById('ctryIN').className = base + (isUS() ? off : on);
+  document.getElementById('ctryUS').className = base + (isUS() ? on  : off);
+}
+function setCountry(c) {
+  if (currentCountry === c) return;
+  currentCountry = c;
+  localStorage.setItem('ik_country', c);
+  applyCountryButtons();
+  loadSeries();
+  load();
+}
+
+function setTab(t) {
+  if (currentTab === t) return;
+  currentTab = t;
+  const tabs = ['Acquisition','Engagement','Quality','Calls'];
+  const base = 'px-3 py-1.5 rounded-md font-medium text-sm whitespace-nowrap ';
+  tabs.forEach(name => {
+    const lower = name.toLowerCase();
+    const el = document.getElementById('tab' + name);
+    el.className = base + (currentTab === lower ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
+  });
+  syncURL();
+  if (lastData) renderTable(lastData);
+}
+
+function onSeriesChange() {
+  currentSeries = document.getElementById('seriesFilter').value;
+  expandedMonth = null;
+  syncURL();
+  load();
+}
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('userEmail').textContent = email;
+  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+  loadSeries();
+  load();
+}
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+async function checkAuth() {
+  try {
+    const r = await fetch('/auth/check');
+    if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
+  } catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+}
+async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+};
+function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
+    document.getElementById('userMenu')?.classList.add('hidden');
+  }
+});
+
+// ── Data ────────────────────────────────────────────────────────────────────
+async function loadSeries() {
+  try {
+    const r = await fetch(`/series?country=${encodeURIComponent(countryParam())}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const sel = document.getElementById('seriesFilter');
+    sel.innerHTML = '<option value="">All events</option>' +
+      (d.series || []).map(s => `<option value="${esc(s.name)}" ${s.name === currentSeries ? 'selected' : ''}>${esc(s.name)} (${s.count})</option>`).join('');
+  } catch {}
+}
+
+async function load() {
+  document.getElementById('tableArea').innerHTML = '<div class="p-12 text-center text-zinc-400 text-sm">Loading…</div>';
+  try {
+    const url = `/months?country=${encodeURIComponent(countryParam())}` + (currentSeries ? `&series=${encodeURIComponent(currentSeries)}` : '');
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lastData = await r.json();
+    renderTable(lastData);
+  } catch (e) {
+    document.getElementById('tableArea').innerHTML = `<div class="p-12 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function toggleMonth(slug) {
+  expandedMonth = expandedMonth === slug ? null : slug;
+  syncURL();
+  renderTable(lastData);
+}
+
+// ── Tab schemas ─────────────────────────────────────────────────────────────
+// { label, monthVal(m), eventVal(e), rawVal?(m)→number, align?: 'left' }
+// rawVal drives mini-bar scaling; quality tab has its own bars so no rawVal.
+function tabSchema() {
+  if (currentTab === 'engagement') {
+    return [
+      { label: 'Attendees',     monthVal: m => fmtNum(m.attendees),       eventVal: e => fmtNum(e.attendees),       rawVal: m => m.attendees },
+      { label: 'Attendance %',  monthVal: m => fmtPct(m.attendance_pct),  eventVal: e => fmtPct(e.attendance_pct),  rawVal: m => m.attendance_pct },
+      { label: 'Email open %',  monthVal: m => fmtPct(m.email_open_pct),  eventVal: e => e.email_sent ? fmtPct(100*(e.email_opened||0)/e.email_sent) : '—', rawVal: m => m.email_open_pct },
+      { label: 'Email click %', monthVal: m => fmtPct(m.email_click_pct), eventVal: e => e.email_sent ? fmtPct(100*(e.email_clicked||0)/e.email_sent) : '—', rawVal: m => m.email_click_pct },
+    ];
+  }
+  if (currentTab === 'quality') {
+    return [
+      { label: 'Total qualified', monthVal: m => fmtNum(m.total_regs),   eventVal: e => fmtNum(e.total_regs) },
+      { label: 'Role mix',        monthVal: m => roleMixBars(m),         eventVal: e => roleMixBars(e),       align: 'left' },
+      { label: 'Work-ex mix',     monthVal: m => weMixBars(m),           eventVal: e => weMixBars(e),         align: 'left' },
+    ];
+  }
+  if (currentTab === 'calls') {
+    return [
+      { label: 'Attempted',  monthVal: m => fmtNum(m.calls_attempted),   eventVal: e => fmtNum(e.calls_attempted),  rawVal: m => m.calls_attempted },
+      { label: 'Connected',  monthVal: m => fmtNum(m.calls_connected),   eventVal: e => fmtNum(e.calls_connected),  rawVal: m => m.calls_connected },
+      { label: 'Connect %',  monthVal: m => fmtPct(m.call_connect_pct),  eventVal: e => e.calls_attempted ? fmtPct(100*(e.calls_connected||0)/e.calls_attempted) : '—', rawVal: m => m.call_connect_pct },
+      { label: 'Avg talk',   monthVal: m => fmtSecs(m.avg_talk_seconds), eventVal: e => fmtSecs(e.avg_talk_seconds), rawVal: m => m.avg_talk_seconds },
+    ];
+  }
+  // acquisition (default)
+  return [
+    { label: leadLabel(),  monthVal: m => fmtNum(m.total_regs),     eventVal: e => fmtNum(e.total_regs),     rawVal: m => m.total_regs },
+    { label: 'Paid spend', monthVal: m => fmtMoney(m.meta_spend),   eventVal: e => fmtMoney(e.meta_spend),   rawVal: m => m.meta_spend },
+    { label: cplLabel(),   monthVal: m => fmtMoney(m.cpl_blended),  eventVal: e => fmtMoney(e.cpiql),        rawVal: m => m.cpl_blended },
+    { label: 'Attendance', monthVal: m => fmtPct(m.attendance_pct), eventVal: e => fmtPct(e.attendance_pct), rawVal: m => m.attendance_pct },
+  ];
+}
+
+// ── Quality bars (stacked mini-bar) ─────────────────────────────────────────
+function stackedBar(parts, totalLabel) {
+  const total = parts.reduce((a, [, n]) => a + n, 0);
+  if (total === 0) return '<span class="text-xs text-zinc-400">—</span>';
+  const segs = parts.map(([label, n, color]) => {
+    const pct = (100 * n / total).toFixed(1);
+    return `<div title="${esc(label)}: ${fmtNum(n)} (${pct}%)" style="width:${pct}%;background:${color};" class="h-full"></div>`;
+  }).join('');
+  const labelsHtml = parts.filter(([, n]) => n > 0).map(([label, n, color]) => {
+    const pct = (100 * n / total).toFixed(0);
+    return `<span class="inline-flex items-center gap-1 mr-2 last:mr-0"><span class="inline-block w-2 h-2 rounded-sm" style="background:${color};"></span>${esc(label)} <span class="text-zinc-400">${pct}%</span></span>`;
+  }).join('');
+  return `
+    <div>
+      <div class="flex w-full h-2 rounded overflow-hidden bg-zinc-100">${segs}</div>
+      <div class="mt-1.5 text-[10px] text-zinc-500 flex flex-wrap">${labelsHtml}</div>
+    </div>`;
+}
+function roleMixBars(x) {
+  return stackedBar([
+    ['Data',  x.role_ml         || 0, '#a855f7'],
+    ['SDE',   x.role_sde        || 0, '#3b82f6'],
+    ['Mgmt',  x.role_management || 0, '#f59e0b'],
+    ['Sys',   x.role_systems    || 0, '#10b981'],
+    ['Null',  x.role_null       || 0, '#a1a1aa'],
+    ['Other', x.role_other      || 0, '#ef4444'],
+  ]);
+}
+function weMixBars(x) {
+  return stackedBar([
+    ['0-5',  x.we_3_5   || 0, '#bfdbfe'],
+    ['5-10', x.we_6_10  || 0, '#60a5fa'],
+    ['10-15',x.we_10_15 || 0, '#3b82f6'],
+    ['15-20',x.we_15_20 || 0, '#1d4ed8'],
+    ['20+',  x.we_20p   || 0, '#1e3a8a'],
+    ['Other',x.we_other || 0, '#a1a1aa'],
+  ]);
+}
+
+// ── Mini bar (for Acquisition / Engagement / Calls month rows) ──────────────
+function miniBar(rawVal, max, formatted) {
+  if (rawVal == null || max === 0) return `<span class="text-sm tabular-nums font-semibold text-zinc-900">${formatted}</span>`;
+  const pct = Math.max(5, Math.min(100, (rawVal / max) * 100)).toFixed(1);
+  return `<div class="flex flex-col gap-0.5 py-0.5">
+    <div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full rounded-full bg-zinc-400 dark:bg-zinc-500" style="width:${pct}%;"></div></div>
+    <span class="text-xs font-semibold text-zinc-900 tabular-nums">${formatted}</span>
+  </div>`;
+}
+
+// ── Renderer ────────────────────────────────────────────────────────────────
+function renderTable(data) {
+  const allMonths = data.months || [];
+  const events   = data.events || [];
+
+  // Only show months where at least one event has already aired.
+  const now = new Date();
+  const airedSlugs = new Set(events.filter(e => new Date(e.live_at) <= now).map(e => e.month_slug));
+  const months = allMonths.filter(m => airedSlugs.has(m.month_slug));
+
+  if (months.length === 0) {
+    document.getElementById('tableArea').innerHTML = `
+      <div class="p-12 text-center text-zinc-500">
+        <div class="text-sm font-medium text-zinc-900">No months yet</div>
+        <div class="text-xs mt-1">No ${currentCountry} masterclasses match these filters in 2026.</div>
+      </div>`;
+    return;
+  }
+  const schema = tabSchema();
+  const isQuality = currentTab === 'quality';
+  const colTemplate = isQuality
+    ? 'minmax(140px,1.1fr) 60px ' + schema.map(() => 'minmax(160px,1.4fr)').join(' ') + ' 30px'
+    : 'minmax(120px,1.2fr) 60px ' + schema.map(() => 'minmax(130px,1fr)').join(' ') + ' 30px';
+
+  // Per-column max value for bar scaling (only cols with rawVal).
+  const colMaxes = schema.map(c => {
+    if (!c.rawVal) return null;
+    return Math.max(0, ...months.map(m => c.rawVal(m) || 0));
+  });
+
+  const head = `
+    <div class="grid items-center gap-2 sm:gap-4 px-5 py-3 border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold"
+         style="grid-template-columns:${colTemplate};">
+      <div>Month</div>
+      <div class="text-right">Events</div>
+      ${schema.map((c, i) => `<div class="${(!isQuality && c.rawVal) ? '' : (c.align==='left' ? '' : 'text-right')}">${esc(c.label)}</div>`).join('')}
+      <div></div>
+    </div>`;
+
+  const monthRows = months.map(m => {
+    const expanded = expandedMonth === m.month_slug;
+    const monthRow = `
+      <div class="grid items-center gap-2 sm:gap-4 px-5 py-3 border-b border-zinc-100 cursor-pointer hover:bg-zinc-50/60"
+           style="grid-template-columns:${colTemplate};"
+           onclick="toggleMonth('${m.month_slug}')">
+        <div class="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
+          <svg class="w-3 h-3 text-zinc-400 transition-transform ${expanded ? 'rotate-90' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          ${esc(monthDisplay(m.month_slug))}
+        </div>
+        <div class="text-right text-sm text-zinc-700 tabular-nums">${fmtNum(m.events)}</div>
+        ${schema.map((c, i) => {
+          if (!isQuality && c.rawVal) {
+            return `<div class="text-sm">${miniBar(c.rawVal(m), colMaxes[i], c.monthVal(m))}</div>`;
+          }
+          return `<div class="${c.align==='left'?'':'text-right'} text-sm ${isQuality?'':'font-medium text-zinc-900 tabular-nums'}">${c.monthVal(m)}</div>`;
+        }).join('')}
+        <div></div>
+      </div>`;
+    if (!expanded) return monthRow;
+    const monthEvents = events.filter(e => e.month_slug === m.month_slug);
+    const eventRows = monthEvents.map(e => `
+      <div class="grid items-center gap-2 sm:gap-4 px-5 py-2.5 border-b border-zinc-100 last:border-0 bg-zinc-50/40 hover:bg-zinc-50"
+           style="grid-template-columns:${colTemplate};">
+        <div class="pl-5 text-[13px] flex items-center gap-2 min-w-0">
+          <span class="text-zinc-400">└</span>
+          <span class="text-zinc-500 tabular-nums whitespace-nowrap">${esc(eventDateShort(e.live_at))}</span>
+          <a href="/event.html?id=${encodeURIComponent(e.event_id)}" class="text-zinc-900 font-medium hover:underline truncate">${esc(e.title || e.event_id)}</a>
+        </div>
+        <div></div>
+        ${schema.map(c => `<div class="${c.align==='left'?'':'text-right'} text-[13px] text-zinc-700 tabular-nums">${c.eventVal(e)}</div>`).join('')}
+        <div></div>
+      </div>`).join('');
+    return monthRow + eventRows;
+  }).join('');
+
+  document.getElementById('tableArea').innerHTML = head + monthRows;
+}
+
+applyCountryButtons();
+applyTheme();
+setTab(currentTab);  // also styles the tab buttons
+document.getElementById('seriesFilter').value = currentSeries;
+checkAuth();
+</script>
+</body>
+</html>

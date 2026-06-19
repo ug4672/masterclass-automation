@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare — Masterclass Hub</title>
+  <script>tailwind = { config: { darkMode: 'class' } };
+    (function() { if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark'); })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* Sticky first column for the compare grid (metric labels). */
+    .cmp-grid-wrap { overflow-x: auto; }
+    .cmp-grid     { display: grid; min-width: 100%; }
+    .cmp-label    { position: sticky; left: 0; background: var(--surface); z-index: 2; box-shadow: 1px 0 0 var(--border); }
+    .cmp-section-head { background: #fafafa; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">IK</div>
+    <h2 class="login-title">Masterclass Hub</h2>
+    <p class="login-sub">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" class="login-error"></p>
+  </div>
+</div>
+
+<div id="appWrap" style="display:none;">
+
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
+        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
+        <div class="hidden sm:block">
+          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+        </div>
+      </a>
+      <nav class="flex items-center gap-1 text-sm">
+        <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
+        <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
+        <a href="/compare.html" class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium shadow-sm whitespace-nowrap">Compare</a>
+      </nav>
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center bg-zinc-100 rounded-lg p-0.5 gap-0.5" id="countrySwitcher">
+          <button onclick="setCountry('IN')" id="ctryIN" class="px-2.5 py-1 rounded-md text-xs font-semibold">IN</button>
+          <button onclick="setCountry('US')" id="ctryUS" class="px-2.5 py-1 rounded-md text-xs font-semibold">US</button>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
+        </button>
+        <div class="relative">
+          <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
+          <div id="userMenu" class="hidden absolute right-0 top-11 bg-white border border-zinc-200 rounded-lg shadow-lg p-1 w-56 z-50">
+            <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-100" id="userEmail">—</div>
+            <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-3 fade-up">
+    <div class="flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        <h1 class="text-xl font-semibold text-zinc-900 tracking-tight">Compare</h1>
+        <p id="cmpSubtitle" class="text-sm text-zinc-500 mt-1">Pick events to compare side-by-side.</p>
+      </div>
+      <button onclick="openPicker()" class="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-zinc-800">+ Add events</button>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
+    <div id="chipBar" class="flex flex-wrap gap-2"></div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+    <div id="cmpArea">
+      <div class="card rounded-2xl p-12 text-center text-zinc-500">
+        <div class="text-sm font-medium text-zinc-900 mb-1">Nothing to compare yet</div>
+        <div class="text-xs">Click <span class="font-medium">+ Add events</span> to pick from past masterclasses.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Picker slide-over -->
+  <div id="pickerOverlay" class="hidden fixed inset-0 z-50 bg-black/40" onclick="closePicker(event)">
+    <div class="absolute right-0 top-0 h-full w-full sm:w-[520px] bg-white shadow-xl flex flex-col" onclick="event.stopPropagation()">
+      <div class="px-5 py-4 border-b border-zinc-200 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-zinc-900">Add events to comparison</div>
+          <div id="pickerHint" class="text-[11px] text-zinc-500 mt-0.5"></div>
+        </div>
+        <button onclick="closePicker()" class="text-zinc-400 hover:text-zinc-900 text-xl leading-none">&times;</button>
+      </div>
+      <div class="px-5 py-3 border-b border-zinc-200 space-y-2">
+        <input id="pickerSearch" oninput="renderPicker()" type="text" placeholder="Search title / instructor…" class="w-full text-sm border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300"/>
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="pickerSeries" onchange="renderPicker()" class="text-xs border border-zinc-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">All series</option>
+          </select>
+          <select id="pickerTopic" onchange="renderPicker()" class="text-xs border border-zinc-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">All topics</option>
+          </select>
+          <select id="pickerType" onchange="renderPicker()" class="text-xs border border-zinc-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">All webinar types</option>
+          </select>
+        </div>
+      </div>
+      <div id="pickerList" class="flex-1 overflow-y-auto p-2 space-y-1">
+        <div class="p-8 text-center text-zinc-400 text-sm">Loading…</div>
+      </div>
+      <div class="px-5 py-3 border-t border-zinc-200 flex items-center justify-between gap-3">
+        <div id="pickerCount" class="text-xs text-zinc-500">0 selected</div>
+        <div class="flex items-center gap-2">
+          <button onclick="closePicker()" class="text-sm text-zinc-500 hover:text-zinc-900 px-3 py-1.5">Cancel</button>
+          <button onclick="applyPicker()" class="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-zinc-800">Add to comparison</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-zinc-200/80 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
+      <div>© 2026 Interview Kickstart · Internal use</div>
+      <div><a href="/hub.html" class="hover:text-zinc-900">Hub</a></div>
+    </div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+
+let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+const urlParams = new URLSearchParams(location.search);
+let selectedIds = (urlParams.get('ids') || '').split(',').filter(Boolean);
+let initialOpen = urlParams.get('open') === 'picker';
+let presetSeries = urlParams.get('series') || '';
+
+// In-memory event cache: id → full event payload (with .snapshot).
+const cache = {};
+// Picker state (separate selection so user can cancel without losing comparison).
+let pickerCandidates = [];   // available events list
+let pickerTempSel    = new Set(); // ids tentatively selected in the picker
+
+// Sections open by default (Funnel + Attendance) per the brief.
+const openSections = { funnel: true, attendance: true, cohort: false, email: false, calls: false };
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
+function isUS() { return currentCountry === 'US'; }
+function moneySym(c) { return (c || currentCountry) === 'US' ? '$' : '₹'; }
+function fmtMoney(n, c) { return n == null ? '—' : moneySym(c) + Math.round(n).toLocaleString(); }
+function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
+function fmtSecs(s) { if (s == null) return '—'; const m = Math.floor(s/60); return m + 'm ' + Math.round(s%60) + 's'; }
+function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'; }
+function leadLbl(c) { return (c || currentCountry) === 'US' ? 'GQLs' : 'IQLs'; }
+function cplLbl(c)  { return (c || currentCountry) === 'US' ? 'CPGQL' : 'CPIQL'; }
+function countryParam() { return isUS() ? 'US' : 'India'; }
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const btn  = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+}
+
+function applyCountryButtons() {
+  const on  = 'bg-white text-zinc-900 shadow-sm';
+  const off = 'text-zinc-500 hover:text-zinc-900';
+  const base = 'px-2.5 py-1 rounded-md text-xs font-semibold ';
+  document.getElementById('ctryIN').className = base + (isUS() ? off : on);
+  document.getElementById('ctryUS').className = base + (isUS() ? on  : off);
+}
+function setCountry(c) {
+  if (currentCountry === c) return;
+  // If the user has events selected, switching country would orphan them. Confirm first.
+  if (selectedIds.length > 0) {
+    if (!confirm('Switching country will clear your current comparison. Continue?')) return;
+    selectedIds = []; Object.keys(cache).forEach(k => delete cache[k]); syncURL();
+  }
+  currentCountry = c;
+  localStorage.setItem('ik_country', c);
+  applyCountryButtons();
+  load();
+}
+
+function syncURL() {
+  const p = new URLSearchParams();
+  if (selectedIds.length) p.set('ids', selectedIds.join(','));
+  history.replaceState(null, '', selectedIds.length ? '?' + p.toString() : location.pathname);
+}
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('userEmail').textContent = email;
+  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+  load();
+}
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+async function checkAuth() {
+  try {
+    const r = await fetch('/auth/check');
+    if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
+  } catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+}
+async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+};
+function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
+    document.getElementById('userMenu')?.classList.add('hidden');
+  }
+});
+
+// ── Data ────────────────────────────────────────────────────────────────────
+async function load() {
+  // Fetch selected events if any. If first event has a country, switch global to match.
+  if (selectedIds.length === 0) {
+    renderChipBar();
+    renderEmpty();
+    if (initialOpen) { initialOpen = false; openPicker(); }
+    return;
+  }
+  try {
+    const r = await fetch('/events?ids=' + encodeURIComponent(selectedIds.join(',')));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    (d.events || []).forEach(ev => { cache[ev.event_id] = ev; });
+    // Align global country to the first event's country (same-country only).
+    const firstCountry = (cache[selectedIds[0]]?.country || '').toLowerCase();
+    if (firstCountry === 'us' || firstCountry === 'usa') currentCountry = 'US';
+    else if (firstCountry === 'india')                   currentCountry = 'IN';
+    localStorage.setItem('ik_country', currentCountry);
+    applyCountryButtons();
+    renderChipBar();
+    renderCompare();
+    if (initialOpen) { initialOpen = false; openPicker(); }
+  } catch (e) {
+    document.getElementById('cmpArea').innerHTML = `<div class="card rounded-2xl p-12 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderEmpty() {
+  document.getElementById('cmpArea').innerHTML = `
+    <div class="card rounded-2xl p-12 text-center text-zinc-500">
+      <div class="text-sm font-medium text-zinc-900 mb-1">Nothing to compare yet</div>
+      <div class="text-xs">Click <span class="font-medium">+ Add events</span> to pick from past masterclasses.</div>
+    </div>`;
+}
+
+function renderChipBar() {
+  const el = document.getElementById('chipBar');
+  if (selectedIds.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = selectedIds.map(id => {
+    const ev = cache[id];
+    const label = ev ? `${ev.title || id} · ${fmtDate(ev.live_at)}` : id;
+    return `<span class="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-700 text-xs rounded-full px-3 py-1.5">
+      <span class="truncate max-w-[260px]">${esc(label)}</span>
+      <button onclick="removeId('${esc(id)}')" class="text-zinc-400 hover:text-zinc-900 text-base leading-none">&times;</button>
+    </span>`;
+  }).join('') + (selectedIds.length > 1
+    ? `<button onclick="clearAll()" class="text-xs text-zinc-500 hover:text-zinc-900 px-2 py-1.5">clear all</button>`
+    : '');
+}
+function removeId(id) {
+  selectedIds = selectedIds.filter(x => x !== id);
+  delete cache[id];
+  syncURL();
+  if (selectedIds.length === 0) { renderChipBar(); renderEmpty(); }
+  else renderCompare();
+}
+function clearAll() {
+  selectedIds = [];
+  Object.keys(cache).forEach(k => delete cache[k]);
+  syncURL();
+  renderChipBar();
+  renderEmpty();
+}
+
+// ── Compare grid ────────────────────────────────────────────────────────────
+function renderCompare() {
+  const N = selectedIds.length;
+  if (N > 8) {
+    document.getElementById('cmpArea').innerHTML = `
+      <div class="card rounded-2xl p-12 text-center">
+        <div class="text-sm font-semibold text-zinc-900">Too many events to compare cleanly</div>
+        <div class="text-xs text-zinc-500 mt-2">Above 8 events, side-by-side stops being legible.<br/>Try the <a href="/months.html" class="underline">Months</a> page with the series filter for trend analysis.</div>
+        <button onclick="trimSelection()" class="mt-4 bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm font-medium">Trim to first 8</button>
+      </div>`;
+    return;
+  }
+  document.getElementById('cmpSubtitle').textContent = `${N} event${N===1?'':'s'} · ${currentCountry === 'US' ? 'United States' : 'India'}`;
+  renderChipBar();
+
+  const evs = selectedIds.map(id => cache[id]).filter(Boolean);
+  const c   = (evs[0] && evs[0].country) || countryParam();
+
+  // Column template: sticky 200px label column, then equal columns per event.
+  // 4 cols fit clean at full-width; beyond that we let the wrap scroll.
+  const colWidth = N <= 4 ? `minmax(180px, 1fr)` : `220px`;
+  const tpl = `200px ${Array(N).fill(colWidth).join(' ')}`;
+
+  const cell = (content, opts) => `<div class="px-4 py-2.5 text-sm border-b border-zinc-100 text-center tabular-nums ${opts?.cls || ''}">${content}</div>`;
+  const labelCell = (content, opts) => `<div class="cmp-label px-4 py-2.5 text-xs text-zinc-500 font-medium border-b border-zinc-100 ${opts?.cls || ''}">${content}</div>`;
+
+  // Section header row (collapsible)
+  const sectionHead = (key, label) => {
+    const isOpen = openSections[key];
+    const arrow = isOpen ? '▾' : '▸';
+    return `
+      <div class="cmp-label cmp-section-head px-4 py-2 text-[11px] uppercase tracking-wider font-semibold text-zinc-700 border-b border-zinc-200 cursor-pointer" onclick="toggleSection('${key}')">${arrow} ${esc(label)}</div>
+      ${evs.map(() => `<div class="cmp-section-head border-b border-zinc-200"></div>`).join('')}
+    `;
+  };
+
+  // Header (event identity row)
+  const headerCells = [
+    labelCell('', { cls: 'cmp-section-head' }),
+    ...evs.map(ev => `
+      <div class="px-4 py-3 border-b border-zinc-200 cmp-section-head">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${esc(fmtDate(ev.live_at))}</div>
+        <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="text-sm font-semibold text-zinc-900 hover:underline no-underline block leading-snug mt-1 line-clamp-2">${esc(ev.title || ev.event_id)}</a>
+        <div class="text-[11px] text-zinc-500 mt-1 truncate">${esc(ev.instructor_name || '—')}</div>
+      </div>`)
+  ].join('');
+
+  const identityRows = '';
+
+  const funnelRows = openSections.funnel ? [
+    [`${leadLbl(c)} total`,     ev => fmtNum(ev.snapshot?.total_regs), {right:true, bold:true}],
+    [`Paid spend`,              ev => fmtMoney(ev.snapshot?.meta_spend, c), {right:true}],
+    [`${cplLbl(c)}`,            ev => fmtMoney(ev.snapshot?.cpiql, c), {right:true, bold:true}],
+    [`Paid ${leadLbl(c).toLowerCase()}`, ev => fmtNum(ev.snapshot?.meta_regs), {right:true}],
+    [`CRM`,                     ev => fmtNum(ev.snapshot?.crm_regs), {right:true}],
+    [`Other`,                   ev => fmtNum(ev.snapshot?.other_regs), {right:true}],
+  ].map(([lbl, fn, opts]) => [labelCell(esc(lbl)), ...evs.map(ev => cell(fn(ev), opts))].join('')).join('') : '';
+
+  const attRows = openSections.attendance ? [
+    [`Attendees`,       ev => fmtNum(ev.snapshot?.attendees), {right:true}],
+    [`Attendance %`,    ev => fmtPct(ev.snapshot?.attendance_pct), {right:true, bold:true}],
+  ].map(([lbl, fn, opts]) => [labelCell(esc(lbl)), ...evs.map(ev => cell(fn(ev), opts))].join('')).join('') : '';
+
+  const cohortRows = openSections.cohort ? (() => {
+    const roleDenoms = evs.map(ev => {
+      const s = ev.snapshot || {};
+      return (s.role_sde||0) + (s.role_ml||0) + (s.role_management||0) + (s.role_systems||0) + (s.role_other||0);
+    });
+    const weDenoms = evs.map(ev => {
+      const s = ev.snapshot || {};
+      return (s.we_3_5||0) + (s.we_6_10||0) + (s.we_10_15||0) + (s.we_15_20||0) + (s.we_20p||0) + (s.we_other||0);
+    });
+    const makeRow = (lbl, field, denoms) => {
+      const pcts = evs.map((ev, i) => {
+        const val = ev.snapshot?.[field];
+        const den = denoms[i];
+        return (val != null && val > 0 && den > 0) ? (val / den * 100) : null;
+      });
+      if (pcts.every(p => p == null)) return '';
+      return [labelCell(esc(lbl)), ...pcts.map(p => cell(p != null ? fmtPct(p) : '—'))].join('');
+    };
+    return [
+      makeRow('SDE',        'role_sde',        roleDenoms),
+      makeRow('Data',       'role_ml',          roleDenoms),
+      makeRow('Management', 'role_management',  roleDenoms),
+      makeRow('Systems',    'role_systems',     roleDenoms),
+      makeRow('Other role', 'role_other',       roleDenoms),
+      makeRow('We 0-5',     'we_3_5',           weDenoms),
+      makeRow('We 5-10',    'we_6_10',          weDenoms),
+      makeRow('We 10-15',   'we_10_15',         weDenoms),
+      makeRow('We 15-20',   'we_15_20',         weDenoms),
+      makeRow('We 20+',     'we_20p',           weDenoms),
+    ].join('');
+  })() : '';
+
+  const emailRows = openSections.email ? [
+    [`Sent`,      ev => fmtNum(ev.snapshot?.email_sent), {right:true}],
+    [`Delivered`, ev => fmtNum(ev.snapshot?.email_delivered), {right:true}],
+    [`Opened`,    ev => fmtNum(ev.snapshot?.email_opened), {right:true}],
+    [`Clicked`,   ev => fmtNum(ev.snapshot?.email_clicked), {right:true}],
+    [`Open %`,    ev => ev.snapshot?.email_sent ? fmtPct(100*(ev.snapshot.email_opened||0)/ev.snapshot.email_sent) : '—', {right:true, bold:true}],
+  ].map(([lbl, fn, opts]) => [labelCell(esc(lbl)), ...evs.map(ev => cell(fn(ev), opts))].join('')).join('') : '';
+
+  const callsRows = openSections.calls ? [
+    [`Attempted`, ev => fmtNum(ev.snapshot?.calls_attempted), {right:true}],
+    [`Connected`, ev => fmtNum(ev.snapshot?.calls_connected), {right:true}],
+    [`Connect %`, ev => ev.snapshot?.calls_attempted ? fmtPct(100*(ev.snapshot.calls_connected||0)/ev.snapshot.calls_attempted) : '—', {right:true, bold:true}],
+    [`Avg talk`,  ev => fmtSecs(ev.snapshot?.avg_talk_seconds), {right:true}],
+  ].map(([lbl, fn, opts]) => [labelCell(esc(lbl)), ...evs.map(ev => cell(fn(ev), opts))].join('')).join('') : '';
+
+  document.getElementById('cmpArea').innerHTML = `
+    <div class="card rounded-2xl overflow-hidden">
+      <div class="cmp-grid-wrap">
+        <div class="cmp-grid" style="grid-template-columns:${tpl};">
+          ${headerCells}
+          ${identityRows}
+          ${sectionHead('funnel',     'Funnel')}      ${funnelRows}
+          ${sectionHead('attendance', 'Attendance')}  ${attRows}
+          ${sectionHead('cohort',     'Cohort')}      ${cohortRows}
+          ${sectionHead('email',      'Email funnel')} ${emailRows}
+          ${sectionHead('calls',      'Calls')}       ${callsRows}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleSection(key) { openSections[key] = !openSections[key]; renderCompare(); }
+function trimSelection() {
+  selectedIds = selectedIds.slice(0, 8);
+  syncURL();
+  load();
+}
+
+// ── Picker ──────────────────────────────────────────────────────────────────
+async function openPicker() {
+  document.getElementById('pickerOverlay').classList.remove('hidden');
+  pickerTempSel = new Set();
+  const hint = currentCountry === 'US'
+    ? 'Comparisons are same-country. Showing US events.'
+    : 'Comparisons are same-country. Showing India events.';
+  document.getElementById('pickerHint').textContent = hint;
+  document.getElementById('pickerList').innerHTML = '<div class="p-8 text-center text-zinc-400 text-sm">Loading events…</div>';
+  try {
+    const r = await fetch(`/events?status=aired&country=${encodeURIComponent(countryParam())}&limit=200`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    pickerCandidates = (d.events || []).filter(ev => !selectedIds.includes(ev.event_id));
+    populatePickerFilters();
+    // Preset series filter coming from event-page "Compare with…"
+    if (presetSeries) {
+      document.getElementById('pickerSeries').value = presetSeries;
+      presetSeries = '';
+    }
+    renderPicker();
+  } catch (e) {
+    document.getElementById('pickerList').innerHTML = `<div class="p-8 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+function closePicker(e) {
+  if (e && e.target.id !== 'pickerOverlay') return;
+  document.getElementById('pickerOverlay').classList.add('hidden');
+}
+function populatePickerFilters() {
+  const seriesSel = document.getElementById('pickerSeries');
+  const topicSel  = document.getElementById('pickerTopic');
+  const typeSel   = document.getElementById('pickerType');
+  const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort();
+  seriesSel.innerHTML = '<option value="">All series</option>' + uniq(pickerCandidates.map(e => e.series)).map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  topicSel.innerHTML  = '<option value="">All topics</option>'  + uniq(pickerCandidates.map(e => e.topic)).map(t => `<option value="${esc(t)}">${esc(TOPIC_LABEL[t] || t)}</option>`).join('');
+  typeSel.innerHTML   = '<option value="">All webinar types</option>' + uniq(pickerCandidates.map(e => e.webinar_type)).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+function renderPicker() {
+  const q       = document.getElementById('pickerSearch').value.trim().toLowerCase();
+  const series  = document.getElementById('pickerSeries').value;
+  const topic   = document.getElementById('pickerTopic').value;
+  const wtype   = document.getElementById('pickerType').value;
+  const matched = pickerCandidates.filter(ev => {
+    if (series && ev.series !== series) return false;
+    if (topic  && ev.topic !== topic)   return false;
+    if (wtype  && ev.webinar_type !== wtype) return false;
+    if (q) {
+      const hay = ((ev.title || '') + ' ' + (ev.instructor_name || '')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const list = document.getElementById('pickerList');
+  if (matched.length === 0) {
+    list.innerHTML = '<div class="p-8 text-center text-zinc-500 text-sm">No events match these filters.</div>';
+    updatePickerCount();
+    return;
+  }
+  list.innerHTML = matched.map(ev => {
+    const checked = pickerTempSel.has(ev.event_id) ? 'checked' : '';
+    return `
+      <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-zinc-50 cursor-pointer">
+        <input type="checkbox" data-id="${esc(ev.event_id)}" ${checked} onchange="onPickerToggle('${esc(ev.event_id)}', this.checked)" class="mt-1"/>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-baseline justify-between gap-2">
+            <div class="text-sm font-medium text-zinc-900 truncate">${esc(ev.title || ev.event_id)}</div>
+            <div class="text-[10px] text-zinc-500 whitespace-nowrap">${esc(fmtDate(ev.live_at))}</div>
+          </div>
+          <div class="text-[11px] text-zinc-500 mt-0.5 truncate">${esc(ev.instructor_name || '—')}${ev.series ? ' · ' + esc(ev.series) : ''}</div>
+        </div>
+      </label>`;
+  }).join('');
+  updatePickerCount();
+}
+function onPickerToggle(id, checked) {
+  if (checked) pickerTempSel.add(id); else pickerTempSel.delete(id);
+  updatePickerCount();
+}
+function updatePickerCount() {
+  document.getElementById('pickerCount').textContent = `${pickerTempSel.size} selected`;
+}
+function applyPicker() {
+  if (pickerTempSel.size === 0) { closePicker(); return; }
+  // Append (don't replace) — picker is for adding.
+  Array.from(pickerTempSel).forEach(id => { if (!selectedIds.includes(id)) selectedIds.push(id); });
+  syncURL();
+  closePicker();
+  load();
+}
+
+const TOPIC_LABEL = {
+  ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
+  data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
+};
+
+applyCountryButtons();
+applyTheme();
+checkAuth();
+</script>
+</body>
+</html>
