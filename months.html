@@ -5,14 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Months — Masterclass Hub</title>
   <script>tailwind = { config: { darkMode: 'class' } };
-    (function() { if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark'); })();
+    (function() {
+      const s = localStorage.getItem('ik_theme');
+      if (!s) { document.documentElement.classList.add('dark'); localStorage.setItem('ik_theme','dark'); }
+      else if (s === 'dark') document.documentElement.classList.add('dark');
+    })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    .chart-wrap { position: relative; height: 300px; }
+    .ctt {
+      position: absolute; pointer-events: none; z-index: 20; min-width: 210px;
+      background: rgba(9,9,11,.96); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: 14px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5); backdrop-filter: blur(20px);
+      transform: translate(-50%, calc(-100% - 14px));
+      transition: opacity .1s ease;
+    }
+    .mbtn { transition: all .15s ease; }
+    .mbtn.on { background: rgba(99,102,241,.15) !important; color: #a5b4fc !important; border-color: rgba(99,102,241,.4) !important; }
+    .mcard { transition: transform .2s ease, border-color .15s ease, box-shadow .2s ease; cursor: pointer; }
+    .mcard:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+    .mcard.sel { border-color: rgba(99,102,241,.55) !important; box-shadow: 0 0 0 1px rgba(99,102,241,.25), 0 16px 40px rgba(99,102,241,.1) !important; }
+    .icard { transition: transform .2s ease; }
+    .icard:hover { transform: translateY(-2px); }
+    .bfill { transition: width .75s cubic-bezier(.16,1,.3,1); }
+    .dd { animation: ddIn .3s cubic-bezier(.16,1,.3,1) forwards; }
+    @keyframes ddIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  </style>
 </head>
 <body class="min-h-screen">
 
@@ -61,40 +87,66 @@
     </div>
   </header>
 
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 fade-up">
-    <div class="flex items-end justify-between gap-4 flex-wrap">
+  <!-- ── HERO ───────────────────────────────────────────────────────────────── -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+    <div class="flex items-end justify-between gap-4 flex-wrap mb-6">
       <div>
-        <h1 class="text-xl font-semibold text-zinc-900 tracking-tight">Months</h1>
-        <p class="text-sm text-zinc-500 mt-1">Month-over-month · bucketed by event live date · from Jan 2026.</p>
+        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Performance Timeline</h1>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Visual trend exploration · <span id="heroSub">India · Jan 2026 onwards</span></p>
       </div>
       <div class="flex items-center gap-2">
         <label class="text-xs text-zinc-500 font-medium">Series</label>
-        <select id="seriesFilter" onchange="onSeriesChange()" class="text-sm border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-zinc-300">
+        <select id="seriesFilter" onchange="onSeriesChange()" class="text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-zinc-800 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300">
           <option value="">All events</option>
         </select>
       </div>
     </div>
-  </section>
 
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
-    <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1 w-fit mx-auto overflow-x-auto scroll-hide">
-      <button id="tabAcquisition" onclick="setTab('acquisition')" class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm whitespace-nowrap">Acquisition</button>
-      <button id="tabEngagement"  onclick="setTab('engagement')"  class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Engagement</button>
-      <button id="tabQuality"     onclick="setTab('quality')"     class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Quality</button>
-      <button id="tabCalls"       onclick="setTab('calls')"       class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Calls</button>
+    <!-- KPI aggregate strip -->
+    <div id="kpiStrip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div class="col-span-2 sm:col-span-4 py-4 text-center text-zinc-400 text-sm">Loading…</div>
+    </div>
+
+    <!-- Metric selector -->
+    <div class="flex items-center gap-2 flex-wrap mb-3">
+      <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mr-1">Metric</span>
+      <div id="metricPills" class="flex items-center gap-1.5 flex-wrap"></div>
+    </div>
+
+    <!-- Chart card -->
+    <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden mb-6">
+      <div class="px-5 pt-4 pb-1 flex items-center justify-between">
+        <div id="chartMeta" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
+        <div id="chartBadge" class="text-xs font-medium text-zinc-400"></div>
+      </div>
+      <div class="px-4 pb-4">
+        <div class="chart-wrap">
+          <canvas id="trendCanvas"></canvas>
+          <div id="ctt" class="ctt" style="opacity:0;"></div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-    <div id="tableArea" class="card rounded-2xl overflow-hidden">
-      <div class="p-12 text-center text-zinc-400 text-sm">Loading…</div>
-    </div>
+  <!-- ── INSIGHTS ───────────────────────────────────────────────────────────── -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
+    <div id="insightStrip" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
   </section>
 
-  <footer class="border-t border-zinc-200/80 bg-white">
+  <!-- ── MONTH CARDS ────────────────────────────────────────────────────────── -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">Monthly breakdown</h2>
+      <span id="monthCount" class="text-xs text-zinc-400"></span>
+    </div>
+    <div id="monthCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+    <div id="ddPanel"></div>
+  </section>
+
+  <footer class="border-t border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
       <div>© 2026 Interview Kickstart · Internal use</div>
-      <div><a href="/hub.html" class="hover:text-zinc-900">Hub</a></div>
+      <div><a href="/hub.html" class="hover:text-zinc-900 dark:hover:text-white">Hub</a></div>
     </div>
   </footer>
 </div>
@@ -105,46 +157,82 @@
 const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
 
 let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
-const params = new URLSearchParams(location.search);
-let currentTab    = params.get('tab') || 'acquisition';
-let currentSeries = params.get('series') || '';
-let expandedMonth = params.get('month') || null;
-let lastData      = null;
+let currentMetric  = 'regs';
+let selectedMonth  = null;
+let lastData       = null;
+let chartInst      = null;
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+const urlP = new URLSearchParams(location.search);
+let currentSeries = urlP.get('series') || '';
+
+// ── Metrics config ────────────────────────────────────────────────────────────
+function METRICS() {
+  return [
+    { id:'regs',       field:'total_regs',      label: leadLabel(),   val: m => m.total_regs,            fmt: fmtNum,   color:'#6366f1' },
+    { id:'spend',      field:'meta_spend',       label:'Paid Spend',   val: m => m.meta_spend,            fmt: fmtMoney, color:'#8b5cf6' },
+    { id:'cpl',        field:'cpl_blended',      label: cplLabel(),    val: m => m.cpl_blended ?? m.cpiql,fmt: fmtMoney, color:'#ec4899' },
+    { id:'att',        field:'attendance_pct',   label:'Attendance',   val: m => m.attendance_pct,        fmt: fmtPct,   color:'#10b981' },
+    { id:'email_open', field:'email_open_pct',   label:'Email Open',   val: m => m.email_open_pct,        fmt: fmtPct,   color:'#f59e0b' },
+    { id:'connect',    field:'call_connect_pct', label:'Connect Rate', val: m => m.call_connect_pct,      fmt: fmtPct,   color:'#06b6d4' },
+  ];
+}
+function getMeta() { return METRICS().find(m => m.id === currentMetric) || METRICS()[0]; }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
-function isUS() { return currentCountry === 'US'; }
-function moneySym() { return isUS() ? '$' : '₹'; }
-function fmtMoney(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
-function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
-function fmtSecs(s) { if (s == null) return '—'; const m = Math.floor(s/60); return m + 'm ' + Math.round(s%60) + 's'; }
+function fmtNum(n)   { if (n==null) return '—'; if (n>=1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'k'; return Math.round(n).toLocaleString(); }
+function isUS()      { return currentCountry === 'US'; }
+function moneySym()  { return isUS() ? '$' : '₹'; }
+function fmtMoney(n) { return n==null ? '—' : moneySym()+Math.round(n).toLocaleString(); }
+function fmtPct(n)   { return n==null ? '—' : n.toFixed(1)+'%'; }
+function fmtSecs(s)  { if (s==null) return '—'; const m=Math.floor(s/60); return m+'m '+Math.round(s%60)+'s'; }
 function leadLabel() { return isUS() ? 'GQLs' : 'IQLs'; }
 function cplLabel()  { return isUS() ? 'CPGQL' : 'CPIQL'; }
 function countryParam() { return isUS() ? 'US' : 'India'; }
 function monthDisplay(slug) {
   if (!slug) return '—';
-  const [y, m] = slug.split('-');
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const [y,m] = slug.split('-');
+  return new Date(Number(y), Number(m)-1, 1).toLocaleDateString('en-US', { month:'short', year:'numeric' });
 }
-function eventDateShort(iso) {
-  return iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+function evDateShort(iso) {
+  return iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
 }
-function syncURL() {
-  const p = new URLSearchParams();
-  p.set('tab', currentTab);
-  if (currentSeries) p.set('series', currentSeries);
-  if (expandedMonth) p.set('month', expandedMonth);
-  history.replaceState(null, '', '?' + p.toString());
+function hex2rgba(hex, a) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function getMoM(months, i, field) {
+  if (i === 0) return null;
+  const curr = months[i][field]||0, prev = months[i-1][field]||0;
+  return prev > 0 ? (curr-prev)/prev*100 : null;
+}
+function norm(val, arr) {
+  const mn=Math.min(...arr), mx=Math.max(...arr);
+  return mx===mn ? 50 : (val-mn)/(mx-mn)*100;
+}
+function computeScore(m, months) {
+  const leads = norm(m.total_regs||0,     months.map(x=>x.total_regs||0));
+  const att   = norm(m.attendance_pct||0, months.map(x=>x.attendance_pct||0));
+  const cpls  = months.map(x=>x.cpl_blended||0).filter(Boolean);
+  const cplEff= cpls.length ? 100-norm(m.cpl_blended||0, cpls) : 50;
+  const email = norm(m.email_open_pct||0, months.map(x=>x.email_open_pct||0));
+  return Math.round(leads*0.4 + att*0.3 + cplEff*0.25 + email*0.05);
+}
+function scoreTheme(s) {
+  if (s>=75) return { text:'text-emerald-400', ring:'#10b981' };
+  if (s>=50) return { text:'text-indigo-400',  ring:'#6366f1' };
+  if (s>=30) return { text:'text-amber-400',   ring:'#f59e0b' };
+  return           { text:'text-red-400',       ring:'#ef4444' };
 }
 
-// ── Theme ───────────────────────────────────────────────────────────────────
-const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
-const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+// ── Theme ─────────────────────────────────────────────────────────────────────
+const SUN  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 function applyTheme() {
   const dark = document.documentElement.classList.contains('dark');
-  const btn  = document.getElementById('themeToggle');
-  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN : MOON;
+  if (lastData) renderChart(lastData.months);
 }
 function toggleTheme() {
   const dark = document.documentElement.classList.toggle('dark');
@@ -152,282 +240,396 @@ function toggleTheme() {
   applyTheme();
 }
 
+// ── Country ───────────────────────────────────────────────────────────────────
 function applyCountryButtons() {
-  const on  = 'bg-white text-zinc-900 shadow-sm';
-  const off = 'text-zinc-500 hover:text-zinc-900';
-  const base = 'px-2.5 py-1 rounded-md text-xs font-semibold ';
-  document.getElementById('ctryIN').className = base + (isUS() ? off : on);
-  document.getElementById('ctryUS').className = base + (isUS() ? on  : off);
+  const on='bg-white text-zinc-900 shadow-sm', off='text-zinc-500 hover:text-zinc-900';
+  const base='px-2.5 py-1 rounded-md text-xs font-semibold ';
+  document.getElementById('ctryIN').className = base+(isUS()?off:on);
+  document.getElementById('ctryUS').className = base+(isUS()?on:off);
+  document.getElementById('heroSub').textContent = (isUS()?'United States':'India')+' · Jan 2026 onwards';
 }
 function setCountry(c) {
-  if (currentCountry === c) return;
-  currentCountry = c;
-  localStorage.setItem('ik_country', c);
-  applyCountryButtons();
-  loadSeries();
-  load();
+  if (currentCountry===c) return;
+  currentCountry=c; localStorage.setItem('ik_country',c);
+  applyCountryButtons(); loadSeries(); load();
 }
 
-function setTab(t) {
-  if (currentTab === t) return;
-  currentTab = t;
-  const tabs = ['Acquisition','Engagement','Quality','Calls'];
-  const base = 'px-3 py-1.5 rounded-md font-medium text-sm whitespace-nowrap ';
-  tabs.forEach(name => {
-    const lower = name.toLowerCase();
-    const el = document.getElementById('tab' + name);
-    el.className = base + (currentTab === lower ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
-  });
-  syncURL();
-  if (lastData) renderTable(lastData);
-}
-
-function onSeriesChange() {
-  currentSeries = document.getElementById('seriesFilter').value;
-  expandedMonth = null;
-  syncURL();
-  load();
-}
-
-// ── Auth ────────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 function showApp(email) {
-  document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('appWrap').style.display = '';
-  document.getElementById('userEmail').textContent = email;
-  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
-  loadSeries();
-  load();
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('appWrap').style.display='';
+  document.getElementById('userEmail').textContent=email;
+  if (email) document.getElementById('avatarBtn').textContent=
+    (email[0]||'?').toUpperCase()+(email.split('.')[1]?.[0]||'').toUpperCase();
+  loadSeries(); load();
 }
 function showLogin() {
-  document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('loginOverlay').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
 }
 async function checkAuth() {
-  try {
-    const r = await fetch('/auth/check');
-    if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
-  } catch { showLogin(); }
+  try { const r=await fetch('/auth/check'); if(r.ok){const d=await r.json();showApp(d.email);}else showLogin(); }
+  catch { showLogin(); }
 }
 async function handleGoogleSignIn(response) {
-  const err = document.getElementById('loginError');
-  err.style.display = 'none';
+  const err=document.getElementById('loginError'); err.style.display='none';
   try {
-    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
-    const d = await r.json();
-    if (r.ok) showApp(d.email);
-    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
-  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+    const r=await fetch('/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:response.credential})});
+    const d=await r.json();
+    if(r.ok) showApp(d.email); else { err.textContent=d.error||'Sign-in failed.'; err.style.display='block'; }
+  } catch { err.textContent='Sign-in failed.'; err.style.display='block'; }
 }
-async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
-window.onGoogleLibraryLoad = function () {
-  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
-  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+async function signOut() { await fetch('/auth/logout',{method:'POST'}); showLogin(); }
+window.onGoogleLibraryLoad = function() {
+  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleSignIn,hd:'interviewkickstart.com'});
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'),{theme:'outline',size:'large',width:280});
 };
 function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
 document.addEventListener('click', e => {
-  if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
+  if (!e.target.closest('#avatarBtn')&&!e.target.closest('#userMenu'))
     document.getElementById('userMenu')?.classList.add('hidden');
-  }
 });
 
-// ── Data ────────────────────────────────────────────────────────────────────
+// ── Data ──────────────────────────────────────────────────────────────────────
 async function loadSeries() {
   try {
-    const r = await fetch(`/series?country=${encodeURIComponent(countryParam())}`);
+    const r=await fetch(`/series?country=${encodeURIComponent(countryParam())}`);
     if (!r.ok) return;
-    const d = await r.json();
-    const sel = document.getElementById('seriesFilter');
-    sel.innerHTML = '<option value="">All events</option>' +
-      (d.series || []).map(s => `<option value="${esc(s.name)}" ${s.name === currentSeries ? 'selected' : ''}>${esc(s.name)} (${s.count})</option>`).join('');
+    const d=await r.json();
+    const sel=document.getElementById('seriesFilter');
+    sel.innerHTML='<option value="">All events</option>'+(d.series||[]).map(s=>`<option value="${esc(s.name)}" ${s.name===currentSeries?'selected':''}>${esc(s.name)} (${s.count})</option>`).join('');
   } catch {}
 }
+function onSeriesChange() { currentSeries=document.getElementById('seriesFilter').value; load(); }
 
 async function load() {
-  document.getElementById('tableArea').innerHTML = '<div class="p-12 text-center text-zinc-400 text-sm">Loading…</div>';
+  document.getElementById('kpiStrip').innerHTML='<div class="col-span-2 sm:col-span-4 py-6 text-center text-zinc-400 text-sm">Loading…</div>';
+  ['insightStrip','monthCards','ddPanel'].forEach(id=>{document.getElementById(id).innerHTML='';});
+  selectedMonth=null;
   try {
-    const url = `/months?country=${encodeURIComponent(countryParam())}` + (currentSeries ? `&series=${encodeURIComponent(currentSeries)}` : '');
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    lastData = await r.json();
-    renderTable(lastData);
-  } catch (e) {
-    document.getElementById('tableArea').innerHTML = `<div class="p-12 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
+    const url=`/months?country=${encodeURIComponent(countryParam())}`+(currentSeries?`&series=${encodeURIComponent(currentSeries)}`:'');
+    const r=await fetch(url); if (!r.ok) throw new Error('HTTP '+r.status);
+    lastData=await r.json();
+    const now=new Date();
+    const airedSlugs=new Set((lastData.events||[]).filter(e=>new Date(e.live_at)<=now).map(e=>e.month_slug));
+    lastData.months=(lastData.months||[]).filter(m=>airedSlugs.has(m.month_slug));
+    refreshAll();
+  } catch(e) {
+    document.getElementById('kpiStrip').innerHTML=`<div class="col-span-2 sm:col-span-4 py-6 text-center text-rose-500 text-sm">Failed: ${esc(e.message)}</div>`;
   }
 }
 
-function toggleMonth(slug) {
-  expandedMonth = expandedMonth === slug ? null : slug;
-  syncURL();
-  renderTable(lastData);
-}
-
-// ── Tab schemas ─────────────────────────────────────────────────────────────
-// { label, monthVal(m), eventVal(e), rawVal?(m)→number, align?: 'left' }
-// rawVal drives mini-bar scaling; quality tab has its own bars so no rawVal.
-function tabSchema() {
-  if (currentTab === 'engagement') {
-    return [
-      { label: 'Attendees',     monthVal: m => fmtNum(m.attendees),       eventVal: e => fmtNum(e.attendees),       rawVal: m => m.attendees },
-      { label: 'Attendance %',  monthVal: m => fmtPct(m.attendance_pct),  eventVal: e => fmtPct(e.attendance_pct),  rawVal: m => m.attendance_pct },
-      { label: 'Email open %',  monthVal: m => fmtPct(m.email_open_pct),  eventVal: e => e.email_sent ? fmtPct(100*(e.email_opened||0)/e.email_sent) : '—', rawVal: m => m.email_open_pct },
-      { label: 'Email click %', monthVal: m => fmtPct(m.email_click_pct), eventVal: e => e.email_sent ? fmtPct(100*(e.email_clicked||0)/e.email_sent) : '—', rawVal: m => m.email_click_pct },
-    ];
-  }
-  if (currentTab === 'quality') {
-    return [
-      { label: 'Total qualified', monthVal: m => fmtNum(m.total_regs),   eventVal: e => fmtNum(e.total_regs) },
-      { label: 'Role mix',        monthVal: m => roleMixBars(m),         eventVal: e => roleMixBars(e),       align: 'left' },
-      { label: 'Work-ex mix',     monthVal: m => weMixBars(m),           eventVal: e => weMixBars(e),         align: 'left' },
-    ];
-  }
-  if (currentTab === 'calls') {
-    return [
-      { label: 'Attempted',  monthVal: m => fmtNum(m.calls_attempted),   eventVal: e => fmtNum(e.calls_attempted),  rawVal: m => m.calls_attempted },
-      { label: 'Connected',  monthVal: m => fmtNum(m.calls_connected),   eventVal: e => fmtNum(e.calls_connected),  rawVal: m => m.calls_connected },
-      { label: 'Connect %',  monthVal: m => fmtPct(m.call_connect_pct),  eventVal: e => e.calls_attempted ? fmtPct(100*(e.calls_connected||0)/e.calls_attempted) : '—', rawVal: m => m.call_connect_pct },
-      { label: 'Avg talk',   monthVal: m => fmtSecs(m.avg_talk_seconds), eventVal: e => fmtSecs(e.avg_talk_seconds), rawVal: m => m.avg_talk_seconds },
-    ];
-  }
-  // acquisition (default)
-  return [
-    { label: leadLabel(),  monthVal: m => fmtNum(m.total_regs),     eventVal: e => fmtNum(e.total_regs),     rawVal: m => m.total_regs },
-    { label: 'Paid spend', monthVal: m => fmtMoney(m.meta_spend),   eventVal: e => fmtMoney(e.meta_spend),   rawVal: m => m.meta_spend },
-    { label: cplLabel(),   monthVal: m => fmtMoney(m.cpl_blended),  eventVal: e => fmtMoney(e.cpiql),        rawVal: m => m.cpl_blended },
-    { label: 'Attendance', monthVal: m => fmtPct(m.attendance_pct), eventVal: e => fmtPct(e.attendance_pct), rawVal: m => m.attendance_pct },
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+function renderKPI(months) {
+  if (!months.length) { document.getElementById('kpiStrip').innerHTML=''; return; }
+  const totLeads = months.reduce((a,m)=>a+(m.total_regs||0),0);
+  const totSpend = months.reduce((a,m)=>a+(m.meta_spend||0),0);
+  const cpl      = totLeads ? totSpend/totLeads : null;
+  const attMs    = months.filter(m=>m.attendance_pct);
+  const avgAtt   = attMs.length ? attMs.reduce((a,m)=>a+m.attendance_pct,0)/attMs.length : null;
+  const tiles=[
+    { label:`Total ${leadLabel()}`, val:fmtNum(totLeads),   sub:`${months.length} months` },
+    { label:'Paid Spend',           val:fmtMoney(totSpend), sub:'Total media spend' },
+    { label:cplLabel(),             val:fmtMoney(cpl),      sub:'Blended avg' },
+    { label:'Avg Attendance',       val:fmtPct(avgAtt),     sub:'Across all events' },
   ];
+  document.getElementById('kpiStrip').innerHTML=tiles.map(t=>`
+    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5">
+      <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">${esc(t.label)}</div>
+      <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">${t.val}</div>
+      <div class="text-[11px] text-zinc-400 mt-0.5">${esc(t.sub)}</div>
+    </div>`).join('');
 }
 
-// ── Quality bars (stacked mini-bar) ─────────────────────────────────────────
-function stackedBar(parts, totalLabel) {
-  const total = parts.reduce((a, [, n]) => a + n, 0);
-  if (total === 0) return '<span class="text-xs text-zinc-400">—</span>';
-  const segs = parts.map(([label, n, color]) => {
-    const pct = (100 * n / total).toFixed(1);
-    return `<div title="${esc(label)}: ${fmtNum(n)} (${pct}%)" style="width:${pct}%;background:${color};" class="h-full"></div>`;
-  }).join('');
-  const labelsHtml = parts.filter(([, n]) => n > 0).map(([label, n, color]) => {
-    const pct = (100 * n / total).toFixed(0);
-    return `<span class="inline-flex items-center gap-1 mr-2 last:mr-0"><span class="inline-block w-2 h-2 rounded-sm" style="background:${color};"></span>${esc(label)} <span class="text-zinc-400">${pct}%</span></span>`;
-  }).join('');
-  return `
-    <div>
-      <div class="flex w-full h-2 rounded overflow-hidden bg-zinc-100">${segs}</div>
-      <div class="mt-1.5 text-[10px] text-zinc-500 flex flex-wrap">${labelsHtml}</div>
-    </div>`;
+// ── Metric pills ──────────────────────────────────────────────────────────────
+function renderMetricPills() {
+  document.getElementById('metricPills').innerHTML=METRICS().map(m=>`
+    <button onclick="selectMetric('${m.id}')" class="mbtn ${m.id===currentMetric?'on':''} px-3 py-1 rounded-full text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900"
+      ${m.id===currentMetric?`style="border-color:rgba(99,102,241,.4);color:#a5b4fc;background:rgba(99,102,241,.15);"`:''}>
+      ${esc(m.label)}
+    </button>`).join('');
 }
-function roleMixBars(x) {
-  return stackedBar([
-    ['Data',  x.role_ml         || 0, '#a855f7'],
-    ['SDE',   x.role_sde        || 0, '#3b82f6'],
-    ['Mgmt',  x.role_management || 0, '#f59e0b'],
-    ['Sys',   x.role_systems    || 0, '#10b981'],
-    ['Null',  x.role_null       || 0, '#a1a1aa'],
-    ['Other', x.role_other      || 0, '#ef4444'],
-  ]);
-}
-function weMixBars(x) {
-  return stackedBar([
-    ['0-5',  x.we_3_5   || 0, '#bfdbfe'],
-    ['5-10', x.we_6_10  || 0, '#60a5fa'],
-    ['10-15',x.we_10_15 || 0, '#3b82f6'],
-    ['15-20',x.we_15_20 || 0, '#1d4ed8'],
-    ['20+',  x.we_20p   || 0, '#1e3a8a'],
-    ['Other',x.we_other || 0, '#a1a1aa'],
-  ]);
+function selectMetric(id) {
+  currentMetric=id;
+  renderMetricPills();
+  if (lastData) { renderChart(lastData.months); updateChartMeta(lastData.months); }
 }
 
-// ── Mini bar (for Acquisition / Engagement / Calls month rows) ──────────────
-function miniBar(rawVal, max, formatted) {
-  if (rawVal == null || max === 0) return `<span class="text-sm tabular-nums font-semibold text-zinc-900">${formatted}</span>`;
-  const pct = Math.max(5, Math.min(100, (rawVal / max) * 100)).toFixed(1);
-  return `<div class="flex flex-col gap-0.5 py-0.5">
-    <div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full rounded-full bg-zinc-400 dark:bg-zinc-500" style="width:${pct}%;"></div></div>
-    <span class="text-xs font-semibold text-zinc-900 tabular-nums">${formatted}</span>
-  </div>`;
+// ── Chart ─────────────────────────────────────────────────────────────────────
+function updateChartMeta(months) {
+  const meta=getMeta();
+  const vals=months.map(m=>meta.val(m)).filter(v=>v!=null&&v>0);
+  const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  document.getElementById('chartMeta').innerHTML=
+    `<span class="font-semibold text-zinc-800 dark:text-zinc-200">${esc(meta.label)}</span>`+
+    (avg!=null?` <span class="text-zinc-400">· avg ${meta.fmt(avg)}</span>`:'');
+  // Best month label
+  let bestIdx=-1, bestVal=-Infinity;
+  months.forEach((m,i)=>{ const v=meta.val(m)||0; if(v>bestVal){bestVal=v;bestIdx=i;} });
+  document.getElementById('chartBadge').textContent = bestIdx>=0
+    ? `↑ peak: ${monthDisplay(months[bestIdx].month_slug)}` : '';
 }
 
-// ── Renderer ────────────────────────────────────────────────────────────────
-function renderTable(data) {
-  const allMonths = data.months || [];
-  const events   = data.events || [];
+function renderChart(months) {
+  const canvas=document.getElementById('trendCanvas');
+  if (!canvas||!months.length) return;
+  const meta=getMeta();
+  const dark=document.documentElement.classList.contains('dark');
+  const ctx=canvas.getContext('2d');
+  const labels=months.map(m=>monthDisplay(m.month_slug));
+  const values=months.map(m=>meta.val(m)||0);
 
-  // Only show months where at least one event has already aired.
-  const now = new Date();
-  const airedSlugs = new Set(events.filter(e => new Date(e.live_at) <= now).map(e => e.month_slug));
-  const months = allMonths.filter(m => airedSlugs.has(m.month_slug));
+  const grad=ctx.createLinearGradient(0,0,0,canvas.offsetHeight||300);
+  grad.addColorStop(0, hex2rgba(meta.color,.28));
+  grad.addColorStop(1, hex2rgba(meta.color,.0));
 
-  if (months.length === 0) {
-    document.getElementById('tableArea').innerHTML = `
-      <div class="p-12 text-center text-zinc-500">
-        <div class="text-sm font-medium text-zinc-900">No months yet</div>
-        <div class="text-xs mt-1">No ${currentCountry} masterclasses match these filters in 2026.</div>
-      </div>`;
-    return;
-  }
-  const schema = tabSchema();
-  const isQuality = currentTab === 'quality';
-  const colTemplate = isQuality
-    ? 'minmax(140px,1.1fr) 60px ' + schema.map(() => 'minmax(160px,1.4fr)').join(' ') + ' 30px'
-    : 'minmax(120px,1.2fr) 60px ' + schema.map(() => 'minmax(130px,1fr)').join(' ') + ' 30px';
+  if (chartInst) { chartInst.destroy(); chartInst=null; }
 
-  // Per-column max value for bar scaling (only cols with rawVal).
-  const colMaxes = schema.map(c => {
-    if (!c.rawVal) return null;
-    return Math.max(0, ...months.map(m => c.rawVal(m) || 0));
+  chartInst = new Chart(ctx, {
+    type:'line',
+    data: { labels, datasets:[{
+      data:values, borderColor:meta.color, backgroundColor:grad, fill:true, tension:.45,
+      pointBackgroundColor:meta.color, pointBorderColor:dark?'#09090b':'#fff', pointBorderWidth:2.5,
+      pointRadius:5, pointHoverRadius:8, pointHoverBackgroundColor:meta.color,
+      pointHoverBorderColor:dark?'#09090b':'#fff', borderWidth:2.5,
+    }]},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:500, easing:'easeInOutQuart' },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ enabled:false, external: buildTooltipFn(months, meta) }
+      },
+      scales:{
+        x:{ grid:{color:dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)',drawBorder:false}, ticks:{color:dark?'#52525b':'#a1a1aa',font:{size:11,family:'Inter'}}, border:{display:false} },
+        y:{ grid:{color:dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)',drawBorder:false}, ticks:{color:dark?'#52525b':'#a1a1aa',font:{size:11,family:'Inter'},callback:v=>meta.fmt(v)}, border:{display:false} }
+      },
+      onClick:(_,els)=>{ if(els.length) selectMonth(months[els[0].index].month_slug); },
+      onHover:(_,els)=>{ canvas.style.cursor=els.length?'pointer':'default'; }
+    }
   });
+  updateChartMeta(months);
+}
 
-  const head = `
-    <div class="grid items-center gap-2 sm:gap-4 px-5 py-3 border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold"
-         style="grid-template-columns:${colTemplate};">
-      <div>Month</div>
-      <div class="text-right">Events</div>
-      ${schema.map((c, i) => `<div class="${(!isQuality && c.rawVal) ? '' : (c.align==='left' ? '' : 'text-right')}">${esc(c.label)}</div>`).join('')}
-      <div></div>
+function buildTooltipFn(months, meta) {
+  return function({ chart, tooltip }) {
+    const el=document.getElementById('ctt');
+    if (tooltip.opacity===0) { el.style.opacity='0'; return; }
+    const idx=tooltip.dataIndex, m=months[idx];
+    const mom=getMoM(months,idx,meta.field);
+    const evs=(lastData?.events||[]).filter(e=>e.month_slug===m.month_slug);
+    const topEv=[...evs].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
+    const val=tooltip.dataPoints?.[0]?.parsed?.y;
+    el.innerHTML=`
+      <div style="font-size:11px;color:#71717a;margin-bottom:4px;font-weight:500;">${esc(monthDisplay(m.month_slug))}</div>
+      <div style="font-size:22px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;">${val!=null?meta.fmt(val):'—'}</div>
+      ${mom!=null?`<div style="font-size:12px;font-weight:600;margin-top:4px;color:${mom>=0?'#34d399':'#f87171'};">${mom>=0?'▲':'▼'} ${Math.abs(mom).toFixed(1)}% vs prev</div>`:''}
+      ${topEv?`<div style="font-size:11px;color:#52525b;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);">Top: ${esc(topEv.title||topEv.event_id)}</div>`:''}
+      <div style="font-size:10px;color:#3f3f46;margin-top:4px;">Click to explore →</div>`;
+    el.style.opacity='1';
+    el.style.left=tooltip.caretX+'px';
+    el.style.top =tooltip.caretY+'px';
+  };
+}
+
+// ── Insights ──────────────────────────────────────────────────────────────────
+function generateInsights(months, events) {
+  if (!months.length) return [];
+  const out=[];
+  const best=[...months].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
+  out.push({ icon:'🚀', title:`${monthDisplay(best.month_slug)} led with ${fmtNum(best.total_regs)} ${leadLabel()}`, sub:'Highest volume month this year' });
+  let bigSlug=null, bigPct=0;
+  for (let i=1;i<months.length;i++) {
+    const p=getMoM(months,i,'total_regs');
+    if (p!=null&&p>bigPct) { bigPct=p; bigSlug=months[i]; }
+  }
+  if (bigSlug) out.push({ icon:'📈', title:`${monthDisplay(bigSlug.month_slug)} grew ${bigPct.toFixed(0)}% MoM`, sub:`Biggest month-over-month jump in ${leadLabel()}` });
+  const ba=[...months].sort((a,b)=>(b.attendance_pct||0)-(a.attendance_pct||0))[0];
+  if (ba.attendance_pct) out.push({ icon:'👥', title:`${fmtPct(ba.attendance_pct)} attendance peak in ${monthDisplay(ba.month_slug)}`, sub:'Highest engagement rate this year' });
+  if (events.length) {
+    const te=[...events].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
+    out.push({ icon:'⭐', title:`"${te.title||te.event_id}" was the top event`, sub:`${fmtNum(te.total_regs)} ${leadLabel()} · ${monthDisplay(te.month_slug)}` });
+  }
+  return out;
+}
+function renderInsights(insights) {
+  document.getElementById('insightStrip').innerHTML=insights.map(i=>`
+    <div class="icard rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 flex items-start gap-3">
+      <span class="text-xl shrink-0">${i.icon}</span>
+      <div class="min-w-0">
+        <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">${esc(i.title)}</div>
+        <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">${esc(i.sub)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Month cards ───────────────────────────────────────────────────────────────
+function sparkline(vals, color) {
+  if (vals.length < 2) return '';
+  const mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||1;
+  const W=72,H=28,p=2;
+  const pts=vals.map((v,i)=>{
+    const x=p+(i/(vals.length-1))*(W-2*p);
+    const y=H-p-((v-mn)/rng)*(H-2*p);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${esc(color)}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/></svg>`;
+}
+function scoreRing(score, color) {
+  const R=17, circ=2*Math.PI*R, dash=(score/100)*circ;
+  return `<svg width="44" height="44" viewBox="0 0 44 44">
+    <circle cx="22" cy="22" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
+    <circle cx="22" cy="22" r="${R}" fill="none" stroke="${esc(color)}" stroke-width="3"
+      stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"
+      transform="rotate(-90 22 22)"/>
+    <text x="22" y="22" text-anchor="middle" dominant-baseline="central"
+      fill="${esc(color)}" font-size="10" font-weight="700" font-family="Inter,sans-serif">${score}</text>
+  </svg>`;
+}
+
+function renderMonthCards(months, events) {
+  const el=document.getElementById('monthCards');
+  if (!months.length) { el.innerHTML='<div class="col-span-3 py-8 text-center text-zinc-400 text-sm">No months found.</div>'; return; }
+  document.getElementById('monthCount').textContent=`${months.length} month${months.length===1?'':'s'}`;
+  const meta=getMeta();
+  const allVals=months.map(m=>meta.val(m)||0);
+
+  el.innerHTML=months.map((m,i)=>{
+    const score=computeScore(m,months);
+    const st=scoreTheme(score);
+    const mom=getMoM(months,i,'total_regs');
+    const monthEvs=events.filter(e=>e.month_slug===m.month_slug);
+    const topEv=[...monthEvs].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
+    const sparkVals=allVals.slice(Math.max(0,i-4),i+1);
+    const isSel=selectedMonth===m.month_slug;
+    return `
+    <div class="mcard rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 ${isSel?'sel':''}"
+         data-slug="${esc(m.month_slug)}" onclick="selectMonth('${esc(m.month_slug)}')">
+      <div class="flex items-start justify-between gap-2 mb-4">
+        <div>
+          <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">${m.events||0} event${(m.events||0)===1?'':'s'}</div>
+          <div class="text-lg font-bold text-zinc-900 dark:text-white mt-0.5">${esc(monthDisplay(m.month_slug))}</div>
+        </div>
+        <div class="shrink-0">${scoreRing(score, st.ring)}</div>
+      </div>
+
+      <div class="flex items-end justify-between gap-2 mb-3">
+        <div>
+          <div class="text-[11px] text-zinc-400 font-medium mb-0.5">${leadLabel()}</div>
+          <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">${fmtNum(m.total_regs)}</div>
+          <div class="text-xs font-semibold mt-0.5 ${mom==null?'text-zinc-400':mom>=0?'text-emerald-400':'text-red-400'}">
+            ${mom==null?'First month':(mom>=0?'▲':'▼')+' '+Math.abs(mom).toFixed(1)+'%'}
+          </div>
+        </div>
+        <div class="shrink-0 pb-1 opacity-70">${sparkline(sparkVals, st.ring)}</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-2">
+          <div class="text-[10px] text-zinc-400 font-medium">Attendance</div>
+          <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">${fmtPct(m.attendance_pct)}</div>
+        </div>
+        <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-2">
+          <div class="text-[10px] text-zinc-400 font-medium">${cplLabel()}</div>
+          <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">${fmtMoney(m.cpl_blended)}</div>
+        </div>
+      </div>
+
+      ${topEv?`
+      <div class="flex items-center gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+        <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${esc(st.ring)};"></span>
+        <span class="text-xs text-zinc-500 dark:text-zinc-400 truncate">${esc(topEv.title||topEv.event_id)}</span>
+        <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 tabular-nums ml-auto shrink-0">${fmtNum(topEv.total_regs)}</span>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── Drilldown ─────────────────────────────────────────────────────────────────
+const DCOLORS=['#6366f1','#8b5cf6','#10b981','#f59e0b','#ec4899','#06b6d4','#ef4444','#84cc16'];
+function renderDrilldown(slug, months, events) {
+  const panel=document.getElementById('ddPanel');
+  if (!slug) { panel.innerHTML=''; return; }
+  const m=months.find(x=>x.month_slug===slug);
+  const evs=[...events.filter(e=>e.month_slug===slug)].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0));
+  if (!m||!evs.length) { panel.innerHTML=''; return; }
+  const total=evs.reduce((a,e)=>a+(e.total_regs||0),0)||1;
+  const meta=getMeta();
+
+  panel.className='dd rounded-2xl border border-indigo-200 dark:border-indigo-900/40 bg-white dark:bg-zinc-900 overflow-hidden';
+  panel.innerHTML=`
+    <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Drilldown</div>
+        <div class="text-base font-bold text-zinc-900 dark:text-white">${esc(monthDisplay(slug))} · ${evs.length} event${evs.length===1?'':'s'}</div>
+      </div>
+      <button onclick="clearDrilldown()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg> Close
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-5">
+      ${evs.map((e,i)=>{
+        const pct=((e.total_regs||0)/total*100);
+        const col=DCOLORS[i%DCOLORS.length];
+        return `
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <a href="/event.html?id=${encodeURIComponent(e.event_id)}" class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-indigo-400 truncate flex-1">${esc(e.title||e.event_id)}</a>
+            <div class="shrink-0 flex items-center gap-3 text-xs text-zinc-500">
+              <span class="font-bold tabular-nums text-zinc-800 dark:text-zinc-200">${fmtNum(e.total_regs)} ${leadLabel()}</span>
+              <span class="tabular-nums w-10 text-right">${pct.toFixed(1)}%</span>
+            </div>
+          </div>
+          <div class="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+            <div class="bfill h-full rounded-full" style="width:0%;background:${esc(col)};"></div>
+          </div>
+          <div class="flex items-center gap-4 mt-1.5 text-[11px] text-zinc-400">
+            <span>${esc(evDateShort(e.live_at))}</span>
+            <span>Att: ${fmtPct(e.attendance_pct)}</span>
+            <span>${cplLabel()}: ${fmtMoney(e.cpiql??e.cpl_blended)}</span>
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
 
-  const monthRows = months.map(m => {
-    const expanded = expandedMonth === m.month_slug;
-    const monthRow = `
-      <div class="grid items-center gap-2 sm:gap-4 px-5 py-3 border-b border-zinc-100 cursor-pointer hover:bg-zinc-50/60"
-           style="grid-template-columns:${colTemplate};"
-           onclick="toggleMonth('${m.month_slug}')">
-        <div class="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
-          <svg class="w-3 h-3 text-zinc-400 transition-transform ${expanded ? 'rotate-90' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          ${esc(monthDisplay(m.month_slug))}
-        </div>
-        <div class="text-right text-sm text-zinc-700 tabular-nums">${fmtNum(m.events)}</div>
-        ${schema.map((c, i) => {
-          if (!isQuality && c.rawVal) {
-            return `<div class="text-sm">${miniBar(c.rawVal(m), colMaxes[i], c.monthVal(m))}</div>`;
-          }
-          return `<div class="${c.align==='left'?'':'text-right'} text-sm ${isQuality?'':'font-medium text-zinc-900 tabular-nums'}">${c.monthVal(m)}</div>`;
-        }).join('')}
-        <div></div>
-      </div>`;
-    if (!expanded) return monthRow;
-    const monthEvents = events.filter(e => e.month_slug === m.month_slug);
-    const eventRows = monthEvents.map(e => `
-      <div class="grid items-center gap-2 sm:gap-4 px-5 py-2.5 border-b border-zinc-100 last:border-0 bg-zinc-50/40 hover:bg-zinc-50"
-           style="grid-template-columns:${colTemplate};">
-        <div class="pl-5 text-[13px] flex items-center gap-2 min-w-0">
-          <span class="text-zinc-400">└</span>
-          <span class="text-zinc-500 tabular-nums whitespace-nowrap">${esc(eventDateShort(e.live_at))}</span>
-          <a href="/event.html?id=${encodeURIComponent(e.event_id)}" class="text-zinc-900 font-medium hover:underline truncate">${esc(e.title || e.event_id)}</a>
-        </div>
-        <div></div>
-        ${schema.map(c => `<div class="${c.align==='left'?'':'text-right'} text-[13px] text-zinc-700 tabular-nums">${c.eventVal(e)}</div>`).join('')}
-        <div></div>
-      </div>`).join('');
-    return monthRow + eventRows;
-  }).join('');
+  // Animate bars after paint
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    panel.querySelectorAll('.bfill').forEach((bar,i)=>{
+      const pct=((evs[i]?.total_regs||0)/total*100);
+      bar.style.width=pct.toFixed(1)+'%';
+    });
+  }));
+}
 
-  document.getElementById('tableArea').innerHTML = head + monthRows;
+// ── Interactions ──────────────────────────────────────────────────────────────
+function selectMonth(slug) {
+  if (selectedMonth===slug) { clearDrilldown(); return; }
+  selectedMonth=slug;
+  document.querySelectorAll('.mcard').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.slug===slug);
+  });
+  renderDrilldown(slug, lastData.months, lastData.events||[]);
+  setTimeout(()=>document.getElementById('ddPanel').scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+}
+function clearDrilldown() {
+  selectedMonth=null;
+  document.querySelectorAll('.mcard').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('ddPanel').innerHTML='';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+function refreshAll() {
+  if (!lastData) return;
+  const { months, events } = lastData;
+  renderKPI(months);
+  renderMetricPills();
+  renderChart(months);
+  renderInsights(generateInsights(months, events||[]));
+  renderMonthCards(months, events||[]);
 }
 
 applyCountryButtons();
 applyTheme();
-setTab(currentTab);  // also styles the tab buttons
-document.getElementById('seriesFilter').value = currentSeries;
 checkAuth();
 </script>
 </body>
