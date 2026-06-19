@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/masterclass-automation-ik/masterclass-automation:$COMMIT_SHA', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/masterclass-automation-ik/masterclass-automation:$COMMIT_SHA']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - masterclass-automation
+      - --image=gcr.io/masterclass-automation-ik/masterclass-automation:$COMMIT_SHA
+      - --region=asia-south1
+      - --platform=managed
+      - --project=masterclass-automation-ik
+
+images:
+  - 'gcr.io/masterclass-automation-ik/masterclass-automation:$COMMIT_SHA'
