@@ -831,6 +831,10 @@ def _build_event_snapshot_india(client, ev, now, now_iso):
     wt_param     = [bigquery.ScalarQueryParameter('wt', 'STRING', ev.webinar_type)]
 
     # ─── 1. Leads + spends (per-day buckets) ──────────────────────────────────
+    # Daily Meta spend is computed once per (date, campaign_name) via DISTINCT —
+    # without this, a campaign that matches multiple utm_campaigns gets counted
+    # multiple times. Previous "dedup-by-date in Python" was the opposite bug:
+    # only one campaign per day was kept and the rest were silently dropped.
     query = f"""
 WITH leads AS (
   SELECT DATE(formatted_date) AS registration_date, channel, utm_campaign, COUNT(*) AS total_leads
@@ -853,12 +857,21 @@ spends AS (
   WHERE (LOWER(campaign_name) LIKE '%l10x%' OR LOWER(campaign_name) LIKE '%masterclass%')
     AND (LOWER(campaign_name) LIKE '%meta%' OR LOWER(campaign_name) LIKE '%facebook%' OR LOWER(campaign_name) LIKE '%l10x%')
   GROUP BY spend_date, campaign_name
+),
+matched_campaigns AS (
+  SELECT DISTINCT l.registration_date, s.campaign_name, s.total_spend
+  FROM leads l
+  JOIN spends s ON l.registration_date = s.spend_date
+    AND LOWER(l.utm_campaign) LIKE CONCAT('%', LOWER(s.campaign_name), '%')
+),
+daily_spend AS (
+  SELECT registration_date, SUM(total_spend) AS day_spend
+  FROM matched_campaigns
+  GROUP BY registration_date
 )
-SELECT l.registration_date, l.channel, l.total_leads, SUM(s.total_spend) AS total_spend
+SELECT l.registration_date, l.channel, l.total_leads, COALESCE(ds.day_spend, 0) AS total_spend
 FROM leads l
-LEFT JOIN spends s ON l.registration_date = s.spend_date
-  AND LOWER(l.utm_campaign) LIKE CONCAT('%', LOWER(s.campaign_name), '%')
-GROUP BY l.registration_date, l.channel, l.total_leads
+LEFT JOIN daily_spend ds ON l.registration_date = ds.registration_date
 ORDER BY l.registration_date, l.channel"""
 
     job = src_client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=wt_param))
