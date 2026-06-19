@@ -16,3 +16,6 @@ steps:
 
 images:
   - 'gcr.io/masterclass-automation-ik/masterclass-automation:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
