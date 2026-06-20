@@ -1222,30 +1222,43 @@ FROM per_lead"""
     }
 
 def _query_sales_india(src_client, date_literal, wt_param):
-    """Returns sales count, total revenue, paid (Meta/Facebook) revenue for India events."""
+    """Returns sales count, total INR revenue, paid (Meta/Facebook) INR revenue.
+    Converts net_revenue from USD to INR per-sale using each sale's month avg
+    USD/INR rate from events.fx_rates_monthly. Falls back to 84 if rate missing."""
     from google.cloud import bigquery
     q = f"""
-SELECT
-  COUNTIF(Sale_date IS NOT NULL)                                         AS sales,
-  SUM(CASE WHEN Sale_date IS NOT NULL THEN net_revenue END)              AS revenue,
-  SUM(CASE WHEN Sale_date IS NOT NULL AND Channel = 'Facebook'
-           THEN net_revenue END)                                         AS paid_revenue
-FROM (
-  SELECT Sale_date, net_revenue, Channel,
-    ROW_NUMBER() OVER (
-      PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")
-      ORDER BY formatted_date ASC
-    ) AS rnk,
-    DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,
-    dupe_flag, webinar_type, dupe_logic, work_ex
-  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
-  WHERE dupe_logic = 1
+WITH sales AS (
+  SELECT Sale_date, net_revenue, Channel, dupe_flag,
+    FORMAT_DATE('%Y-%m', Sale_date) AS sale_month
+  FROM (
+    SELECT Sale_date, net_revenue, Channel, dupe_flag, webinar_type, work_ex,
+      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,
+      ROW_NUMBER() OVER (
+        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+    WHERE dupe_logic = 1
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND webinar_type = @wt
+    AND dupe_flag = 0
+    AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
+),
+sales_inr AS (
+  SELECT s.Sale_date, s.Channel,
+    s.net_revenue * COALESCE(fx.rate, 84.0) AS rev_inr
+  FROM sales s
+  LEFT JOIN `masterclass-automation-ik.events.fx_rates_monthly` fx
+    ON fx.month = s.sale_month AND fx.base = 'USD' AND fx.quote = 'INR'
 )
-WHERE rnk = 1
-  AND web_scheduled_date IN ({date_literal})
-  AND webinar_type = @wt
-  AND dupe_flag = 0
-  AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')"""
+SELECT
+  COUNTIF(Sale_date IS NOT NULL)                                  AS sales,
+  SUM(CASE WHEN Sale_date IS NOT NULL THEN rev_inr END)            AS revenue,
+  SUM(CASE WHEN Sale_date IS NOT NULL AND Channel = 'Facebook'
+           THEN rev_inr END)                                       AS paid_revenue
+FROM sales_inr"""
     r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
     if not r:
         return {'sales': 0, 'revenue': 0.0, 'paid_revenue': 0.0}

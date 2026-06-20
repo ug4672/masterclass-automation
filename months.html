@@ -232,7 +232,6 @@
     'use strict';
 
     const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-    const USD_TO_INR = 84;
 
     let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
     let lastEvents = [];
@@ -293,8 +292,9 @@
     function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—'; }
     function fmtPct(n, d=0) { return n == null ? '—' : n.toFixed(d) + '%'; }
 
-    function revLocal(s) { if (!s || s.revenue == null) return null; return isUS() ? s.revenue : s.revenue * USD_TO_INR; }
-    function paidRevLocal(s) { if (!s || s.paid_revenue == null) return null; return isUS() ? s.paid_revenue : s.paid_revenue * USD_TO_INR; }
+    // Revenue is stored in local currency at snapshot time (INR for India, USD for US)
+    function revLocal(s) { return s?.revenue ?? null; }
+    function paidRevLocal(s) { return s?.paid_revenue ?? null; }
     function isPipelineOpen(ev) {
       if (!ev.live_at) return false;
       const days = (Date.now() - new Date(ev.live_at).getTime()) / 86400000;

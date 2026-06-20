@@ -147,7 +147,6 @@
     'use strict';
 
     const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-    const USD_TO_INR = 84;
     const MAX_EVENTS = 8;
 
     let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
@@ -198,8 +197,9 @@
     function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—'; }
     function fmtPct(n, d=1) { return n == null ? '—' : n.toFixed(d) + '%'; }
     function fmtSecs(s) { if (s == null) return '—'; const m = Math.floor(s/60); return m + 'm ' + Math.round(s%60) + 's'; }
-    function revLocal(s) { if (!s || s.revenue == null) return null; return isUS() ? s.revenue : s.revenue * USD_TO_INR; }
-    function paidRevLocal(s) { if (!s || s.paid_revenue == null) return null; return isUS() ? s.paid_revenue : s.paid_revenue * USD_TO_INR; }
+    // Revenue is stored in local currency at snapshot time (INR for India, USD for US)
+    function revLocal(s) { return s?.revenue ?? null; }
+    function paidRevLocal(s) { return s?.paid_revenue ?? null; }
 
     // ── Init: parse URL params ─────────────────────────────
     function init() {
@@ -390,7 +390,7 @@
         </div>
         <div class="mt-4 flex items-center justify-between text-[11px] text-zinc-500">
           <div>${N} event${N===1?'':'s'} compared · winner per row in green</div>
-          <div>Revenue / ROAS based on dupe_flag=0 attribution${isUS() ? '' : ' · USD→INR at ₹84'}</div>
+          <div>Revenue / ROAS based on dupe_flag=0 attribution${isUS() ? '' : ' · USD→INR at monthly avg rate'}</div>
         </div>`;
     }
 

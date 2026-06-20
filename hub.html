@@ -162,7 +162,6 @@
     'use strict';
 
     const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-    const USD_TO_INR = 84;
     const TOPIC_COLORS = {
       ai_agents: '#a855f7', system_design: '#3b82f6', behavioral: '#f59e0b',
       data: '#10b981', ml: '#ec4899', distributed: '#6366f1',
@@ -336,15 +335,9 @@
       }
     }
 
-    // Compute INR revenue (BQ stores USD)
-    function revINR(s) {
-      const r = s?.revenue;
-      return r == null ? null : r * USD_TO_INR;
-    }
-    function paidRevINR(s) {
-      const r = s?.paid_revenue;
-      return r == null ? null : r * USD_TO_INR;
-    }
+    // Revenue is already in local currency (INR for India, USD for US) — converted at snapshot time
+    function revINR(s) { return s?.revenue ?? null; }
+    function paidRevINR(s) { return s?.paid_revenue ?? null; }
 
     // ── Data load ───────────────────────────────────────────
     async function load() {
