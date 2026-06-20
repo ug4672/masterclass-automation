@@ -26,22 +26,31 @@
     .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
     .grid-bg {
       background-image:
-        linear-gradient(rgba(244,244,245,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244,244,245,0.025) 1px, transparent 1px);
+        linear-gradient(rgba(24,24,27,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24,24,27,0.04) 1px, transparent 1px);
       background-size: 28px 28px;
     }
-    .glow-emerald { box-shadow: 0 0 60px -10px rgba(52,211,153,0.25); }
+    .dark .grid-bg {
+      background-image:
+        linear-gradient(rgba(244,244,245,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244,244,245,0.025) 1px, transparent 1px);
+    }
+    .glow-emerald { box-shadow: 0 0 0 1px rgba(16,185,129,0.15), 0 8px 32px -8px rgba(16,185,129,0.15); }
+    .dark .glow-emerald { box-shadow: 0 0 60px -10px rgba(52,211,153,0.25); }
     .stage-arrow { position: relative; }
     .stage-arrow::after {
       content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
       width: 0; height: 0;
       border-top: 8px solid transparent; border-bottom: 8px solid transparent;
-      border-left: 10px solid rgba(63,63,70,0.6);
+      border-left: 10px solid rgba(161,161,170,0.6);
       z-index: 2;
     }
+    .dark .stage-arrow::after { border-left-color: rgba(63,63,70,0.6); }
     .stage-arrow:last-child::after { display: none; }
-    .pill-active { background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%); border-color: #6366f1; }
-    .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .pill-active { background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%); border-color: #4f46e5; color: #ffffff; }
+    .dark .pill-active { background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%); border-color: #6366f1; color: #c7d2fe; }
+    .gradient-text-em { background: linear-gradient(135deg, #047857, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .dark .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .row-highlight-top { background: linear-gradient(90deg, rgba(34,197,94,0.04), transparent 60%); border-left: 2px solid #10b981; }
     .row-highlight-bot { background: linear-gradient(90deg, rgba(244,63,94,0.04), transparent 60%); border-left: 2px solid #f43f5e; }
     .signal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
@@ -55,49 +64,15 @@
     .login-title { font-size: 18px; font-weight: 600; color: #18181b; margin-bottom: 6px; }
     .login-sub { font-size: 13px; color: #71717a; margin-bottom: 24px; }
     .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
-
-    /* Light theme overrides — swap dark Tailwind utilities to light when :not(.dark) */
-    html:not(.dark) { color-scheme: light; }
-    html:not(.dark) body { background: #f1f2f4; color: #18181b; }
-    html:not(.dark) .bg-zinc-950 { background-color: #f1f2f4 !important; }
-    html:not(.dark) .bg-zinc-950\/90 { background-color: rgba(241,242,244,0.85) !important; backdrop-filter: blur(12px); }
-    html:not(.dark) .bg-zinc-900 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
-    html:not(.dark) .bg-zinc-900\/50, html:not(.dark) .bg-zinc-900\/40, html:not(.dark) .bg-zinc-900\/30 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
-    html:not(.dark) .bg-zinc-900\/60 { background-color: #f4f4f5 !important; }
-    html:not(.dark) .bg-zinc-800 { background-color: #e4e4e7 !important; }
-    html:not(.dark) .hover\:bg-zinc-900:hover, html:not(.dark) .hover\:bg-zinc-900\/40:hover { background-color: #f4f4f5 !important; }
-    html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-800\/80, html:not(.dark) .border-zinc-800\/60 { border-color: #d4d4d8 !important; }
-    html:not(.dark) .border-zinc-900 { border-color: #e4e4e7 !important; }
-    html:not(.dark) .divide-zinc-900 > * + * { border-color: #e4e4e7 !important; }
-    html:not(.dark) .text-zinc-50, html:not(.dark) .text-zinc-100 { color: #18181b !important; }
-    html:not(.dark) .text-zinc-200 { color: #27272a !important; }
-    html:not(.dark) .text-zinc-300 { color: #3f3f46 !important; }
-    html:not(.dark) .text-zinc-400 { color: #52525b !important; }
-    html:not(.dark) .text-zinc-500 { color: #71717a !important; }
-    html:not(.dark) .text-zinc-600 { color: #a1a1aa !important; }
-    html:not(.dark) .hover\:text-zinc-100:hover { color: #18181b !important; }
-    html:not(.dark) .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
-    html:not(.dark) .from-zinc-900, html:not(.dark) .to-zinc-950 { --tw-gradient-from: #ffffff !important; --tw-gradient-to: #fafafa !important; }
-    html:not(.dark) .bg-gradient-to-br.from-emerald-950\/40 { background: linear-gradient(135deg, #ecfdf5, #f0fdf4) !important; }
-    html:not(.dark) .bg-gradient-to-br.from-amber-950\/30 { background: linear-gradient(135deg, #fffbeb, #fefce8) !important; }
-    html:not(.dark) .border-emerald-900\/30, html:not(.dark) .border-emerald-900\/40, html:not(.dark) .border-emerald-900\/50 { border-color: #a7f3d0 !important; }
-    html:not(.dark) .border-rose-900\/40, html:not(.dark) .border-rose-900\/50 { border-color: #fda4af !important; }
-    html:not(.dark) .border-amber-900\/40, html:not(.dark) .border-amber-900\/50 { border-color: #fcd34d !important; }
-    html:not(.dark) .bg-emerald-900\/30, html:not(.dark) .bg-emerald-900\/40, html:not(.dark) .bg-emerald-900\/50 { background-color: #d1fae5 !important; }
-    html:not(.dark) .bg-rose-900\/30, html:not(.dark) .bg-rose-900\/40 { background-color: #ffe4e6 !important; }
-    html:not(.dark) .bg-amber-900\/30, html:not(.dark) .bg-amber-900\/40, html:not(.dark) .bg-amber-900\/50 { background-color: #fef3c7 !important; }
-    html:not(.dark) .bg-indigo-900\/30, html:not(.dark) .bg-indigo-900\/40 { background-color: #e0e7ff !important; }
-    html:not(.dark) .text-emerald-300, html:not(.dark) .text-emerald-400 { color: #047857 !important; }
-    html:not(.dark) .text-rose-300, html:not(.dark) .text-rose-400 { color: #be123c !important; }
-    html:not(.dark) .text-amber-300, html:not(.dark) .text-amber-400 { color: #b45309 !important; }
-    html:not(.dark) .text-indigo-300, html:not(.dark) .text-indigo-400 { color: #4338ca !important; }
-    html:not(.dark) .border-dashed.border-zinc-800 { border-color: #d4d4d8 !important; }
-    html:not(.dark) .glow-emerald { box-shadow: 0 0 60px -10px rgba(16,185,129,0.15) !important; }
-    html:not(.dark) .row-highlight-top { background: linear-gradient(90deg, rgba(16,185,129,0.06), transparent 60%); }
-    html:not(.dark) .row-highlight-bot { background: linear-gradient(90deg, rgba(244,63,94,0.06), transparent 60%); }
+    .dark .login-overlay { background: #0a0a0b; }
+    .dark .login-card { background: #18181b; border-color: #27272a; }
+    .dark .login-title { color: #fafafa; }
+    .dark .login-sub { color: #a1a1aa; }
+    html:not(.dark) [class*="dark:bg-zinc-900"] { box-shadow: 0 1px 2px rgba(24,24,27,0.05), 0 1px 1px rgba(24,24,27,0.03); }
+    html:not(.dark) header[class*="dark:bg-zinc-950"] { box-shadow: none; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased min-h-screen">
 
   <div id="loginOverlay" class="login-overlay">
     <div class="login-card">
@@ -111,7 +86,7 @@
 
   <div id="appWrap" style="display:none;">
 
-    <header class="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
+    <header class="border-b border-zinc-200 dark:border-zinc-900 bg-white/80 dark:bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
       <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
         <div class="flex items-center gap-6">
           <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
@@ -119,22 +94,22 @@
             <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
           </a>
           <nav class="flex items-center gap-1 text-sm">
-            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Hub</a>
-            <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-zinc-900 text-zinc-100 font-medium no-underline">Months</a>
-            <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Compare</a>
+            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Hub</a>
+            <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium no-underline">Months</a>
+            <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Compare</a>
           </nav>
         </div>
         <div class="flex items-center gap-3">
-          <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
-            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-800">India</button>
+          <div class="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs">
+            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800">India</button>
             <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">US</button>
           </div>
-          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-900"></button>
+          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"></button>
           <div class="relative">
             <button onclick="toggleMenu()" id="avatarBtn" class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</button>
-            <div id="userMenu" class="hidden absolute right-0 top-10 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
-              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800" id="userEmail">—</div>
-              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 rounded">Sign out</button>
+            <div id="userMenu" class="hidden absolute right-0 top-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
+              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800" id="userEmail">—</div>
+              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded">Sign out</button>
             </div>
           </div>
         </div>
@@ -148,24 +123,24 @@
           <h1 class="text-3xl font-bold tracking-tight">Performance Overview</h1>
           <p class="text-sm text-zinc-500 mt-1" id="periodSub">Loading…</p>
         </div>
-        <div id="pipelineBanner" class="hide items-center gap-2 px-3 py-2 rounded-lg border border-amber-900/50 bg-amber-950/30 text-xs text-amber-200">
+        <div id="pipelineBanner" class="hide items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-900/50 bg-amber-950/30 text-xs text-amber-200">
           <span class="signal-dot bg-amber-400"></span>
           <span id="pipelineText"></span>
         </div>
       </div>
 
       <div id="loadingArea" class="p-12 text-center text-zinc-500 text-sm">Loading…</div>
-      <div id="errorArea" class="hide p-12 text-center text-rose-400 text-sm"></div>
+      <div id="errorArea" class="hide p-12 text-center text-rose-600 dark:text-rose-400 text-sm"></div>
 
       <div id="contentArea" class="hide space-y-14">
 
         <section class="grid grid-cols-12 gap-6">
-          <div class="col-span-7 p-8 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 relative overflow-hidden">
+          <div class="col-span-7 p-8 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
             <div class="absolute inset-0 grid-bg opacity-30 pointer-events-none"></div>
             <div class="relative">
               <div class="flex items-center justify-between mb-6">
                 <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Revenue Generated</div>
-                <div class="text-[10px] text-zinc-600 uppercase tracking-widest" id="revPeriod">last 6 months</div>
+                <div class="text-[10px] text-zinc-400 dark:text-zinc-600 uppercase tracking-widest" id="revPeriod">last 6 months</div>
               </div>
               <div class="flex items-end gap-6">
                 <div class="num-hero text-7xl font-bold tracking-tight" id="revHero">—</div>
@@ -174,31 +149,31 @@
                 </div>
               </div>
               <div class="mt-8 grid grid-cols-6 gap-2 items-end h-20" id="revBars"></div>
-              <div class="mt-3 text-[10px] text-zinc-600" id="revFootnote">* last month pipeline may still be open</div>
+              <div class="mt-3 text-[10px] text-zinc-400 dark:text-zinc-600" id="revFootnote">* last month pipeline may still be open</div>
             </div>
           </div>
 
-          <div class="col-span-5 p-8 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 border border-emerald-900/30 relative overflow-hidden glow-emerald">
+          <div class="col-span-5 p-8 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 border border-emerald-300 dark:border-emerald-900/30 relative overflow-hidden glow-emerald">
             <div class="relative">
               <div class="flex items-center justify-between mb-6">
                 <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Overall ROAS</div>
-                <div class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800/50">North star</div>
+                <div class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-800/50">North star</div>
               </div>
               <div class="flex items-end gap-4 mb-6">
                 <div class="num-hero text-7xl font-bold gradient-text-em" id="roasHero">—</div>
               </div>
               <div class="space-y-3">
-                <div class="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                <div class="flex justify-between items-center pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
                   <span class="text-xs text-zinc-500">Target</span>
-                  <span class="text-xs text-zinc-300">5.0x baseline</span>
+                  <span class="text-xs text-zinc-700 dark:text-zinc-300">5.0x baseline</span>
                 </div>
-                <div class="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                <div class="flex justify-between items-center pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
                   <span class="text-xs text-zinc-500">Paid ROAS</span>
-                  <span class="text-xs text-zinc-300 tabular" id="paidRoasVal">—</span>
+                  <span class="text-xs text-zinc-700 dark:text-zinc-300 tabular" id="paidRoasVal">—</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-xs text-zinc-500">Cost / Sale</span>
-                  <span class="text-xs text-zinc-300 tabular" id="cpsVal">—</span>
+                  <span class="text-xs text-zinc-700 dark:text-zinc-300 tabular" id="cpsVal">—</span>
                 </div>
               </div>
             </div>
@@ -217,7 +192,7 @@
           <div class="grid grid-cols-5 gap-3" id="funnelArea"></div>
         </section>
 
-        <section class="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800">
+        <section class="p-6 rounded-2xl bg-white/70 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800">
           <div class="flex items-center justify-between mb-6">
             <div>
               <h2 class="text-base font-semibold tracking-tight">Performance Trend</h2>
@@ -225,10 +200,10 @@
             </div>
             <div class="flex gap-1 text-xs" id="trendPills">
               <button data-metric="roas"    class="px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border">ROAS</button>
-              <button data-metric="revenue" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Revenue</button>
-              <button data-metric="sales"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Sales</button>
-              <button data-metric="spend"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Spend</button>
-              <button data-metric="cpiql"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">CPIQL</button>
+              <button data-metric="revenue" class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Revenue</button>
+              <button data-metric="sales"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Sales</button>
+              <button data-metric="spend"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Spend</button>
+              <button data-metric="cpiql"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">CPIQL</button>
             </div>
           </div>
           <div class="h-72"><canvas id="trendChart"></canvas></div>
@@ -240,11 +215,11 @@
               <h2 class="text-base font-semibold tracking-tight">Event Performance</h2>
               <p class="text-xs text-zinc-500 mt-0.5">Ranked by ROAS · top 3 highlighted</p>
             </div>
-            <div class="text-[10px] text-zinc-600">All amounts in <span id="curLbl">₹</span></div>
+            <div class="text-[10px] text-zinc-400 dark:text-zinc-600">All amounts in <span id="curLbl">₹</span></div>
           </div>
-          <div class="rounded-xl border border-zinc-800 overflow-hidden">
+          <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
             <table class="w-full text-sm tabular">
-              <thead class="bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
+              <thead class="bg-zinc-100 dark:bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
                 <tr>
                   <th class="text-left px-4 py-3 font-medium">Event</th>
                   <th class="text-right px-4 py-3 font-medium">Date</th>
@@ -256,7 +231,7 @@
                   <th class="text-center px-4 py-3 font-medium w-20">Signal</th>
                 </tr>
               </thead>
-              <tbody id="leaderboardBody" class="divide-y divide-zinc-900"></tbody>
+              <tbody id="leaderboardBody" class="divide-y divide-zinc-200 dark:divide-zinc-900"></tbody>
             </table>
           </div>
         </section>
@@ -286,8 +261,8 @@
     function toggleTheme() { const dark = document.documentElement.classList.toggle('dark'); localStorage.setItem('ik_theme', dark ? 'dark' : 'light'); applyTheme(); }
     function applyCountryButtons() {
       const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
-      inEl.className = (currentCountry === 'IN' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-800';
-      usEl.className = (currentCountry === 'US' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5';
+      inEl.className = (currentCountry === 'IN' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800';
+      usEl.className = (currentCountry === 'US' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5';
       document.getElementById('curLbl').textContent = isUS() ? '$' : '₹';
     }
     function setCountry(c) { if (currentCountry === c) return; currentCountry = c; localStorage.setItem('ik_country', c); applyCountryButtons(); load(); }
@@ -423,7 +398,7 @@
         const h = Math.max(2, m.rev / maxRev * 100);
         const isBest = m.rev === bestRev && !m.isOpen && bestRev > 0;
         const color = m.isOpen ? 'from-zinc-700 to-zinc-600 border border-dashed border-zinc-500' : (isBest ? 'from-emerald-500 to-emerald-400' : 'from-indigo-500 to-indigo-400');
-        const labelColor = m.isOpen ? 'text-amber-400' : isBest ? 'text-emerald-400 font-medium' : 'text-zinc-500';
+        const labelColor = m.isOpen ? 'text-amber-600 dark:text-amber-400' : isBest ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-zinc-500';
         return `<div class="flex flex-col items-center gap-1">
           <div class="w-full bg-gradient-to-t ${color} rounded-sm" style="height:${h}%;"></div>
           <div class="text-[10px] ${labelColor}">${esc(m.shortLabel)}${m.isOpen ? '*' : ''}</div>
@@ -437,17 +412,17 @@
       document.getElementById('secKpis').innerHTML = `
         ${kpiCard('Sales', fmtN(totalSales), totalEvents + ' events · ' + (totalSales / Math.max(1,totalEvents)).toFixed(1) + ' avg')}
         ${kpiCard('Paid Spend', fmtMoney(totalSpend), `${moneySym()}${Math.round(totalSpend/Math.max(1,totalEvents)).toLocaleString()} avg`)}
-        ${kpiCard('IQLs Generated', fmtN(totalRegs), `CPIQL <span class="text-zinc-300">${fmtMoneyRaw(aggCpiql)}</span>`)}
-        ${kpiCard('Lead → Sale', aggSaleRate != null ? aggSaleRate.toFixed(2) + '%' : '—', 'Industry <span class="text-zinc-300">0.8–1.5%</span>')}
+        ${kpiCard('IQLs Generated', fmtN(totalRegs), `CPIQL <span class="text-zinc-700 dark:text-zinc-300">${fmtMoneyRaw(aggCpiql)}</span>`)}
+        ${kpiCard('Lead → Sale', aggSaleRate != null ? aggSaleRate.toFixed(2) + '%' : '—', 'Industry <span class="text-zinc-700 dark:text-zinc-300">0.8–1.5%</span>')}
       `;
 
       const totalCalls = lastMonthly.reduce((s,m) => s + m.events.reduce((s2,e) => s2 + ((e.snapshot?.call_pre_attempts||0) + (e.snapshot?.call_p2_attempts||0) + (e.snapshot?.call_p14p_attempts||0)), 0), 0);
       document.getElementById('funnelArea').innerHTML = `
         ${funnelStage('Spend', fmtMoney(totalSpend), 'Meta only', false)}
-        ${funnelStage('IQLs', fmtN(totalRegs), `<span class="text-emerald-400">${fmtMoneyRaw(aggCpiql)}</span> <span class="text-zinc-600">CPIQL</span>`, false)}
-        ${funnelStage('Attendees', fmtN(totalAtt), `<span class="text-emerald-400">${fmtPct(aggAttRate, 1)}</span> <span class="text-zinc-600">show-up</span>`, false)}
-        ${funnelStage('Sales Calls', fmtN(totalCalls), totalCalls > 0 ? `<span class="text-zinc-300">${(totalCalls/Math.max(1,totalRegs)).toFixed(1)}</span> <span class="text-zinc-600">calls/lead</span>` : '', false)}
-        ${funnelStage('Sales', fmtN(totalSales), `<span class="text-emerald-400">${fmtMoney(totalRev)}</span> <span class="text-zinc-600">rev</span>`, true)}
+        ${funnelStage('IQLs', fmtN(totalRegs), `<span class="text-emerald-600 dark:text-emerald-400">${fmtMoneyRaw(aggCpiql)}</span> <span class="text-zinc-400 dark:text-zinc-600">CPIQL</span>`, false)}
+        ${funnelStage('Attendees', fmtN(totalAtt), `<span class="text-emerald-600 dark:text-emerald-400">${fmtPct(aggAttRate, 1)}</span> <span class="text-zinc-400 dark:text-zinc-600">show-up</span>`, false)}
+        ${funnelStage('Sales Calls', fmtN(totalCalls), totalCalls > 0 ? `<span class="text-zinc-700 dark:text-zinc-300">${(totalCalls/Math.max(1,totalRegs)).toFixed(1)}</span> <span class="text-zinc-400 dark:text-zinc-600">calls/lead</span>` : '', false)}
+        ${funnelStage('Sales', fmtN(totalSales), `<span class="text-emerald-600 dark:text-emerald-400">${fmtMoney(totalRev)}</span> <span class="text-zinc-400 dark:text-zinc-600">rev</span>`, true)}
       `;
 
       renderTrend('roas');
@@ -462,21 +437,21 @@
     }
 
     function kpiCard(label, value, sub) {
-      return `<div class="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+      return `<div class="p-5 rounded-xl bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80">
         <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">${esc(label)}</div>
-        <div class="num-big text-3xl font-bold tabular text-zinc-100">${value === '—' ? '—' : value}</div>
+        <div class="num-big text-3xl font-bold tabular text-zinc-900 dark:text-zinc-100">${value === '—' ? '—' : value}</div>
         <div class="mt-2 text-[11px] text-zinc-500">${sub}</div>
       </div>`;
     }
 
     function funnelStage(label, value, sub, isLast) {
-      const cls = isLast ? 'p-5 rounded-xl bg-gradient-to-br from-emerald-950/40 to-zinc-900 border border-emerald-900/40' : 'funnel-stage stage-arrow p-5 rounded-xl bg-zinc-900/40 border border-zinc-800';
-      const lblCls = isLast ? 'text-emerald-400' : 'text-zinc-500';
-      const valCls = isLast ? 'gradient-text-em' : 'text-zinc-100';
+      const cls = isLast ? 'p-5 rounded-xl bg-gradient-to-br from-emerald-950/40 to-zinc-900 border border-emerald-300 dark:border-emerald-900/40' : 'funnel-stage stage-arrow p-5 rounded-xl bg-white/80 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800';
+      const lblCls = isLast ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500';
+      const valCls = isLast ? 'gradient-text-em' : 'text-zinc-900 dark:text-zinc-100';
       return `<div class="${cls}">
         <div class="text-[10px] font-medium ${lblCls} uppercase tracking-widest mb-2">${esc(label)}</div>
         <div class="num-big text-2xl font-bold tabular ${valCls}">${value}</div>
-        ${sub ? `<div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]">${sub}</div>` : `<div class="mt-2 pt-2 border-t border-zinc-800 text-[10px] text-zinc-600">—</div>`}
+        ${sub ? `<div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px]">${sub}</div>` : `<div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-400 dark:text-zinc-600">—</div>`}
       </div>`;
     }
 
@@ -530,24 +505,24 @@
       tbody.innerHTML = visible.map(ev => {
         if (ev === 'COLLAPSE') {
           const hidden = ranked.length - 6;
-          return `<tr class="bg-zinc-950/40"><td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-600">↓ ${hidden} more events ↓</td></tr>`;
+          return `<tr class="bg-zinc-950/40"><td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-400 dark:text-zinc-600">↓ ${hidden} more events ↓</td></tr>`;
         }
         const s = ev.snapshot || {};
         const open = isPipelineOpen(ev);
         const roas = s.overall_roas;
         const rowCls = top3.has(ev.event_id) ? 'row-highlight-top' : bot3.has(ev.event_id) ? 'row-highlight-bot' : '';
-        const roasCls = roas == null ? 'text-zinc-500' : roas >= 8 ? 'gradient-text-em font-bold' : roas >= 4 ? 'text-emerald-400 font-bold' : roas >= 2 ? 'text-zinc-200' : 'text-rose-400 font-bold';
-        const signal = top3.has(ev.event_id) && !open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300">★ ${roas >= 10 ? 'Best' : 'Strong'}</span>` : open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300">⏱ Pipeline</span>` : `<span class="text-[10px] text-zinc-500">—</span>`;
-        return `<tr class="${rowCls} hover:bg-zinc-900/40 cursor-pointer" onclick="location.href='/event.html?id=${encodeURIComponent(ev.event_id)}'">
+        const roasCls = roas == null ? 'text-zinc-500' : roas >= 8 ? 'gradient-text-em font-bold' : roas >= 4 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : roas >= 2 ? 'text-zinc-800 dark:text-zinc-200' : 'text-rose-600 dark:text-rose-400 font-bold';
+        const signal = top3.has(ev.event_id) && !open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">★ ${roas >= 10 ? 'Best' : 'Strong'}</span>` : open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">⏱ Pipeline</span>` : `<span class="text-[10px] text-zinc-500">—</span>`;
+        return `<tr class="${rowCls} hover:bg-zinc-100 dark:hover:bg-zinc-900/40 cursor-pointer" onclick="location.href='/event.html?id=${encodeURIComponent(ev.event_id)}'">
           <td class="px-4 py-3">
-            <div class="font-medium text-zinc-100">${esc(ev.title || ev.event_id)}</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100">${esc(ev.title || ev.event_id)}</div>
             <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}</div>
           </td>
           <td class="px-4 py-3 text-right text-zinc-500">${esc(fmtDate(ev.live_at))}</td>
-          <td class="px-4 py-3 text-right text-zinc-300">${fmtMoneyRaw(s.meta_spend)}</td>
-          <td class="px-4 py-3 text-right text-zinc-300">${s.total_regs != null ? Math.round(s.total_regs).toLocaleString() : '—'}</td>
-          <td class="px-4 py-3 text-right text-zinc-300">${s.sales != null ? s.sales : '—'}</td>
-          <td class="px-4 py-3 text-right text-zinc-300">${revLocal(s) ? fmtMoneyRaw(revLocal(s)) : '—'}</td>
+          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${fmtMoneyRaw(s.meta_spend)}</td>
+          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${s.total_regs != null ? Math.round(s.total_regs).toLocaleString() : '—'}</td>
+          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${s.sales != null ? s.sales : '—'}</td>
+          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${revLocal(s) ? fmtMoneyRaw(revLocal(s)) : '—'}</td>
           <td class="px-4 py-3 text-right ${roasCls}">${fmtROAS(roas)}${open ? '*' : ''}</td>
           <td class="px-4 py-3 text-center">${signal}</td>
         </tr>`;
@@ -567,28 +542,28 @@
       const saleRate = totalRegs > 0 ? totalSales/totalRegs*100 : 0;
 
       const insights = [];
-      if (bestEv) insights.push({ tone: 'emerald', title: 'Winning Pattern', body: `<b>${esc(bestEv.title)}</b> drove <span class="text-emerald-300 font-semibold">${fmtROAS(bestEv.snapshot.overall_roas)}</span> ROAS${avgRoas > 0 ? ` — ${(bestEv.snapshot.overall_roas/avgRoas*100 - 100).toFixed(0)}% above portfolio average` : ''}.`, action: 'Investigate what worked and replicate (topic, presenter, budget)' });
-      if (isLastMOpen && lastM.roas != null) insights.push({ tone: 'amber', title: 'Efficiency Drop (expected)', body: `<b>${esc(lastM.label)}</b> ROAS at <span class="text-amber-300 font-semibold">${fmtROAS(lastM.roas)}</span> reflects open pipeline, not weak performance. Historical lift over 14 days is <span class="text-zinc-300 font-semibold">+25–40%</span>.`, action: `Re-evaluate after ${new Date(Date.now() + 14*86400000).toLocaleDateString('en-US', {month:'short', day:'numeric'})}` });
-      if (saleRate > 0 && aggAttRate > 0) insights.push({ tone: 'indigo', title: 'Funnel Bottleneck', body: `Show-up rate <span class="text-zinc-300 font-semibold">${aggAttRate.toFixed(0)}%</span> is in benchmark — but only <span class="text-zinc-300 font-semibold">${saleRate.toFixed(2)}%</span> of leads buy. The gap is at <b>attendee → sale</b>.`, action: 'Push sales call connectivity for next 5 events' });
-      insights.push({ tone: 'zinc', title: 'Coverage Gap', body: `Recurring MASTERCLASS_INDIA_2 series events aren't tracked in this dashboard. Backfill estimated to add <span class="text-zinc-300 font-semibold">~₹1.5 Cr</span> attributable revenue.`, action: 'Backfill weekly recurring series' });
+      if (bestEv) insights.push({ tone: 'emerald', title: 'Winning Pattern', body: `<b>${esc(bestEv.title)}</b> drove <span class="text-emerald-700 dark:text-emerald-300 font-semibold">${fmtROAS(bestEv.snapshot.overall_roas)}</span> ROAS${avgRoas > 0 ? ` — ${(bestEv.snapshot.overall_roas/avgRoas*100 - 100).toFixed(0)}% above portfolio average` : ''}.`, action: 'Investigate what worked and replicate (topic, presenter, budget)' });
+      if (isLastMOpen && lastM.roas != null) insights.push({ tone: 'amber', title: 'Efficiency Drop (expected)', body: `<b>${esc(lastM.label)}</b> ROAS at <span class="text-amber-700 dark:text-amber-300 font-semibold">${fmtROAS(lastM.roas)}</span> reflects open pipeline, not weak performance. Historical lift over 14 days is <span class="text-zinc-700 dark:text-zinc-300 font-semibold">+25–40%</span>.`, action: `Re-evaluate after ${new Date(Date.now() + 14*86400000).toLocaleDateString('en-US', {month:'short', day:'numeric'})}` });
+      if (saleRate > 0 && aggAttRate > 0) insights.push({ tone: 'indigo', title: 'Funnel Bottleneck', body: `Show-up rate <span class="text-zinc-700 dark:text-zinc-300 font-semibold">${aggAttRate.toFixed(0)}%</span> is in benchmark — but only <span class="text-zinc-700 dark:text-zinc-300 font-semibold">${saleRate.toFixed(2)}%</span> of leads buy. The gap is at <b>attendee → sale</b>.`, action: 'Push sales call connectivity for next 5 events' });
+      insights.push({ tone: 'zinc', title: 'Coverage Gap', body: `Recurring MASTERCLASS_INDIA_2 series events aren't tracked in this dashboard. Backfill estimated to add <span class="text-zinc-700 dark:text-zinc-300 font-semibold">~₹1.5 Cr</span> attributable revenue.`, action: 'Backfill weekly recurring series' });
 
       const colorMap = {
-        emerald: { border: 'border-emerald-900/40', bg: 'from-emerald-950/30', icon: 'bg-emerald-900/50 text-emerald-300', label: 'text-emerald-400' },
-        amber:   { border: 'border-amber-900/40',   bg: 'from-amber-950/30',   icon: 'bg-amber-900/50 text-amber-300',   label: 'text-amber-400' },
-        indigo:  { border: 'border-zinc-800',       bg: '',                    icon: 'bg-indigo-900/40 text-indigo-300', label: 'text-indigo-400' },
-        zinc:    { border: 'border-zinc-800',       bg: '',                    icon: 'bg-zinc-800 text-zinc-300',        label: 'text-zinc-500' },
+        emerald: { border: 'border-emerald-300 dark:border-emerald-900/40', bg: 'from-emerald-950/30', icon: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300', label: 'text-emerald-600 dark:text-emerald-400' },
+        amber:   { border: 'border-amber-300 dark:border-amber-900/40',   bg: 'from-amber-950/30',   icon: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',   label: 'text-amber-600 dark:text-amber-400' },
+        indigo:  { border: 'border-zinc-200 dark:border-zinc-800',       bg: '',                    icon: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300', label: 'text-indigo-600 dark:text-indigo-400' },
+        zinc:    { border: 'border-zinc-200 dark:border-zinc-800',       bg: '',                    icon: 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300',        label: 'text-zinc-500' },
       };
 
       document.getElementById('insightsArea').innerHTML = insights.map(ins => {
         const c = colorMap[ins.tone];
-        return `<div class="p-5 rounded-xl border ${c.border} ${c.bg ? `bg-gradient-to-br ${c.bg} to-zinc-900/40` : 'bg-zinc-900/40'}">
+        return `<div class="p-5 rounded-xl border ${c.border} ${c.bg ? `bg-gradient-to-br ${c.bg} to-zinc-900/40` : 'bg-white/80 dark:bg-zinc-900/40'}">
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-lg ${c.icon} flex items-center justify-center flex-shrink-0">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
             </div>
             <div class="flex-1">
               <div class="text-[10px] uppercase tracking-widest ${c.label} mb-1">${esc(ins.title)}</div>
-              <div class="text-sm text-zinc-100 leading-relaxed">${ins.body}</div>
+              <div class="text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed">${ins.body}</div>
               ${ins.action ? `<div class="mt-2 text-xs text-zinc-500">Recommended action: ${esc(ins.action)}</div>` : ''}
             </div>
           </div>
@@ -600,7 +575,7 @@
       const btn = e.target.closest('#trendPills button');
       if (!btn) return;
       const metric = btn.dataset.metric;
-      document.querySelectorAll('#trendPills button').forEach(b => { b.className = 'px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800'; });
+      document.querySelectorAll('#trendPills button').forEach(b => { b.className = 'px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800'; });
       btn.className = 'px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border';
       renderTrend(metric);
     });

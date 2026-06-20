@@ -22,11 +22,14 @@
     body { font-feature-settings: 'cv02','cv03','cv04','cv11','ss01'; -webkit-font-smoothing: antialiased; }
     .tabular { font-variant-numeric: tabular-nums; }
     .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
-    .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .winner-cell { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04)); border-bottom: 1px solid rgba(16,185,129,0.25) !important; }
-    .winner-cell .val { color: #6ee7b7; font-weight: 700; }
-    .loser-cell { opacity: 0.7; }
-    .section-head { background: linear-gradient(180deg, #18181b, #0f0f11); }
+    .gradient-text-em { background: linear-gradient(135deg, #047857, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .dark .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .winner-cell { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.03)); border-bottom: 1px solid rgba(16,185,129,0.3) !important; }
+    .winner-cell .val { color: #047857; font-weight: 700; }
+    .dark .winner-cell .val { color: #6ee7b7; }
+    .loser-cell { opacity: 0.75; }
+    .section-head { background: linear-gradient(180deg, #f4f4f5, #fafafa); }
+    .dark .section-head { background: linear-gradient(180deg, #18181b, #0f0f11); }
     .cmp-grid { display: grid; min-width: 100%; }
     .cmp-grid > div { min-height: 40px; }
     .signal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
@@ -39,49 +42,24 @@
     .login-title { font-size: 18px; font-weight: 600; color: #18181b; margin-bottom: 6px; }
     .login-sub { font-size: 13px; color: #71717a; margin-bottom: 24px; }
     .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
+    .dark .login-overlay { background: #0a0a0b; }
+    .dark .login-card { background: #18181b; border-color: #27272a; }
+    .dark .login-title { color: #fafafa; }
+    .dark .login-sub { color: #a1a1aa; }
 
-    .picker-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .picker-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; width: 90%; max-width: 800px; max-height: 80vh; display: flex; flex-direction: column; }
+    .picker-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .dark .picker-modal { background: rgba(0,0,0,0.7); }
+    .picker-card { background: #ffffff; border: 1px solid #e4e4e7; border-radius: 16px; width: 90%; max-width: 800px; max-height: 80vh; display: flex; flex-direction: column; }
+    .dark .picker-card { background: #18181b; border-color: #27272a; }
     .picker-list { overflow-y: auto; }
     .picker-list::-webkit-scrollbar { width: 8px; }
-    .picker-list::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-
-    /* Light theme overrides */
-    html:not(.dark) { color-scheme: light; }
-    html:not(.dark) body { background: #f1f2f4; color: #18181b; }
-    html:not(.dark) .bg-zinc-950 { background-color: #f1f2f4 !important; }
-    html:not(.dark) .bg-zinc-950\/90 { background-color: rgba(241,242,244,0.85) !important; backdrop-filter: blur(12px); }
-    html:not(.dark) .bg-zinc-900 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
-    html:not(.dark) .bg-zinc-900\/50, html:not(.dark) .bg-zinc-900\/40, html:not(.dark) .bg-zinc-900\/30, html:not(.dark) .bg-zinc-900\/60 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
-    html:not(.dark) .bg-zinc-800 { background-color: #e4e4e7 !important; }
-    html:not(.dark) .hover\:bg-zinc-900:hover, html:not(.dark) .hover\:bg-zinc-900\/40:hover, html:not(.dark) .hover\:bg-zinc-900\/60:hover, html:not(.dark) .hover\:bg-zinc-800:hover { background-color: #f4f4f5 !important; }
-    html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-800\/80, html:not(.dark) .border-zinc-800\/60 { border-color: #d4d4d8 !important; }
-    html:not(.dark) .border-zinc-900 { border-color: #e4e4e7 !important; }
-    html:not(.dark) .border-zinc-700 { border-color: #a1a1aa !important; }
-    html:not(.dark) .divide-zinc-900 > * + * { border-color: #e4e4e7 !important; }
-    html:not(.dark) .text-zinc-50, html:not(.dark) .text-zinc-100 { color: #18181b !important; }
-    html:not(.dark) .text-zinc-200 { color: #27272a !important; }
-    html:not(.dark) .text-zinc-300 { color: #3f3f46 !important; }
-    html:not(.dark) .text-zinc-400 { color: #52525b !important; }
-    html:not(.dark) .text-zinc-500 { color: #71717a !important; }
-    html:not(.dark) .text-zinc-600 { color: #a1a1aa !important; }
-    html:not(.dark) .hover\:text-zinc-100:hover, html:not(.dark) .hover\:text-zinc-200:hover { color: #18181b !important; }
-    html:not(.dark) .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
-    html:not(.dark) .text-emerald-300, html:not(.dark) .text-emerald-400 { color: #047857 !important; }
-    html:not(.dark) .text-rose-300, html:not(.dark) .text-rose-400 { color: #be123c !important; }
-    html:not(.dark) .text-amber-300, html:not(.dark) .text-amber-400 { color: #b45309 !important; }
-    html:not(.dark) .text-indigo-300, html:not(.dark) .text-indigo-400 { color: #4338ca !important; }
-    html:not(.dark) .border-dashed.border-zinc-800 { border-color: #d4d4d8 !important; }
-    html:not(.dark) .section-head { background: linear-gradient(180deg, #f4f4f5, #fafafa) !important; }
-    html:not(.dark) .winner-cell { background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.03)) !important; border-bottom-color: rgba(16,185,129,0.3) !important; }
-    html:not(.dark) .winner-cell .val { color: #047857 !important; }
-    html:not(.dark) input[type="text"].bg-zinc-900,
-    html:not(.dark) select.bg-zinc-900 { background-color: #ffffff !important; color: #18181b !important; border-color: #d4d4d8 !important; }
-    html:not(.dark) .picker-card { background: #ffffff !important; border-color: #e4e4e7 !important; }
-    html:not(.dark) .picker-modal { background: rgba(0,0,0,0.4) !important; }
+    .picker-list::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+    .dark .picker-list::-webkit-scrollbar-thumb { background: #3f3f46; }
+    html:not(.dark) [class*="dark:bg-zinc-900"] { box-shadow: 0 1px 2px rgba(24,24,27,0.05), 0 1px 1px rgba(24,24,27,0.03); }
+    html:not(.dark) header[class*="dark:bg-zinc-950"] { box-shadow: none; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased min-h-screen">
 
   <div id="loginOverlay" class="login-overlay">
     <div class="login-card">
@@ -95,7 +73,7 @@
 
   <div id="appWrap" style="display:none;">
 
-    <header class="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
+    <header class="border-b border-zinc-200 dark:border-zinc-900 bg-white/80 dark:bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
       <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
         <div class="flex items-center gap-6">
           <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
@@ -103,22 +81,22 @@
             <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
           </a>
           <nav class="flex items-center gap-1 text-sm">
-            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Hub</a>
-            <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Months</a>
-            <a href="/compare.html" class="px-3 py-1.5 rounded-md bg-zinc-900 text-zinc-100 font-medium no-underline">Compare</a>
+            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Hub</a>
+            <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Months</a>
+            <a href="/compare.html" class="px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium no-underline">Compare</a>
           </nav>
         </div>
         <div class="flex items-center gap-3">
-          <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
-            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-800">India</button>
+          <div class="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs">
+            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800">India</button>
             <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">US</button>
           </div>
-          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-900"></button>
+          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"></button>
           <div class="relative">
             <button onclick="toggleMenu()" id="avatarBtn" class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</button>
-            <div id="userMenu" class="hidden absolute right-0 top-10 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
-              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800" id="userEmail">—</div>
-              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 rounded">Sign out</button>
+            <div id="userMenu" class="hidden absolute right-0 top-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
+              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800" id="userEmail">—</div>
+              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded">Sign out</button>
             </div>
           </div>
         </div>
@@ -134,7 +112,7 @@
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openPicker()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 text-xs font-semibold">+ Add events</button>
-          <button onclick="clearAll()" id="clearBtn" class="hide px-4 py-2 rounded-lg border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-100 hover:border-zinc-700">Clear all</button>
+          <button onclick="clearAll()" id="clearBtn" class="hide px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700">Clear all</button>
         </div>
       </div>
 
@@ -143,11 +121,11 @@
 
       <!-- LOADING / ERROR / EMPTY -->
       <div id="loadingArea" class="hide p-12 text-center text-zinc-500 text-sm">Loading…</div>
-      <div id="errorArea" class="hide p-12 text-center text-rose-400 text-sm"></div>
+      <div id="errorArea" class="hide p-12 text-center text-rose-600 dark:text-rose-400 text-sm"></div>
       <div id="emptyArea" class="hide">
-        <div class="p-16 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950">
-          <div class="text-base font-medium text-zinc-200 mb-2">Nothing to compare yet</div>
-          <div class="text-sm text-zinc-500 mb-6">Click <b class="text-zinc-300">+ Add events</b> to pick from past masterclasses.<br/>Or select multiple events from the <a href="/hub.html" class="text-indigo-400 hover:text-indigo-300">Hub page</a> Past view.</div>
+        <div class="p-16 text-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+          <div class="text-base font-medium text-zinc-800 dark:text-zinc-200 mb-2">Nothing to compare yet</div>
+          <div class="text-sm text-zinc-500 mb-6">Click <b class="text-zinc-700 dark:text-zinc-300">+ Add events</b> to pick from past masterclasses.<br/>Or select multiple events from the <a href="/hub.html" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:text-indigo-300">Hub page</a> Past view.</div>
           <button onclick="openPicker()" class="px-5 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 text-sm font-semibold">+ Add events</button>
         </div>
       </div>
@@ -161,18 +139,18 @@
   <!-- Event Picker Modal -->
   <div id="pickerModal" class="picker-modal hide" onclick="if (event.target === this) closePicker()">
     <div class="picker-card">
-      <div class="p-5 border-b border-zinc-800 flex items-center justify-between">
+      <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <div>
           <div class="text-base font-semibold tracking-tight">Add events to compare</div>
           <div class="text-xs text-zinc-500 mt-0.5">Past masterclasses · select up to 8</div>
         </div>
-        <button onclick="closePicker()" class="w-7 h-7 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100">✕</button>
+        <button onclick="closePicker()" class="w-7 h-7 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">✕</button>
       </div>
-      <div class="p-4 border-b border-zinc-800">
-        <input id="pickerSearch" oninput="renderPicker()" type="text" placeholder="Search title, instructor…" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700">
+      <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
+        <input id="pickerSearch" oninput="renderPicker()" type="text" placeholder="Search title, instructor…" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:text-zinc-600 focus:outline-none focus:border-zinc-300 dark:border-zinc-700">
       </div>
       <div id="pickerList" class="picker-list flex-1 p-3 space-y-1"></div>
-      <div class="p-4 border-t border-zinc-800 flex items-center justify-between">
+      <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <div class="text-xs text-zinc-500" id="pickerCount">0 selected</div>
         <button onclick="confirmPicker()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 text-sm font-semibold">Done</button>
       </div>
@@ -198,8 +176,8 @@
     function toggleTheme() { const dark = document.documentElement.classList.toggle('dark'); localStorage.setItem('ik_theme', dark ? 'dark' : 'light'); applyTheme(); }
     function applyCountryButtons() {
       const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
-      inEl.className = (currentCountry === 'IN' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-800';
-      usEl.className = (currentCountry === 'US' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5';
+      inEl.className = (currentCountry === 'IN' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800';
+      usEl.className = (currentCountry === 'US' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5';
     }
     function setCountry(c) { if (currentCountry === c) return; currentCountry = c; localStorage.setItem('ik_country', c); applyCountryButtons(); clearAll(); }
     function isUS() { return currentCountry === 'US'; }
@@ -285,10 +263,10 @@
         const ev = cache[id];
         const label = ev ? `${ev.title || id}` : id;
         const date = ev ? `· ${fmtDate(ev.live_at)}` : '';
-        return `<span class="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-full pl-3 pr-1 py-1">
+        return `<span class="inline-flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs rounded-full pl-3 pr-1 py-1">
           <span class="truncate max-w-[260px]">${esc(label)}</span>
           <span class="text-zinc-500">${esc(date)}</span>
-          <button onclick="removeId('${esc(id)}')" class="w-5 h-5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 text-sm leading-none">×</button>
+          <button onclick="removeId('${esc(id)}')" class="w-5 h-5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 text-sm leading-none">×</button>
         </span>`;
       }).join('');
     }
@@ -315,10 +293,10 @@
       if (N === 0) return;
       if (N > MAX_EVENTS) {
         document.getElementById('cmpArea').innerHTML = `
-          <div class="p-12 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950">
-            <div class="text-base font-semibold text-zinc-100">Too many events to compare cleanly</div>
-            <div class="text-sm text-zinc-500 mt-2">Above ${MAX_EVENTS} events, side-by-side stops being legible. Try the <a href="/months.html" class="text-indigo-400">Months</a> view.</div>
-            <button onclick="trimTo(${MAX_EVENTS})" class="mt-4 px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">Trim to first ${MAX_EVENTS}</button>
+          <div class="p-12 text-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+            <div class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Too many events to compare cleanly</div>
+            <div class="text-sm text-zinc-500 mt-2">Above ${MAX_EVENTS} events, side-by-side stops being legible. Try the <a href="/months.html" class="text-indigo-600 dark:text-indigo-400">Months</a> view.</div>
+            <button onclick="trimTo(${MAX_EVENTS})" class="mt-4 px-4 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm">Trim to first ${MAX_EVENTS}</button>
           </div>`;
         return;
       }
@@ -331,12 +309,12 @@
 
       // Header (event identity)
       const headerCells = [
-        `<div class="px-4 py-4 section-head border-b border-zinc-800"></div>`,
+        `<div class="px-4 py-4 section-head border-b border-zinc-200 dark:border-zinc-800"></div>`,
         ...evs.map(ev => {
           const s = ev.snapshot || {};
-          return `<div class="px-4 py-4 section-head border-b border-zinc-800">
+          return `<div class="px-4 py-4 section-head border-b border-zinc-200 dark:border-zinc-800">
             <div class="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">${esc(fmtDate(ev.live_at))}</div>
-            <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="text-sm font-semibold text-zinc-100 hover:text-indigo-300 no-underline block leading-snug mt-1">${esc(ev.title || ev.event_id)}</a>
+            <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-indigo-700 dark:text-indigo-300 no-underline block leading-snug mt-1">${esc(ev.title || ev.event_id)}</a>
             <div class="text-[11px] text-zinc-500 mt-1 truncate">${esc(ev.instructor_name || '—')}</div>
           </div>`;
         })
@@ -346,7 +324,7 @@
       const sectionHead = (key, label) => {
         const open = openSections[key];
         const arrow = open ? '▾' : '▸';
-        return `<div class="section-head px-4 py-2.5 text-[10px] uppercase tracking-widest font-semibold text-zinc-400 border-b border-zinc-800 cursor-pointer flex items-center gap-2" onclick="toggleSection('${key}')">${arrow} ${esc(label)}</div>${evs.map(() => `<div class="section-head border-b border-zinc-800"></div>`).join('')}`;
+        return `<div class="section-head px-4 py-2.5 text-[10px] uppercase tracking-widest font-semibold text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 cursor-pointer flex items-center gap-2" onclick="toggleSection('${key}')">${arrow} ${esc(label)}</div>${evs.map(() => `<div class="section-head border-b border-zinc-200 dark:border-zinc-800"></div>`).join('')}`;
       };
 
       // Rows
@@ -396,13 +374,13 @@
           const best = opts.better === 'high' ? Math.max(...valid) : Math.min(...valid);
           winnerIdx = vals.findIndex(v => v === best);
         }
-        const labelCell = `<div class="px-4 py-3 text-xs text-zinc-500 font-medium border-b border-zinc-900 ${opts.bold ? 'text-zinc-300' : ''}">${esc(lbl)}</div>`;
+        const labelCell = `<div class="px-4 py-3 text-xs text-zinc-500 font-medium border-b border-zinc-200 dark:border-zinc-900 ${opts.bold ? 'text-zinc-700 dark:text-zinc-300' : ''}">${esc(lbl)}</div>`;
         const dataCells = vals.map((v, i) => {
           const isWin = i === winnerIdx;
           const isLoser = vals.length > 1 && winnerIdx >= 0 && !isWin;
-          const cls = `px-4 py-3 text-sm tabular text-center border-b border-zinc-900 ${isWin ? 'winner-cell' : isLoser ? 'loser-cell' : ''}`;
+          const cls = `px-4 py-3 text-sm tabular text-center border-b border-zinc-200 dark:border-zinc-900 ${isWin ? 'winner-cell' : isLoser ? 'loser-cell' : ''}`;
           const valStr = opts.fmt(v);
-          const inner = `<span class="val ${opts.bold ? 'font-semibold' : ''} ${valStr === '—' ? 'text-zinc-600' : 'text-zinc-200'}">${esc(valStr)}</span>`;
+          const inner = `<span class="val ${opts.bold ? 'font-semibold' : ''} ${valStr === '—' ? 'text-zinc-400 dark:text-zinc-600' : 'text-zinc-800 dark:text-zinc-200'}">${esc(valStr)}</span>`;
           return `<div class="${cls}">${inner}</div>`;
         }).join('');
         return labelCell + dataCells;
@@ -411,7 +389,7 @@
       const sectionBlock = (key, label, rowDefs) => sectionHead(key, label) + (openSections[key] && rowDefs.length ? buildRows(rowDefs) : '');
 
       document.getElementById('cmpArea').innerHTML = `
-        <div class="rounded-2xl border border-zinc-800 overflow-hidden bg-zinc-950">
+        <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-950">
           <div style="overflow-x:auto;">
             <div class="cmp-grid" style="grid-template-columns:${tpl};">
               ${headerCells}
@@ -513,7 +491,7 @@
         pickerEvents = (d.events || []).sort((a,b) => new Date(b.live_at||0) - new Date(a.live_at||0));
         renderPicker();
       } catch (e) {
-        document.getElementById('pickerList').innerHTML = `<div class="text-center py-12 text-sm text-rose-400">Failed: ${esc(e.message)}</div>`;
+        document.getElementById('pickerList').innerHTML = `<div class="text-center py-12 text-sm text-rose-600 dark:text-rose-400">Failed: ${esc(e.message)}</div>`;
       }
     }
     function renderPicker() {
@@ -524,11 +502,11 @@
       list.innerHTML = filtered.map(ev => {
         const isSel = pickerSelected.has(ev.event_id);
         const s = ev.snapshot || {};
-        return `<label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-900/60 cursor-pointer ${isSel ? 'bg-zinc-900' : ''}">
+        return `<label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900/60 cursor-pointer ${isSel ? 'bg-white dark:bg-zinc-900' : ''}">
           <input type="checkbox" ${isSel?'checked':''} onchange="togglePickerSel('${esc(ev.event_id)}', this.checked)" class="rounded"/>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-zinc-100 truncate">${esc(ev.title || ev.event_id)}</div>
-            <div class="text-[11px] text-zinc-500">${esc(fmtDate(ev.live_at))} · ${esc(ev.instructor_name || '—')}${s.overall_roas != null ? ` · ROAS <span class="text-zinc-300">${fmtROAS(s.overall_roas)}</span>` : ''}</div>
+            <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">${esc(ev.title || ev.event_id)}</div>
+            <div class="text-[11px] text-zinc-500">${esc(fmtDate(ev.live_at))} · ${esc(ev.instructor_name || '—')}${s.overall_roas != null ? ` · ROAS <span class="text-zinc-700 dark:text-zinc-300">${fmtROAS(s.overall_roas)}</span>` : ''}</div>
           </div>
         </label>`;
       }).join('');
