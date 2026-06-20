@@ -252,10 +252,6 @@ function render(data) {
               Join Zoom
             </a>` : ''}
             ${ev.landing_url ? `<a href="${esc(ev.landing_url)}" target="_blank" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5 no-underline">Landing ↗</a>` : ''}
-            ${isAired ? `<button id="pollReportBtn" onclick="exportPollQna('${esc(ev.event_id)}')" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span id="pollReportLbl">Poll & Q&A Report</span>
-            </button>` : ''}
           </div>
           <div class="text-right">
             <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${isAired ? 'Aired on' : 'Goes live'}</div>
@@ -373,6 +369,17 @@ function render(data) {
           <a href="/compare.html?ids=${encodeURIComponent(ev.event_id)}${ev.series ? '&open=picker&series=' + encodeURIComponent(ev.series) : '&open=picker'}" class="block text-center py-3 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition no-underline">Compare with…</a>
           ${ev.series ? `<p class="text-[10px] text-zinc-500 mt-2.5">Picker pre-filtered to <span class="font-medium text-zinc-700">${esc(ev.series)}</span></p>` : ''}
         </article>
+
+        ${isAired ? `
+        <!-- Download Polls & Q&A -->
+        <article class="card rounded-2xl p-5 fade-up">
+          <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Download Polls &amp; Q&amp;A</h3>
+          <button id="pollReportBtn" onclick="exportPollQna('${esc(ev.event_id)}')" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="pollReportLbl">Generate Google Sheet</span>
+          </button>
+          <p class="text-[10px] text-zinc-500 mt-2.5">Creates a new sheet with two tabs (Polls and Q&amp;A) from Zoom data for this event.</p>
+        </article>` : ''}
       </div>
     </section>
   `;
