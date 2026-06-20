@@ -625,28 +625,49 @@ ORDER BY e.live_at DESC"""
             live_at = ev['live_at']
             country = (ev['country'] or '').strip()
             is_us = country.lower() in ('us', 'usa', 'united states')
-            tz = 'America/Los_Angeles' if is_us else 'Asia/Kolkata'
-            event_date = live_at.astimezone(datetime.timezone.utc).date() if live_at else None
-            if event_date is None:
+            tz_name = 'America/Los_Angeles' if is_us else 'Asia/Kolkata'
+            date_col = 'webinar_date_pst' if is_us else 'webinar_date_ist'
+
+            # live_at is a UTC timestamp; convert to event's local tz to get the right calendar date.
+            if live_at is None:
                 self._json_response(400, {'error': 'Event has no live_at date'})
                 return
+            try:
+                import zoneinfo
+                local_tz = zoneinfo.ZoneInfo(tz_name)
+            except Exception:
+                local_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30) if not is_us else datetime.timedelta(hours=-7))
+            event_date = live_at.astimezone(local_tz).date()
+            # Search ±1 day to absorb Zoom's date-capture timing quirks
+            d_lo = (event_date - datetime.timedelta(days=1)).isoformat()
+            d_hi = (event_date + datetime.timedelta(days=1)).isoformat()
+
+            # Fuzzy keyword from the event title — use the leading distinctive phrase
+            # (drop trailing dash/em-dash suffixes like " — Master AI Engineering").
+            import re
+            base = re.split(r'\s*[—–-]\s+', title, maxsplit=1)[0].strip()
+            keyword = base[:40] if base else title[:30]
 
             src = bigquery.Client(project='ik-marketing-data')
 
             poll_q = f"""SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_polls_view`
-              WHERE webinar_topic = @t AND DATE(webinar_date, '{tz}') = @d"""
+              WHERE DATE(webinar_date, '{tz_name}') BETWEEN @lo AND @hi
+                AND LOWER(IFNULL(webinar_topic, '')) LIKE CONCAT('%', LOWER(@k), '%')"""
             poll_job = src.query(poll_q, job_config=bigquery.QueryJobConfig(query_parameters=[
-                bigquery.ScalarQueryParameter('t', 'STRING', title),
-                bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
+                bigquery.ScalarQueryParameter('lo', 'DATE', d_lo),
+                bigquery.ScalarQueryParameter('hi', 'DATE', d_hi),
+                bigquery.ScalarQueryParameter('k', 'STRING', keyword),
             ]))
             poll_rows = list(poll_job.result())
             poll_fields = [f.name for f in poll_job.schema] if poll_job.schema else []
 
             qna_q = f"""SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_qa_json_view`
-              WHERE webinar_type = @t AND DATE(webinar_date, '{tz}') = @d"""
+              WHERE DATE(webinar_date, '{tz_name}') BETWEEN @lo AND @hi
+                AND LOWER(IFNULL(webinar_type, '')) LIKE CONCAT('%', LOWER(@k), '%')"""
             qna_job = src.query(qna_q, job_config=bigquery.QueryJobConfig(query_parameters=[
-                bigquery.ScalarQueryParameter('t', 'STRING', title),
-                bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
+                bigquery.ScalarQueryParameter('lo', 'DATE', d_lo),
+                bigquery.ScalarQueryParameter('hi', 'DATE', d_hi),
+                bigquery.ScalarQueryParameter('k', 'STRING', keyword),
             ]))
             qna_rows = list(qna_job.result())
             qna_fields = [f.name for f in qna_job.schema] if qna_job.schema else []
