@@ -597,8 +597,9 @@ ORDER BY e.live_at DESC"""
             self._json_response(500, {'error': str(e)})
 
     def _poll_qna_export(self, parsed_url):
-        """Pull poll + Q&A data for an event from the Zoom views, write to a fresh
-        Google Sheet (one tab each), share with IK domain, return the URL."""
+        """Pull poll + Q&A rows for an event from the Zoom views and return an
+        XLSX file with two sheets (Polls, Q&A) as a direct download. No Google
+        Drive / Sheets API needed — generates the file in memory with openpyxl."""
         qs = urllib.parse.parse_qs(parsed_url.query)
         event_id = qs.get('event_id', [None])[0] or qs.get('id', [None])[0]
         if not event_id:
@@ -606,8 +607,10 @@ ORDER BY e.live_at DESC"""
             return
         try:
             from google.cloud import bigquery
-            from googleapiclient.discovery import build
-            from google.auth import default
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment
+            from openpyxl.utils import get_column_letter
+            import io, re
 
             client = bigquery.Client(project=BQ_APP_PROJECT)
             ev_rows = list(client.query(
@@ -623,19 +626,15 @@ ORDER BY e.live_at DESC"""
             country = (ev['country'] or '').strip()
             is_us = country.lower() in ('us', 'usa', 'united states')
             tz = 'America/Los_Angeles' if is_us else 'Asia/Kolkata'
-            date_col = 'webinar_date_pst' if is_us else 'webinar_date_ist'
-            event_date = live_at.astimezone(__import__('datetime').timezone.utc).date() if live_at else None
+            event_date = live_at.astimezone(datetime.timezone.utc).date() if live_at else None
             if event_date is None:
                 self._json_response(400, {'error': 'Event has no live_at date'})
                 return
 
             src = bigquery.Client(project='ik-marketing-data')
 
-            # Poll rows
-            poll_q = f"""
-              SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_polls_view`
-              WHERE webinar_topic = @t AND DATE(webinar_date, '{tz}') = @d
-            """
+            poll_q = f"""SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_polls_view`
+              WHERE webinar_topic = @t AND DATE(webinar_date, '{tz}') = @d"""
             poll_job = src.query(poll_q, job_config=bigquery.QueryJobConfig(query_parameters=[
                 bigquery.ScalarQueryParameter('t', 'STRING', title),
                 bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
@@ -643,11 +642,8 @@ ORDER BY e.live_at DESC"""
             poll_rows = list(poll_job.result())
             poll_fields = [f.name for f in poll_job.schema] if poll_job.schema else []
 
-            # Q&A rows
-            qna_q = f"""
-              SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_qa_json_view`
-              WHERE webinar_type = @t AND DATE(webinar_date, '{tz}') = @d
-            """
+            qna_q = f"""SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_qa_json_view`
+              WHERE webinar_type = @t AND DATE(webinar_date, '{tz}') = @d"""
             qna_job = src.query(qna_q, job_config=bigquery.QueryJobConfig(query_parameters=[
                 bigquery.ScalarQueryParameter('t', 'STRING', title),
                 bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
@@ -655,97 +651,53 @@ ORDER BY e.live_at DESC"""
             qna_rows = list(qna_job.result())
             qna_fields = [f.name for f in qna_job.schema] if qna_job.schema else []
 
-            def to_table(fields, rows):
+            wb = Workbook()
+            header_font = Font(bold=True, color='18181B')
+            header_fill = PatternFill(start_color='F0F0F2', end_color='F0F0F2', fill_type='solid')
+            header_align = Alignment(horizontal='left', vertical='center')
+
+            def populate(ws, fields, rows, label):
                 if not fields:
-                    return [['No data']]
-                out = [fields]
+                    ws.append(['No schema available'])
+                    return
+                ws.append(fields)
+                for cell in ws[1]:
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_align
+                ws.freeze_panes = 'A2'
                 for r in rows:
-                    out.append([_cell_to_str(r.get(f)) for f in fields])
-                if len(out) == 1:
-                    out.append(['(no rows matched ' + title + ' on ' + event_date.isoformat() + ')'])
-                return out
+                    ws.append([_cell_to_str(r.get(f)) for f in fields])
+                if not rows:
+                    ws.append([f'(no {label} matched "{title}" on {event_date.isoformat()})'])
+                # Reasonable column widths
+                for i, fname in enumerate(fields, 1):
+                    ws.column_dimensions[get_column_letter(i)].width = min(40, max(12, len(fname) + 2))
 
-            poll_table = to_table(poll_fields, poll_rows)
-            qna_table  = to_table(qna_fields, qna_rows)
+            # First sheet
+            ws_p = wb.active
+            ws_p.title = 'Polls'
+            populate(ws_p, poll_fields, poll_rows, 'polls')
+            # Second sheet
+            ws_q = wb.create_sheet('Q&A')
+            populate(ws_q, qna_fields, qna_rows, 'Q&A')
 
-            # Create the Google Sheet.
-            # Cloud Run's default SA token has cloud-platform scope which doesn't include
-            # Sheets/Drive (those are Workspace APIs, not GCP). We impersonate the same SA
-            # via google.auth.impersonated_credentials to mint a token with the right scopes.
-            # Requires roles/iam.serviceAccountTokenCreator on the SA pointing to itself.
-            source_creds, _ = default()
-            from google.auth import impersonated_credentials
-            SHEETS_SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-            # Resolve the SA email — on Cloud Run it's available from the metadata server.
-            try:
-                import urllib.request as _ur
-                _req = _ur.Request('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email', headers={'Metadata-Flavor': 'Google'})
-                sa_email = _ur.urlopen(_req, timeout=2).read().decode('utf-8').strip()
-            except Exception:
-                sa_email = '1016538215063-compute@developer.gserviceaccount.com'
-            creds = impersonated_credentials.Credentials(
-                source_credentials=source_creds,
-                target_principal=sa_email,
-                target_scopes=SHEETS_SCOPES,
-                lifetime=600,
-            )
-            sheets = build('sheets', 'v4', credentials=creds, cache_discovery=False)
-            drive  = build('drive',  'v3', credentials=creds, cache_discovery=False)
+            buf = io.BytesIO()
+            wb.save(buf)
+            buf.seek(0)
+            xlsx_bytes = buf.getvalue()
 
-            sheet_title = f"Poll & Q&A — {title} ({event_date.isoformat()})"[:99]
-            created = sheets.spreadsheets().create(body={
-                'properties': {'title': sheet_title},
-                'sheets': [
-                    {'properties': {'title': 'Polls', 'gridProperties': {'rowCount': max(50, len(poll_table) + 10), 'columnCount': max(20, len(poll_fields) + 2)}}},
-                    {'properties': {'title': 'Q&A',   'gridProperties': {'rowCount': max(50, len(qna_table)  + 10), 'columnCount': max(20, len(qna_fields)  + 2)}}},
-                ],
-            }, fields='spreadsheetId,spreadsheetUrl').execute()
-            spreadsheet_id = created['spreadsheetId']
-            spreadsheet_url = created['spreadsheetUrl']
+            safe_title = re.sub(r'[^A-Za-z0-9._-]+', '_', title)[:60]
+            filename = f"polls-qna_{safe_title}_{event_date.isoformat()}.xlsx"
 
-            sheets.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id, body={
-                'valueInputOption': 'RAW',
-                'data': [
-                    {'range': 'Polls!A1', 'values': poll_table},
-                    {'range': 'Q&A!A1',   'values': qna_table},
-                ],
-            }).execute()
-
-            # Header formatting (bold + frozen row 1) on each sheet
-            sheet_ids = {s['properties']['title']: s['properties']['sheetId'] for s in sheets.spreadsheets().get(spreadsheetId=spreadsheet_id, fields='sheets.properties').execute()['sheets']}
-            sheets.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body={'requests': [
-                {'updateSheetProperties': {'properties': {'sheetId': sid, 'gridProperties': {'frozenRowCount': 1}}, 'fields': 'gridProperties.frozenRowCount'}}
-                for sid in sheet_ids.values()
-            ] + [
-                {'repeatCell': {'range': {'sheetId': sid, 'startRowIndex': 0, 'endRowIndex': 1},
-                                'cell': {'userEnteredFormat': {'textFormat': {'bold': True}, 'backgroundColor': {'red': 0.94, 'green': 0.94, 'blue': 0.96}}},
-                                'fields': 'userEnteredFormat(textFormat,backgroundColor)'}}
-                for sid in sheet_ids.values()
-            ]}).execute()
-
-            # Share with IK domain (anyone in interviewkickstart.com can view)
-            try:
-                drive.permissions().create(fileId=spreadsheet_id, body={
-                    'type': 'domain', 'domain': 'interviewkickstart.com', 'role': 'reader',
-                }, sendNotificationEmail=False, supportsAllDrives=True).execute()
-            except Exception as ee:
-                # Domain sharing may fail if Drive policy restricts it — fall back to public-link reader
-                try:
-                    drive.permissions().create(fileId=spreadsheet_id, body={
-                        'type': 'anyone', 'role': 'reader',
-                    }).execute()
-                except Exception:
-                    pass
-
-            self._json_response(200, {
-                'ok': True,
-                'spreadsheet_url': spreadsheet_url,
-                'spreadsheet_id': spreadsheet_id,
-                'poll_rows': len(poll_rows),
-                'qna_rows': len(qna_rows),
-                'event_title': title,
-                'event_date': event_date.isoformat(),
-            })
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+            self.send_header('X-Poll-Rows', str(len(poll_rows)))
+            self.send_header('X-Qna-Rows', str(len(qna_rows)))
+            self.send_header('Content-Length', str(len(xlsx_bytes)))
+            self.end_headers()
+            self.wfile.write(xlsx_bytes)
         except Exception as e:
             import traceback, sys
             tb = traceback.format_exc()
