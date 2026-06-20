@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Months — Masterclass Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%236366f1'/><stop offset='1' stop-color='%2322d3ee'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='url(%23g)'/><text x='50%25' y='56%25' font-family='Inter, Arial, sans-serif' font-weight='800' font-size='18' fill='black' text-anchor='middle' dominant-baseline='middle'>M</text></svg>" />
+  <link rel="alternate icon" href="https://www.interviewkickstart.com/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://www.interviewkickstart.com/favicon.ico" />
   <script>
     (function () {
       if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark');
@@ -55,17 +58,17 @@
 
     /* Light theme overrides — swap dark Tailwind utilities to light when :not(.dark) */
     html:not(.dark) { color-scheme: light; }
-    html:not(.dark) body { background: #fafafa; color: #18181b; }
-    html:not(.dark) .bg-zinc-950 { background-color: #fafafa !important; }
-    html:not(.dark) .bg-zinc-950\/90 { background-color: rgba(250,250,250,0.92) !important; }
-    html:not(.dark) .bg-zinc-900 { background-color: #ffffff !important; }
-    html:not(.dark) .bg-zinc-900\/50, html:not(.dark) .bg-zinc-900\/40, html:not(.dark) .bg-zinc-900\/30 { background-color: #fafafa !important; }
+    html:not(.dark) body { background: #f1f2f4; color: #18181b; }
+    html:not(.dark) .bg-zinc-950 { background-color: #f1f2f4 !important; }
+    html:not(.dark) .bg-zinc-950\/90 { background-color: rgba(241,242,244,0.85) !important; backdrop-filter: blur(12px); }
+    html:not(.dark) .bg-zinc-900 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
+    html:not(.dark) .bg-zinc-900\/50, html:not(.dark) .bg-zinc-900\/40, html:not(.dark) .bg-zinc-900\/30 { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(24,24,27,0.04), 0 1px 1px rgba(24,24,27,0.03); }
     html:not(.dark) .bg-zinc-900\/60 { background-color: #f4f4f5 !important; }
-    html:not(.dark) .bg-zinc-800 { background-color: #f4f4f5 !important; }
+    html:not(.dark) .bg-zinc-800 { background-color: #e4e4e7 !important; }
     html:not(.dark) .hover\:bg-zinc-900:hover, html:not(.dark) .hover\:bg-zinc-900\/40:hover { background-color: #f4f4f5 !important; }
-    html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-800\/80, html:not(.dark) .border-zinc-800\/60 { border-color: #e4e4e7 !important; }
-    html:not(.dark) .border-zinc-900 { border-color: #f4f4f5 !important; }
-    html:not(.dark) .divide-zinc-900 > * + * { border-color: #f4f4f5 !important; }
+    html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-800\/80, html:not(.dark) .border-zinc-800\/60 { border-color: #d4d4d8 !important; }
+    html:not(.dark) .border-zinc-900 { border-color: #e4e4e7 !important; }
+    html:not(.dark) .divide-zinc-900 > * + * { border-color: #e4e4e7 !important; }
     html:not(.dark) .text-zinc-50, html:not(.dark) .text-zinc-100 { color: #18181b !important; }
     html:not(.dark) .text-zinc-200 { color: #27272a !important; }
     html:not(.dark) .text-zinc-300 { color: #3f3f46 !important; }
