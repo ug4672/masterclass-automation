@@ -300,7 +300,8 @@ SELECT
   s.role_sde, s.role_ml, s.role_management, s.role_systems, s.role_null, s.role_other,
   s.we_3_5, s.we_6_10, s.we_10_15, s.we_15_20, s.we_20p, s.we_other,
   s.us_yt_regs, s.us_social_regs, s.us_l10x_email_regs, s.us_l10x_bot_regs,
-  s.us_ni_base_regs, s.us_other_regs
+  s.us_ni_base_regs, s.us_other_regs,
+  s.extras
 FROM `{BQ_APP_PROJECT}.events.event` e
 LEFT JOIN latest_snap s USING (event_id)
 WHERE {' AND '.join(where)}
@@ -322,7 +323,7 @@ LIMIT {limit}"""
                      'role_sde', 'role_ml', 'role_management', 'role_systems', 'role_null', 'role_other',
                      'we_3_5', 'we_6_10', 'we_10_15', 'we_15_20', 'we_20p', 'we_other',
                      'us_yt_regs', 'us_social_regs', 'us_l10x_email_regs', 'us_l10x_bot_regs',
-                     'us_ni_base_regs', 'us_other_regs')
+                     'us_ni_base_regs', 'us_other_regs', 'extras')
         for r in rows:
             d = _row_to_dict(r)
             ev = {k: v for k, v in d.items() if k not in snap_keys}
@@ -1079,34 +1080,40 @@ LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id"""
     return {'attendees': attended, 'attendance_pct': pct}
 
 def _query_calls_india(src_client, date_literal, wt_param):
-    """Returns {calls_attempted, calls_connected, avg_talk_seconds} aggregated across channels."""
+    """Returns pre-webinar top-level metrics for back-compat + extras.call_buckets
+    with the 5 lifecycle buckets (pre, 0-2D, 0-7D, 0-14D, 14D+).
+
+    Each bucket carries: attempts, connects, talk_mins, covered_leads (# of distinct
+    leads who got ≥1 call in that bucket). Bucket boundaries follow the brief —
+    post-webinar 0-2D/0-7D/0-14D are CUMULATIVE (overlapping), 14D+ is exclusive.
+    """
     from google.cloud import bigquery
     q = f"""
 WITH base AS (
   SELECT
-    lead_created_time AS Lead_created_time,
-    DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) AS webinar_start_date,
-    DATETIME(Event_Start_Date_Time, 'Asia/Kolkata') AS webinar_start_datetime,
+    hubspot_id AS leads_hubspot_id,
+    DATETIME(lead_created_time, 'Asia/Kolkata') AS Lead_created_time,
+    DATETIME(Event_Start_Date_Time, 'Asia/Kolkata') AS webinar_start_datetime_ch,
     COALESCE(
-      LEAD(lead_created_time) OVER (PARTITION BY lead_email ORDER BY lead_created_time),
-      DATETIME_ADD(lead_created_time, INTERVAL 1 YEAR)
-    ) AS next_lead_time,
-    hubspot_id
+      LEAD(DATETIME(lead_created_time, 'Asia/Kolkata'))
+        OVER (PARTITION BY lead_email ORDER BY lead_created_time),
+      DATETIME_ADD(DATETIME(lead_created_time, 'Asia/Kolkata'), INTERVAL 1 YEAR)
+    ) AS next_lead_time
   FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
   WHERE DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) IN ({date_literal})
     AND webinar_type = @wt
     AND dupe_logic = 1 AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_id ORDER BY lead_created_time ASC) = 1
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_id ORDER BY DATETIME(lead_created_time, 'Asia/Kolkata') ASC) = 1
 ),
 base_call AS (
-  SELECT activity_datetime, email_11, call_duration FROM (
+  SELECT activity_datetime, DATE(activity_datetime) AS activity_date, hubspot_id, call_duration FROM (
     SELECT
       CASE WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11,12,1,2,3)
            THEN DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 13 HOUR + INTERVAL 30 MINUTE
            ELSE DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 12 HOUR + INTERVAL 30 MINUTE
       END AS activity_datetime,
-      hubspot_id AS email_11,
+      hubspot_id,
       duration AS call_duration,
       ROW_NUMBER() OVER (PARTITION BY call_id ORDER BY
         CASE WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11,12,1,2,3)
@@ -1115,32 +1122,85 @@ base_call AS (
         END DESC) AS rn
     FROM `ik-marketing-data.Marketing_data_new_logic.call_metadata`
     WHERE DATETIME(timestamp, "Asia/Kolkata") >= DATETIME '2024-07-01'
-      AND hubspot_id IN (SELECT hubspot_id FROM base)
+      AND hubspot_id IN (SELECT leads_hubspot_id FROM base)
   ) WHERE rn = 1
 ),
-fin AS (
-  SELECT bm.Lead_created_time, bm.hubspot_id AS lead_email, bm.next_lead_time,
-    COALESCE(bm.webinar_start_datetime, DATETIME_ADD(bm.Lead_created_time, INTERVAL 1 YEAR)) AS webinar_start_datetime_ch,
-    bc.activity_datetime, bc.call_duration
-  FROM base bm
+final_merge AS (
+  SELECT b.leads_hubspot_id, b.Lead_created_time, b.webinar_start_datetime_ch,
+         bc.activity_datetime, bc.activity_date, bc.call_duration
+  FROM base b
   LEFT JOIN base_call bc
-    ON bm.hubspot_id = bc.email_11
-    AND bm.Lead_created_time <= bc.activity_datetime
-    AND bm.next_lead_time > bc.activity_datetime
+    ON b.leads_hubspot_id = bc.hubspot_id
+    AND b.Lead_created_time <= bc.activity_datetime
+    AND b.next_lead_time > bc.activity_datetime
+),
+per_lead AS (
+  SELECT
+    leads_hubspot_id,
+    -- Pre-webinar
+    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN 1 END) AS pre_calls,
+    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch AND call_duration > 120 THEN 1 END) AS pre_conn,
+    SUM(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN call_duration / 60.0 END) AS pre_talk_mins,
+    -- Post 0-2D (cumulative window from event date)
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN activity_datetime END) AS p2_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN activity_datetime END) AS p2_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p2_talk_mins,
+    -- Post 0-7D
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN activity_datetime END) AS p7_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN activity_datetime END) AS p7_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p7_talk_mins,
+    -- Post 0-14D
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14_talk_mins,
+    -- Post 14D+ (exclusive)
+    COUNT(DISTINCT CASE WHEN activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
+  FROM final_merge
+  GROUP BY leads_hubspot_id
 )
 SELECT
-  COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN 1 END) AS total_calls,
-  COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch AND call_duration > 120 THEN 1 END) AS total_connected,
-  SUM(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN call_duration END) AS total_talk_sec
-FROM fin"""
+  COUNT(*) AS total_leads,
+  SUM(pre_calls)  AS pre_total_calls,  SUM(pre_conn)  AS pre_total_conn,  SUM(pre_talk_mins)  AS pre_total_talk_mins,  COUNTIF(pre_calls > 0)  AS pre_covered_leads,
+  SUM(p2_calls)   AS p2_total_calls,   SUM(p2_conn)   AS p2_total_conn,   SUM(p2_talk_mins)   AS p2_total_talk_mins,   COUNTIF(p2_calls > 0)   AS p2_covered_leads,
+  SUM(p7_calls)   AS p7_total_calls,   SUM(p7_conn)   AS p7_total_conn,   SUM(p7_talk_mins)   AS p7_total_talk_mins,   COUNTIF(p7_calls > 0)   AS p7_covered_leads,
+  SUM(p14_calls)  AS p14_total_calls,  SUM(p14_conn)  AS p14_total_conn,  SUM(p14_talk_mins)  AS p14_total_talk_mins,  COUNTIF(p14_calls > 0)  AS p14_covered_leads,
+  SUM(p14p_calls) AS p14p_total_calls, SUM(p14p_conn) AS p14p_total_conn, SUM(p14p_talk_mins) AS p14p_total_talk_mins, COUNTIF(p14p_calls > 0) AS p14p_covered_leads
+FROM per_lead"""
     r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
     if not r:
-        return {'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None}
-    attempted = int(r[0]['total_calls'] or 0)
-    connected = int(r[0]['total_connected'] or 0)
-    talk_sec  = float(r[0]['total_talk_sec'] or 0)
-    avg_talk  = (talk_sec / connected) if connected > 0 else None
-    return {'calls_attempted': attempted, 'calls_connected': connected, 'avg_talk_seconds': avg_talk}
+        return {'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None, 'extras': None}
+    row = r[0]
+    n = lambda k: int(row[k] or 0)
+    g = lambda k: float(row[k] or 0)
+    def bucket(prefix):
+        return {
+            'attempts':      n(f'{prefix}_total_calls'),
+            'connects':      n(f'{prefix}_total_conn'),
+            'talk_mins':     g(f'{prefix}_total_talk_mins'),
+            'covered_leads': n(f'{prefix}_covered_leads'),
+        }
+    extras = {
+        'call_buckets': {
+            'total_leads': n('total_leads'),
+            'pre':   bucket('pre'),
+            'p_2d':  bucket('p2'),
+            'p_7d':  bucket('p7'),
+            'p_14d': bucket('p14'),
+            'p_14p': bucket('p14p'),
+        }
+    }
+    # Back-compat top-level: pre-webinar values (existing semantics)
+    pre_conn = n('pre_total_conn')
+    pre_talk_mins = g('pre_total_talk_mins')
+    avg_talk_sec = (pre_talk_mins * 60.0 / pre_conn) if pre_conn > 0 else None
+    return {
+        'calls_attempted':  n('pre_total_calls'),
+        'calls_connected':  pre_conn,
+        'avg_talk_seconds': avg_talk_sec,
+        'extras':           extras,
+    }
 
 def _query_emails_india(src_client, date_literal, wt_param):
     """Returns {email_sent, email_delivered, email_opened, email_clicked} for reminder campaigns."""

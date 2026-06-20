@@ -285,12 +285,24 @@ function render(data) {
         <article class="card rounded-2xl p-6 fade-up">
           <div class="flex items-start justify-between mb-4">
             <div>
-              <h2 class="text-sm font-semibold text-zinc-900 tracking-tight">Attendance &amp; Engagement</h2>
+              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white tracking-tight">Attendance &amp; Engagement</h2>
               <p class="text-xs text-zinc-500 mt-0.5">${isAired ? 'Post-event metrics' : 'Populates after the event goes live'}</p>
             </div>
-            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100">Not yet aired</span>` : ''}
+            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">Not yet aired</span>` : ''}
           </div>
           ${renderAttendance(snap, isAired)}
+        </article>
+
+        <!-- Call Efforts -->
+        <article class="card rounded-2xl p-6 fade-up">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white tracking-tight">Call Efforts</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Lifecycle engagement · Pre webinar → 14D+ post</p>
+            </div>
+            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">Not yet aired</span>` : ''}
+          </div>
+          ${renderCallEfforts(snap, isAired)}
         </article>
 
         <!-- Per-day timeline -->
@@ -443,55 +455,252 @@ function renderQuality(s) {
 
 function renderAttendance(s, isAired) {
   if (!isAired || s.attendees == null) {
-    return `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
-        <div class="mt-6 text-zinc-300 text-2xl font-semibold">—</div>
+    return `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+      <div class="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50/50 dark:bg-zinc-800/30">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Attendance</div>
+        <div class="mt-6 text-zinc-300 dark:text-zinc-600 text-2xl font-semibold">—</div>
         <div class="text-[10px] text-zinc-400 mt-1">Awaits go-live</div>
       </div>
-      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Email funnel</div>
+      <div class="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50/50 dark:bg-zinc-800/30">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div>
         <div class="mt-4 space-y-1.5 text-[10px]">
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_sent)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_delivered)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_opened)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-700">${fmtNum(s.email_clicked)}</span></div>
-        </div>
-      </div>
-      <div class="rounded-xl border border-dashed border-zinc-200 p-4 bg-zinc-50/50">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Call efforts</div>
-        <div class="mt-4 space-y-1.5 text-[10px]">
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Attempted</span><span class="font-semibold text-zinc-700">${fmtNum(s.calls_attempted)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Connected</span><span class="font-semibold text-zinc-700">${fmtNum(s.calls_connected)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Avg talk</span><span class="font-semibold text-zinc-700">${s.avg_talk_seconds != null ? Math.round(s.avg_talk_seconds/60) + 'm' + Math.round(s.avg_talk_seconds % 60) + 's' : '—'}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_sent)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_delivered)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_opened)}</span></div>
+          <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_clicked)}</span></div>
         </div>
       </div>
     </div>`;
   }
-  return `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-    <div class="rounded-xl border border-zinc-200 p-4">
-      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Attendance</div>
-      <div class="mt-3 text-2xl font-semibold text-zinc-900">${fmtPct(s.attendance_pct)}</div>
+  return `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Attendance</div>
+      <div class="mt-3 text-2xl font-semibold text-zinc-900 dark:text-white">${fmtPct(s.attendance_pct)}</div>
       <div class="text-[10px] text-zinc-500 mt-1">${fmtNum(s.attendees)} of ${fmtNum(s.total_regs)} attended</div>
     </div>
-    <div class="rounded-xl border border-zinc-200 p-4">
-      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Email funnel</div>
+    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div>
       <div class="mt-3 space-y-1 text-[11px]">
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_sent)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_delivered)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_opened)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-900">${fmtNum(s.email_clicked)}</span></div>
-      </div>
-    </div>
-    <div class="rounded-xl border border-zinc-200 p-4">
-      <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Call efforts</div>
-      <div class="mt-3 space-y-1 text-[11px]">
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Attempted</span><span class="font-semibold text-zinc-900">${fmtNum(s.calls_attempted)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Connected</span><span class="font-semibold text-zinc-900">${fmtNum(s.calls_connected)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Avg talk</span><span class="font-semibold text-zinc-900">${s.avg_talk_seconds != null ? Math.round(s.avg_talk_seconds/60) + 'm ' + Math.round(s.avg_talk_seconds % 60) + 's' : '—'}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_sent)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_delivered)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_opened)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_clicked)}</span></div>
       </div>
     </div>
   </div>`;
+}
+
+// ── Call Efforts — full lifecycle dashboard (5 stages, summary, trends, insights)
+function renderCallEfforts(s, isAired) {
+  const cb = s && s.extras && s.extras.call_buckets;
+  if (!isAired) {
+    return `<div class="text-center py-8 text-xs text-zinc-400">Call efforts populate after the event airs.</div>`;
+  }
+  if (!cb || !cb.total_leads) {
+    return `<div class="text-center py-8 text-xs text-zinc-400">Call lifecycle data unavailable for this event.</div>`;
+  }
+
+  const totalLeads = cb.total_leads || 0;
+  const safe = v => (v == null || isNaN(v)) ? 0 : v;
+
+  const STAGES = [
+    { key:'pre',   label:'Pre Webinar',    sub:'Before event',   color:'#6366f1' },
+    { key:'p_2d',  label:'0–2 Days',       sub:'First 48 hours', color:'#8b5cf6' },
+    { key:'p_7d',  label:'0–7 Days',       sub:'First week',     color:'#ec4899' },
+    { key:'p_14d', label:'0–14 Days',      sub:'First 2 weeks',  color:'#f59e0b' },
+    { key:'p_14p', label:'14D+',           sub:'Long tail',      color:'#10b981' },
+  ];
+
+  const M = STAGES.map(st => {
+    const b = cb[st.key] || {};
+    const attempts = safe(b.attempts);
+    const connects = safe(b.connects);
+    const talkMins = safe(b.talk_mins);
+    const covered  = safe(b.covered_leads);
+    return {
+      ...st, attempts, connects, talkMins, covered,
+      avgPerUser:   totalLeads > 0 ? attempts / totalLeads : 0,
+      coverage:     totalLeads > 0 ? covered / totalLeads * 100 : 0,
+      connectivity: attempts > 0 ? connects / attempts * 100 : 0,
+      talkPerUser:  totalLeads > 0 ? talkMins / totalLeads : 0,
+    };
+  });
+
+  // Aggregate non-overlapping totals: pre + p_14d (covers post 0–14D inclusive) + p_14p (14+)
+  const SUM_IDX = [0, 3, 4];
+  const totalAttempts = SUM_IDX.reduce((a,i) => a + M[i].attempts, 0);
+  const totalConnects = SUM_IDX.reduce((a,i) => a + M[i].connects, 0);
+  const totalTalkMins = SUM_IDX.reduce((a,i) => a + M[i].talkMins, 0);
+  const overallCoverage     = Math.max(...M.map(m => m.coverage));
+  const overallConnectivity = totalAttempts > 0 ? (totalConnects / totalAttempts * 100) : 0;
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const ring = (pct, color, size=58) => {
+    const r = size/2 - 5;
+    const c = 2*Math.PI*r;
+    const dash = Math.min(100, Math.max(0, pct)) / 100 * c;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="shrink-0">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(0,0,0,.07)" stroke-width="4" class="dark:[stroke:rgba(255,255,255,.08)]"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${esc(color)}" stroke-width="4"
+              stroke-dasharray="${dash.toFixed(1)} ${c.toFixed(1)}" stroke-linecap="round"
+              transform="rotate(-90 ${size/2} ${size/2})"/>
+      <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+            fill="${esc(color)}" font-size="11" font-weight="700" font-family="Inter,sans-serif">${pct.toFixed(0)}%</text>
+    </svg>`;
+  };
+
+  const fmtMins = m => {
+    if (m == null || m === 0) return '0 mins';
+    if (m < 1) return (m*60).toFixed(0) + ' sec';
+    return m.toFixed(1) + ' mins';
+  };
+  const fmtTotalMins = m => {
+    if (m == null) return '—';
+    if (m >= 60) return (m/60).toFixed(1) + ' hrs';
+    return Math.round(m) + ' mins';
+  };
+
+  // ── Executive summary strip ────────────────────────────────────────────────
+  const summary = `
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Total Calls Made</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${fmtNum(totalAttempts)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">across all stages</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Overall Coverage</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${overallCoverage.toFixed(1)}%</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">of ${fmtNum(totalLeads)} registered users</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Overall Connectivity</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${overallConnectivity.toFixed(1)}%</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">of all call attempts</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Total Talk Time</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${fmtTotalMins(totalTalkMins)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">connected calls only</div>
+      </div>
+    </div>`;
+
+  // ── Trend layer: bar chart for Avg Calls/User + Connectivity ──────────────
+  const bars = (vals, color, fmt) => {
+    const max = Math.max(...vals, 0.001);
+    return STAGES.map((st, i) => {
+      const v = vals[i];
+      const w = Math.max(2, (v / max) * 100);
+      return `<div class="flex items-center gap-2 text-[11px]">
+        <span class="w-16 sm:w-20 text-zinc-500 dark:text-zinc-400 shrink-0">${esc(st.label)}</span>
+        <div class="flex-1 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width:${w.toFixed(1)}%;background:${esc(color)};"></div>
+        </div>
+        <span class="w-12 text-right font-semibold text-zinc-900 dark:text-white tabular-nums">${fmt(v)}</span>
+      </div>`;
+    }).join('');
+  };
+
+  const trend = `
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-3">Avg Calls / User by stage</div>
+        <div class="space-y-2">${bars(M.map(m=>m.avgPerUser), '#6366f1', v => v.toFixed(2))}</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-3">Connectivity % by stage</div>
+        <div class="space-y-2">${bars(M.map(m=>m.connectivity), '#10b981', v => v.toFixed(1)+'%')}</div>
+      </div>
+    </div>`;
+
+  // ── Stage timeline cards ──────────────────────────────────────────────────
+  const timeline = `
+    <div class="relative">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 relative">
+        ${M.map((m, i) => `
+        <div class="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+          <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl" style="background:linear-gradient(90deg, ${esc(m.color)} 0%, ${esc(m.color)}88 100%);"></div>
+          <div class="flex items-center justify-between mb-1">
+            <div class="text-[10px] uppercase tracking-wider font-bold" style="color:${esc(m.color)};">Stage ${i+1}</div>
+            ${i<M.length-1 ? `<svg class="w-3 h-3 text-zinc-300 dark:text-zinc-700 hidden lg:block absolute -right-2.5 top-1/2 -translate-y-1/2 z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>` : ''}
+          </div>
+          <div class="text-sm font-bold text-zinc-900 dark:text-white leading-tight">${esc(m.label)}</div>
+          <div class="text-[10px] text-zinc-400 mb-3">${esc(m.sub)}</div>
+
+          <div class="mb-3">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-0.5">Avg calls / user</div>
+            <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">${m.avgPerUser.toFixed(2)}</div>
+            <div class="text-[10px] text-zinc-400 mt-0.5">${fmtNum(m.attempts)} attempts · ${fmtNum(m.covered)} reached</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="flex flex-col items-center gap-1 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-2">
+              ${ring(m.coverage, m.color, 50)}
+              <div class="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold">Coverage</div>
+            </div>
+            <div class="flex flex-col items-center gap-1 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-2">
+              ${ring(m.connectivity, m.color, 50)}
+              <div class="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold">Connect.</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="${esc(m.color)}" stroke-width="2"><path d="M3 11l6.5-6.5a3 3 0 014.24 0L21 11M3 11v9a1 1 0 001 1h4v-6h8v6h4a1 1 0 001-1v-9M3 11h18"/><path d="M9 21v-6h6v6"/></svg>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Talk time / user</span>
+                <span class="text-[11px] font-bold text-zinc-900 dark:text-white tabular-nums">${fmtMins(m.talkPerUser)}</span>
+              </div>
+              <div class="h-1 mt-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div class="h-full rounded-full" style="width:${Math.min(100, m.talkPerUser/Math.max(...M.map(x=>x.talkPerUser), 0.001)*100).toFixed(1)}%;background:${esc(m.color)};"></div>
+              </div>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  // ── AI insights ───────────────────────────────────────────────────────────
+  const insights = [];
+  // Best connectivity stage
+  const bestConn = [...M].sort((a,b) => b.connectivity - a.connectivity)[0];
+  if (bestConn.connectivity > 0) {
+    insights.push({ icon:'⚡', text:`Highest connectivity is in <b>${bestConn.label}</b> at ${bestConn.connectivity.toFixed(1)}%.` });
+  }
+  // Coverage drop after a stage
+  if (M[2].coverage > 0 && M[3].coverage > 0) {
+    const drop = M[2].coverage - M[3].coverage;
+    if (drop > 5) insights.push({ icon:'📉', text:`Coverage drops <b>${drop.toFixed(0)} pp</b> from 0–7D to 0–14D — follow-up intensity slows past day 7.` });
+  }
+  // Pre vs total talk time
+  const preTalkShare = totalTalkMins > 0 ? (M[0].talkMins / totalTalkMins * 100) : 0;
+  if (preTalkShare > 0) {
+    insights.push({ icon:'⏱', text:`Pre-webinar calls account for <b>${preTalkShare.toFixed(0)}%</b> of total talk time.` });
+  }
+  // 0-2D vs 14D+ connectivity ratio
+  if (M[1].connectivity > 0 && M[4].connectivity > 0) {
+    const ratio = M[1].connectivity / M[4].connectivity;
+    if (ratio > 1.5) insights.push({ icon:'🚀', text:`Users contacted within 2 days show <b>${ratio.toFixed(1)}×</b> higher connectivity than long-tail follow-ups.` });
+    else if (ratio < 0.7) insights.push({ icon:'📊', text:`Long-tail (14D+) calls connect <b>${(1/ratio).toFixed(1)}×</b> better than 0–2D — late-cycle leads are more receptive.` });
+  }
+  // Highest avg calls per user
+  const intense = [...M].sort((a,b) => b.avgPerUser - a.avgPerUser)[0];
+  if (intense.avgPerUser > 0.5) {
+    insights.push({ icon:'📞', text:`Most intense outreach is in <b>${intense.label}</b> at ${intense.avgPerUser.toFixed(2)} calls per registered user.` });
+  }
+
+  const insightStrip = insights.length ? `
+    <div class="mt-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-100 dark:border-indigo-900/40 p-4">
+      <div class="flex items-center gap-1.5 mb-3">
+        <svg class="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 18l1 2.5L8.5 21l-2.5 1L5 24l-1-2-2.5-1L4 20l1-2zM19 14l1 2.5L22.5 17l-2.5 1L19 20l-1-2-2.5-1L18 16l1-2z"/></svg>
+        <span class="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300">Auto Insights</span>
+      </div>
+      <ul class="space-y-2">
+        ${insights.slice(0, 4).map(i => `<li class="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300"><span class="shrink-0">${i.icon}</span><span>${i.text}</span></li>`).join('')}
+      </ul>
+    </div>` : '';
+
+  return summary + trend + timeline + insightStrip;
 }
 
 function renderDaily(daily, ev) {
