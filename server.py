@@ -728,9 +728,11 @@ ORDER BY e.live_at DESC"""
                 'event_date': event_date.isoformat(),
             })
         except Exception as e:
-            import traceback
-            print(f'[poll-qna-export] error: {e}\n{traceback.format_exc()}')
-            self._json_response(500, {'error': str(e)})
+            import traceback, sys
+            tb = traceback.format_exc()
+            sys.stderr.write(f'[poll-qna-export] error: {e}\n{tb}\n')
+            sys.stderr.flush()
+            self._json_response(500, {'error': str(e), 'traceback': tb.splitlines()[-6:]})
 
     def _run_snapshot(self):
         try:
