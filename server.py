@@ -668,8 +668,27 @@ ORDER BY e.live_at DESC"""
             poll_table = to_table(poll_fields, poll_rows)
             qna_table  = to_table(qna_fields, qna_rows)
 
-            # Create the Google Sheet
-            creds, _ = default(scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+            # Create the Google Sheet.
+            # Cloud Run's default SA token has cloud-platform scope which doesn't include
+            # Sheets/Drive (those are Workspace APIs, not GCP). We impersonate the same SA
+            # via google.auth.impersonated_credentials to mint a token with the right scopes.
+            # Requires roles/iam.serviceAccountTokenCreator on the SA pointing to itself.
+            source_creds, _ = default()
+            from google.auth import impersonated_credentials
+            SHEETS_SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            # Resolve the SA email — on Cloud Run it's available from the metadata server.
+            try:
+                import urllib.request as _ur
+                _req = _ur.Request('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email', headers={'Metadata-Flavor': 'Google'})
+                sa_email = _ur.urlopen(_req, timeout=2).read().decode('utf-8').strip()
+            except Exception:
+                sa_email = '1016538215063-compute@developer.gserviceaccount.com'
+            creds = impersonated_credentials.Credentials(
+                source_credentials=source_creds,
+                target_principal=sa_email,
+                target_scopes=SHEETS_SCOPES,
+                lifetime=600,
+            )
             sheets = build('sheets', 'v4', credentials=creds, cache_discovery=False)
             drive  = build('drive',  'v3', credentials=creds, cache_discovery=False)
 
