@@ -500,12 +500,9 @@ function renderAttendance(s, isAired) {
         <div class="text-[10px] text-zinc-400 mt-1">Awaits go-live</div>
       </div>
       <div class="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50/50 dark:bg-zinc-800/30">
-        <div class="flex items-center gap-1.5"><div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div><span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Data accuracy under review">WIP</span></div>
-        <div class="mt-4 space-y-1.5 text-[10px]">
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_sent)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_delivered)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_opened)}</span></div>
-          <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-700 dark:text-zinc-300">${fmtNum(s.email_clicked)}</span></div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div>
+        <div class="mt-6 flex items-center justify-center">
+          <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Data accuracy under review">WIP</span>
         </div>
       </div>
     </div>`;
@@ -517,12 +514,9 @@ function renderAttendance(s, isAired) {
       <div class="text-[10px] text-zinc-500 mt-1">${fmtNum(s.attendees)} of ${fmtNum(s.total_regs)} attended</div>
     </div>
     <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-      <div class="flex items-center gap-1.5"><div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div><span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Data accuracy under review">WIP</span></div>
-      <div class="mt-3 space-y-1 text-[11px]">
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Sent</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_sent)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Delivered</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_delivered)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Opened</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_opened)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-500">Clicked</span><span class="font-semibold text-zinc-900 dark:text-white">${fmtNum(s.email_clicked)}</span></div>
+      <div class="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold">Email funnel</div>
+      <div class="mt-6 flex items-center justify-center">
+        <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Data accuracy under review">WIP</span>
       </div>
     </div>
   </div>`;
