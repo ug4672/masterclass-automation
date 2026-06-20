@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compare — Masterclass Hub</title>
   <script>
     (function () {
-      const t = localStorage.getItem('ik_theme') || 'dark';
-      if (t !== 'dark') document.documentElement.classList.remove('dark');
+      if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark');
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,11 +30,11 @@
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
     .hide { display: none !important; }
 
-    .login-overlay { position: fixed; inset: 0; background: #0a0a0b; display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .login-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 40px; max-width: 380px; width: 90%; text-align: center; }
+    .login-overlay { position: fixed; inset: 0; background: #fafafa; display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .login-card { background: #ffffff; border: 1px solid #e4e4e7; border-radius: 16px; padding: 40px; max-width: 380px; width: 90%; text-align: center; }
     .login-logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg,#6366f1,#22d3ee); display: flex; align-items: center; justify-content: center; color: #0a0a0b; font-weight: 700; font-size: 18px; margin: 0 auto 20px; }
-    .login-title { font-size: 18px; font-weight: 600; color: #fafafa; margin-bottom: 6px; }
-    .login-sub { font-size: 13px; color: #a1a1aa; margin-bottom: 24px; }
+    .login-title { font-size: 18px; font-weight: 600; color: #18181b; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: #71717a; margin-bottom: 24px; }
     .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
 
     .picker-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
@@ -43,6 +42,40 @@
     .picker-list { overflow-y: auto; }
     .picker-list::-webkit-scrollbar { width: 8px; }
     .picker-list::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+
+    /* Light theme overrides */
+    html:not(.dark) { color-scheme: light; }
+    html:not(.dark) body { background: #fafafa; color: #18181b; }
+    html:not(.dark) .bg-zinc-950 { background-color: #fafafa !important; }
+    html:not(.dark) .bg-zinc-950\/90 { background-color: rgba(250,250,250,0.92) !important; }
+    html:not(.dark) .bg-zinc-900 { background-color: #ffffff !important; }
+    html:not(.dark) .bg-zinc-900\/50, html:not(.dark) .bg-zinc-900\/40, html:not(.dark) .bg-zinc-900\/30, html:not(.dark) .bg-zinc-900\/60 { background-color: #fafafa !important; }
+    html:not(.dark) .bg-zinc-800 { background-color: #f4f4f5 !important; }
+    html:not(.dark) .hover\:bg-zinc-900:hover, html:not(.dark) .hover\:bg-zinc-900\/40:hover, html:not(.dark) .hover\:bg-zinc-900\/60:hover, html:not(.dark) .hover\:bg-zinc-800:hover { background-color: #f4f4f5 !important; }
+    html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-800\/80, html:not(.dark) .border-zinc-800\/60 { border-color: #e4e4e7 !important; }
+    html:not(.dark) .border-zinc-900 { border-color: #f4f4f5 !important; }
+    html:not(.dark) .border-zinc-700 { border-color: #d4d4d8 !important; }
+    html:not(.dark) .divide-zinc-900 > * + * { border-color: #f4f4f5 !important; }
+    html:not(.dark) .text-zinc-50, html:not(.dark) .text-zinc-100 { color: #18181b !important; }
+    html:not(.dark) .text-zinc-200 { color: #27272a !important; }
+    html:not(.dark) .text-zinc-300 { color: #3f3f46 !important; }
+    html:not(.dark) .text-zinc-400 { color: #52525b !important; }
+    html:not(.dark) .text-zinc-500 { color: #71717a !important; }
+    html:not(.dark) .text-zinc-600 { color: #a1a1aa !important; }
+    html:not(.dark) .hover\:text-zinc-100:hover, html:not(.dark) .hover\:text-zinc-200:hover { color: #18181b !important; }
+    html:not(.dark) .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
+    html:not(.dark) .text-emerald-300, html:not(.dark) .text-emerald-400 { color: #047857 !important; }
+    html:not(.dark) .text-rose-300, html:not(.dark) .text-rose-400 { color: #be123c !important; }
+    html:not(.dark) .text-amber-300, html:not(.dark) .text-amber-400 { color: #b45309 !important; }
+    html:not(.dark) .text-indigo-300, html:not(.dark) .text-indigo-400 { color: #4338ca !important; }
+    html:not(.dark) .border-dashed.border-zinc-800 { border-color: #d4d4d8 !important; }
+    html:not(.dark) .section-head { background: linear-gradient(180deg, #f4f4f5, #fafafa) !important; }
+    html:not(.dark) .winner-cell { background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.03)) !important; border-bottom-color: rgba(16,185,129,0.3) !important; }
+    html:not(.dark) .winner-cell .val { color: #047857 !important; }
+    html:not(.dark) input[type="text"].bg-zinc-900,
+    html:not(.dark) select.bg-zinc-900 { background-color: #ffffff !important; color: #18181b !important; border-color: #d4d4d8 !important; }
+    html:not(.dark) .picker-card { background: #ffffff !important; border-color: #e4e4e7 !important; }
+    html:not(.dark) .picker-modal { background: rgba(0,0,0,0.4) !important; }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
