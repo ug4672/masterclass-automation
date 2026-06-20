@@ -492,31 +492,30 @@ function renderAttendance(s, isAired) {
 
 // ── Call Efforts — full lifecycle dashboard (5 stages, summary, trends, insights)
 function renderCallEfforts(s, isAired) {
-  const cb = s && s.extras && s.extras.call_buckets;
   if (!isAired) {
     return `<div class="text-center py-8 text-xs text-zinc-400">Call efforts populate after the event airs.</div>`;
   }
-  if (!cb || !cb.total_leads) {
+  if (!s || !s.call_total_leads) {
     return `<div class="text-center py-8 text-xs text-zinc-400">Call lifecycle data unavailable for this event.</div>`;
   }
 
-  const totalLeads = cb.total_leads || 0;
+  const totalLeads = s.call_total_leads || 0;
   const safe = v => (v == null || isNaN(v)) ? 0 : v;
 
   const STAGES = [
-    { key:'pre',   label:'Pre Webinar',    sub:'Before event',   color:'#6366f1' },
-    { key:'p_2d',  label:'0–2 Days',       sub:'First 48 hours', color:'#8b5cf6' },
-    { key:'p_7d',  label:'0–7 Days',       sub:'First week',     color:'#ec4899' },
-    { key:'p_14d', label:'0–14 Days',      sub:'First 2 weeks',  color:'#f59e0b' },
-    { key:'p_14p', label:'14D+',           sub:'Long tail',      color:'#10b981' },
+    { key:'pre',  label:'Pre Webinar', sub:'Before event',   color:'#6366f1' },
+    { key:'p2',   label:'0–2 Days',    sub:'First 48 hours', color:'#8b5cf6' },
+    { key:'p7',   label:'0–7 Days',    sub:'First week',     color:'#ec4899' },
+    { key:'p14',  label:'0–14 Days',   sub:'First 2 weeks',  color:'#f59e0b' },
+    { key:'p14p', label:'14D+',        sub:'Long tail',      color:'#10b981' },
   ];
 
   const M = STAGES.map(st => {
-    const b = cb[st.key] || {};
-    const attempts = safe(b.attempts);
-    const connects = safe(b.connects);
-    const talkMins = safe(b.talk_mins);
-    const covered  = safe(b.covered_leads);
+    const k = st.key;
+    const attempts = safe(s[`call_${k}_attempts`]);
+    const connects = safe(s[`call_${k}_connects`]);
+    const talkMins = safe(s[`call_${k}_talk_mins`]);
+    const covered  = safe(s[`call_${k}_covered`]);
     return {
       ...st, attempts, connects, talkMins, covered,
       avgPerUser:   totalLeads > 0 ? attempts / totalLeads : 0,

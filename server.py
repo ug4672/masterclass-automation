@@ -301,7 +301,13 @@ SELECT
   s.we_3_5, s.we_6_10, s.we_10_15, s.we_15_20, s.we_20p, s.we_other,
   s.us_yt_regs, s.us_social_regs, s.us_l10x_email_regs, s.us_l10x_bot_regs,
   s.us_ni_base_regs, s.us_other_regs,
-  s.extras
+  s.extras,
+  s.call_total_leads,
+  s.call_pre_attempts, s.call_pre_connects, s.call_pre_talk_mins, s.call_pre_covered,
+  s.call_p2_attempts,  s.call_p2_connects,  s.call_p2_talk_mins,  s.call_p2_covered,
+  s.call_p7_attempts,  s.call_p7_connects,  s.call_p7_talk_mins,  s.call_p7_covered,
+  s.call_p14_attempts, s.call_p14_connects, s.call_p14_talk_mins, s.call_p14_covered,
+  s.call_p14p_attempts,s.call_p14p_connects,s.call_p14p_talk_mins,s.call_p14p_covered
 FROM `{BQ_APP_PROJECT}.events.event` e
 LEFT JOIN latest_snap s USING (event_id)
 WHERE {' AND '.join(where)}
@@ -323,7 +329,13 @@ LIMIT {limit}"""
                      'role_sde', 'role_ml', 'role_management', 'role_systems', 'role_null', 'role_other',
                      'we_3_5', 'we_6_10', 'we_10_15', 'we_15_20', 'we_20p', 'we_other',
                      'us_yt_regs', 'us_social_regs', 'us_l10x_email_regs', 'us_l10x_bot_regs',
-                     'us_ni_base_regs', 'us_other_regs', 'extras')
+                     'us_ni_base_regs', 'us_other_regs', 'extras',
+                     'call_total_leads',
+                     'call_pre_attempts', 'call_pre_connects', 'call_pre_talk_mins', 'call_pre_covered',
+                     'call_p2_attempts',  'call_p2_connects',  'call_p2_talk_mins',  'call_p2_covered',
+                     'call_p7_attempts',  'call_p7_connects',  'call_p7_talk_mins',  'call_p7_covered',
+                     'call_p14_attempts', 'call_p14_connects', 'call_p14_talk_mins', 'call_p14_covered',
+                     'call_p14p_attempts','call_p14p_connects','call_p14p_talk_mins','call_p14p_covered')
         for r in rows:
             d = _row_to_dict(r)
             ev = {k: v for k, v in d.items() if k not in snap_keys}
@@ -1090,21 +1102,24 @@ def _query_calls_india(src_client, date_literal, wt_param):
     from google.cloud import bigquery
     q = f"""
 WITH base AS (
-  SELECT
-    hubspot_id AS leads_hubspot_id,
-    DATETIME(lead_created_time, 'Asia/Kolkata') AS Lead_created_time,
-    DATETIME(Event_Start_Date_Time, 'Asia/Kolkata') AS webinar_start_datetime_ch,
-    COALESCE(
-      LEAD(DATETIME(lead_created_time, 'Asia/Kolkata'))
-        OVER (PARTITION BY lead_email ORDER BY lead_created_time),
-      DATETIME_ADD(DATETIME(lead_created_time, 'Asia/Kolkata'), INTERVAL 1 YEAR)
-    ) AS next_lead_time
-  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
-  WHERE DATE(DATETIME(Event_Start_Date_Time, 'Asia/Kolkata')) IN ({date_literal})
+  SELECT hubspot_ID AS leads_hubspot_id,
+    DATETIME(event_start_date_time, 'Asia/Kolkata') AS webinar_start_datetime_ch
+  FROM (
+    SELECT hubspot_ID, event_start_date_time, formatted_date,
+      DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,
+      dupe_flag, gql_flag, webinar_type, dupe_logic, work_ex,
+      ROW_NUMBER() OVER (
+        PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+    WHERE dupe_logic = 1
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
     AND webinar_type = @wt
-    AND dupe_logic = 1 AND dupe_flag = 0 AND gql_flag = 0
+    AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_id ORDER BY DATETIME(lead_created_time, 'Asia/Kolkata') ASC) = 1
 ),
 base_call AS (
   SELECT activity_datetime, DATE(activity_datetime) AS activity_date, hubspot_id, call_duration FROM (
@@ -1126,13 +1141,10 @@ base_call AS (
   ) WHERE rn = 1
 ),
 final_merge AS (
-  SELECT b.leads_hubspot_id, b.Lead_created_time, b.webinar_start_datetime_ch,
+  SELECT b.leads_hubspot_id, b.webinar_start_datetime_ch,
          bc.activity_datetime, bc.activity_date, bc.call_duration
   FROM base b
-  LEFT JOIN base_call bc
-    ON b.leads_hubspot_id = bc.hubspot_id
-    AND b.Lead_created_time <= bc.activity_datetime
-    AND b.next_lead_time > bc.activity_datetime
+  LEFT JOIN base_call bc ON b.leads_hubspot_id = bc.hubspot_id
 ),
 per_lead AS (
   SELECT
