@@ -278,7 +278,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             elif status == 'aired':
                 where.append("e.live_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 4 HOUR)")
             if country:
-                where.append("e.country = @country")
+                where.append("LOWER(e.country) = LOWER(@country)")
                 params.append(bigquery.ScalarQueryParameter('country', 'STRING', country))
 
         order = 'ASC' if status == 'upcoming' else 'DESC'
@@ -339,7 +339,7 @@ LIMIT {limit}"""
 SELECT series, COUNT(*) AS n
 FROM `{BQ_APP_PROJECT}.events.event`
 WHERE series IS NOT NULL
-  AND country = @country
+  AND LOWER(country) = LOWER(@country)
   AND COALESCE(status, 'upcoming') != 'archived'
 GROUP BY series
 ORDER BY MAX(live_at) DESC"""
@@ -369,7 +369,7 @@ ORDER BY MAX(live_at) DESC"""
         series  = qs.get('series', [None])[0]
         tz      = 'America/Los_Angeles' if country.lower() in ('us', 'usa') else 'Asia/Kolkata'
         params  = [bigquery.ScalarQueryParameter('country', 'STRING', country)]
-        where   = ["e.country = @country",
+        where   = ["LOWER(e.country) = LOWER(@country)",
                    "e.live_at >= TIMESTAMP '2026-01-01 00:00:00'",
                    "COALESCE(e.status, 'upcoming') != 'archived'"]
         if series:
@@ -859,10 +859,15 @@ spends AS (
   GROUP BY spend_date, campaign_name
 ),
 matched_campaigns AS (
+  -- Normalize both sides to alphanumeric-only before LIKE: utm_campaign URL-encodes
+  -- spaces as '+', while ad-manager campaign_name keeps actual spaces (and may
+  -- contain en-dashes, hyphens, parens). Stripping non-alphanumerics on both sides
+  -- prevents trivial encoding mismatches from dropping legitimate matches.
   SELECT DISTINCT l.registration_date, s.campaign_name, s.total_spend
   FROM leads l
   JOIN spends s ON l.registration_date = s.spend_date
-    AND LOWER(l.utm_campaign) LIKE CONCAT('%', LOWER(s.campaign_name), '%')
+    AND REGEXP_REPLACE(LOWER(l.utm_campaign), r'[^a-z0-9]', '')
+        LIKE CONCAT('%', REGEXP_REPLACE(LOWER(s.campaign_name), r'[^a-z0-9]', ''), '%')
 ),
 daily_spend AS (
   SELECT registration_date, SUM(total_spend) AS day_spend
