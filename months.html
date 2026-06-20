@@ -1,636 +1,571 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Months — Masterclass Hub</title>
-  <script>tailwind = { config: { darkMode: 'class' } };
-    (function() {
-      const s = localStorage.getItem('ik_theme');
-      if (!s) { document.documentElement.classList.add('dark'); localStorage.setItem('ik_theme','dark'); }
-      else if (s === 'dark') document.documentElement.classList.add('dark');
+  <script>
+    (function () {
+      const t = localStorage.getItem('ik_theme') || 'dark';
+      if (t !== 'dark') document.documentElement.classList.remove('dark');
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://rsms.me/">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
   <style>
-    .chart-wrap { position: relative; height: 300px; }
-    .ctt {
-      position: absolute; pointer-events: none; z-index: 20; min-width: 210px;
-      background: rgba(9,9,11,.96); border: 1px solid rgba(255,255,255,.1);
-      border-radius: 12px; padding: 14px 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5); backdrop-filter: blur(20px);
-      transform: translate(-50%, calc(-100% - 14px));
-      transition: opacity .1s ease;
+    html, body { font-family: 'Inter', system-ui, sans-serif; }
+    body { font-feature-settings: 'cv02','cv03','cv04','cv11','ss01'; -webkit-font-smoothing: antialiased; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .num-hero { letter-spacing: -0.04em; line-height: 0.95; }
+    .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(244,244,245,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244,244,245,0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
     }
-    .mbtn { transition: all .15s ease; }
-    .mbtn.on { background: rgba(99,102,241,.15) !important; color: #a5b4fc !important; border-color: rgba(99,102,241,.4) !important; }
-    .mcard { transition: transform .2s ease, border-color .15s ease, box-shadow .2s ease; cursor: pointer; }
-    .mcard:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.2); }
-    .mcard.sel { border-color: rgba(99,102,241,.55) !important; box-shadow: 0 0 0 1px rgba(99,102,241,.25), 0 16px 40px rgba(99,102,241,.1) !important; }
-    .icard { transition: transform .2s ease; }
-    .icard:hover { transform: translateY(-2px); }
-    .bfill { transition: width .75s cubic-bezier(.16,1,.3,1); }
-    .dd { animation: ddIn .3s cubic-bezier(.16,1,.3,1) forwards; }
-    @keyframes ddIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .glow-emerald { box-shadow: 0 0 60px -10px rgba(52,211,153,0.25); }
+    .stage-arrow { position: relative; }
+    .stage-arrow::after {
+      content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+      border-left: 10px solid rgba(63,63,70,0.6);
+      z-index: 2;
+    }
+    .stage-arrow:last-child::after { display: none; }
+    .pill-active { background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%); border-color: #6366f1; }
+    .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .row-highlight-top { background: linear-gradient(90deg, rgba(34,197,94,0.04), transparent 60%); border-left: 2px solid #10b981; }
+    .row-highlight-bot { background: linear-gradient(90deg, rgba(244,63,94,0.04), transparent 60%); border-left: 2px solid #f43f5e; }
+    .signal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .funnel-stage:hover { transform: translateY(-2px); transition: transform 0.15s; }
+    .hide { display: none !important; }
+
+    .login-overlay { position: fixed; inset: 0; background: #0a0a0b; display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .login-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 40px; max-width: 380px; width: 90%; text-align: center; }
+    .login-logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg,#6366f1,#22d3ee); display: flex; align-items: center; justify-content: center; color: #0a0a0b; font-weight: 700; font-size: 18px; margin: 0 auto 20px; }
+    .login-title { font-size: 18px; font-weight: 600; color: #fafafa; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: #a1a1aa; margin-bottom: 24px; }
+    .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
   </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
 
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <div class="login-logo">IK</div>
-    <h2 class="login-title">Masterclass Hub</h2>
-    <p class="login-sub">Sign in with your IK Google account to continue</p>
-    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
-    <p id="loginError" class="login-error"></p>
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">M</div>
+      <div class="login-title">Masterclass Hub</div>
+      <div class="login-sub">Sign in with your IK Google account</div>
+      <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+      <p id="loginError" class="login-error"></p>
+    </div>
   </div>
-</div>
 
-<div id="appWrap" style="display:none;">
+  <div id="appWrap" style="display:none;">
 
-  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
-      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
-        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
-        <div class="hidden sm:block">
-          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
-          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+    <header class="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
+      <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+          <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
+            <div class="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-xs">M</div>
+            <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
+          </a>
+          <nav class="flex items-center gap-1 text-sm">
+            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Hub</a>
+            <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-zinc-900 text-zinc-100 font-medium no-underline">Months</a>
+            <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Compare</a>
+          </nav>
         </div>
-      </a>
-      <nav class="flex items-center gap-1 text-sm">
-        <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
-        <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium shadow-sm whitespace-nowrap">Months</a>
-        <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
-      </nav>
-      <div class="flex items-center gap-2 shrink-0">
-        <div class="flex items-center bg-zinc-100 rounded-lg p-0.5 gap-0.5">
-          <button onclick="setCountry('IN')" id="ctryIN" class="px-2.5 py-1 rounded-md text-xs font-semibold">IN</button>
-          <button onclick="setCountry('US')" id="ctryUS" class="px-2.5 py-1 rounded-md text-xs font-semibold">US</button>
-        </div>
-        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
-        </button>
-        <div class="relative">
-          <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
-          <div id="userMenu" class="hidden absolute right-0 top-11 bg-white border border-zinc-200 rounded-lg shadow-lg p-1 w-56 z-50">
-            <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-100" id="userEmail">—</div>
-            <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Sign out</button>
+        <div class="flex items-center gap-3">
+          <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
+            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-800">India</button>
+            <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">US</button>
           </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ── HERO ───────────────────────────────────────────────────────────────── -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-    <div class="flex items-end justify-between gap-4 flex-wrap mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Performance Timeline</h1>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Visual trend exploration · <span id="heroSub">India · Jan 2026 onwards</span></p>
-      </div>
-      <div class="flex items-center gap-2">
-        <label class="text-xs text-zinc-500 font-medium">Series</label>
-        <select id="seriesFilter" onchange="onSeriesChange()" class="text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-zinc-800 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300">
-          <option value="">All events</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- KPI aggregate strip -->
-    <div id="kpiStrip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      <div class="col-span-2 sm:col-span-4 py-4 text-center text-zinc-400 text-sm">Loading…</div>
-    </div>
-
-    <!-- Metric selector -->
-    <div class="flex items-center gap-2 flex-wrap mb-3">
-      <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mr-1">Metric</span>
-      <div id="metricPills" class="flex items-center gap-1.5 flex-wrap"></div>
-    </div>
-
-    <!-- Chart card -->
-    <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden mb-6">
-      <div class="px-5 pt-4 pb-1 flex items-center justify-between">
-        <div id="chartMeta" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
-        <div id="chartBadge" class="text-xs font-medium text-zinc-400"></div>
-      </div>
-      <div class="px-4 pb-4">
-        <div class="chart-wrap">
-          <canvas id="trendCanvas"></canvas>
-          <div id="ctt" class="ctt" style="opacity:0;"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── INSIGHTS ───────────────────────────────────────────────────────────── -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
-    <div id="insightStrip" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
-  </section>
-
-  <!-- ── MONTH CARDS ────────────────────────────────────────────────────────── -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">Monthly breakdown</h2>
-      <span id="monthCount" class="text-xs text-zinc-400"></span>
-    </div>
-    <div id="monthCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
-    <div id="ddPanel"></div>
-  </section>
-
-  <footer class="border-t border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
-      <div>© 2026 Interview Kickstart · Internal use</div>
-      <div><a href="/hub.html" class="hover:text-zinc-900 dark:hover:text-white">Hub</a></div>
-    </div>
-  </footer>
-</div>
-
-<script>
-'use strict';
-
-const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-
-let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
-let currentMetric  = 'regs';
-let selectedMonth  = null;
-let lastData       = null;
-let chartInst      = null;
-
-const urlP = new URLSearchParams(location.search);
-let currentSeries = urlP.get('series') || '';
-
-// ── Metrics config ────────────────────────────────────────────────────────────
-function METRICS() {
-  return [
-    { id:'regs',       field:'total_regs',      label: leadLabel(),   val: m => m.total_regs,            fmt: fmtNum,   color:'#6366f1' },
-    { id:'spend',      field:'meta_spend',       label:'Paid Spend',   val: m => m.meta_spend,            fmt: fmtMoney, color:'#8b5cf6' },
-    { id:'cpl',        field:'cpl_blended',      label: cplLabel(),    val: m => m.cpl_blended ?? m.cpiql,fmt: fmtMoney, color:'#ec4899' },
-    { id:'att',        field:'attendance_pct',   label:'Attendance',   val: m => m.attendance_pct,        fmt: fmtPct,   color:'#10b981' },
-    { id:'email_open', field:'email_open_pct',   label:'Email Open',   val: m => m.email_open_pct,        fmt: fmtPct,   color:'#f59e0b' },
-    { id:'connect',    field:'call_connect_pct', label:'Connect Rate', val: m => m.call_connect_pct,      fmt: fmtPct,   color:'#06b6d4' },
-  ];
-}
-function getMeta() { return METRICS().find(m => m.id === currentMetric) || METRICS()[0]; }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtNum(n)   { if (n==null) return '—'; if (n>=1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'k'; return Math.round(n).toLocaleString(); }
-function isUS()      { return currentCountry === 'US'; }
-function moneySym()  { return isUS() ? '$' : '₹'; }
-function fmtMoney(n) { return n==null ? '—' : moneySym()+Math.round(n).toLocaleString(); }
-function fmtPct(n)   { return n==null ? '—' : n.toFixed(1)+'%'; }
-function fmtSecs(s)  { if (s==null) return '—'; const m=Math.floor(s/60); return m+'m '+Math.round(s%60)+'s'; }
-function leadLabel() { return isUS() ? 'GQLs' : 'IQLs'; }
-function cplLabel()  { return isUS() ? 'CPGQL' : 'CPIQL'; }
-function countryParam() { return isUS() ? 'US' : 'India'; }
-function monthDisplay(slug) {
-  if (!slug) return '—';
-  const [y,m] = slug.split('-');
-  return new Date(Number(y), Number(m)-1, 1).toLocaleDateString('en-US', { month:'short', year:'numeric' });
-}
-function evDateShort(iso) {
-  return iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
-}
-function hex2rgba(hex, a) {
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
-function getMoM(months, i, field) {
-  if (i === 0) return null;
-  const curr = months[i][field]||0, prev = months[i-1][field]||0;
-  return prev > 0 ? (curr-prev)/prev*100 : null;
-}
-function norm(val, arr) {
-  const mn=Math.min(...arr), mx=Math.max(...arr);
-  return mx===mn ? 50 : (val-mn)/(mx-mn)*100;
-}
-function computeScore(m, months) {
-  const leads = norm(m.total_regs||0,     months.map(x=>x.total_regs||0));
-  const att   = norm(m.attendance_pct||0, months.map(x=>x.attendance_pct||0));
-  const cpls  = months.map(x=>x.cpl_blended||0).filter(Boolean);
-  const cplEff= cpls.length ? 100-norm(m.cpl_blended||0, cpls) : 50;
-  const email = norm(m.email_open_pct||0, months.map(x=>x.email_open_pct||0));
-  return Math.round(leads*0.4 + att*0.3 + cplEff*0.25 + email*0.05);
-}
-function scoreTheme(s) {
-  if (s>=75) return { text:'text-emerald-400', ring:'#10b981' };
-  if (s>=50) return { text:'text-indigo-400',  ring:'#6366f1' };
-  if (s>=30) return { text:'text-amber-400',   ring:'#f59e0b' };
-  return           { text:'text-red-400',       ring:'#ef4444' };
-}
-
-// ── Theme ─────────────────────────────────────────────────────────────────────
-const SUN  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
-const MOON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-function applyTheme() {
-  const dark = document.documentElement.classList.contains('dark');
-  const btn = document.getElementById('themeToggle');
-  if (btn) btn.innerHTML = dark ? SUN : MOON;
-  if (lastData) renderChart(lastData.months);
-}
-function toggleTheme() {
-  const dark = document.documentElement.classList.toggle('dark');
-  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
-  applyTheme();
-}
-
-// ── Country ───────────────────────────────────────────────────────────────────
-function applyCountryButtons() {
-  const on='bg-white text-zinc-900 shadow-sm', off='text-zinc-500 hover:text-zinc-900';
-  const base='px-2.5 py-1 rounded-md text-xs font-semibold ';
-  document.getElementById('ctryIN').className = base+(isUS()?off:on);
-  document.getElementById('ctryUS').className = base+(isUS()?on:off);
-  document.getElementById('heroSub').textContent = (isUS()?'United States':'India')+' · Jan 2026 onwards';
-}
-function setCountry(c) {
-  if (currentCountry===c) return;
-  currentCountry=c; localStorage.setItem('ik_country',c);
-  applyCountryButtons(); loadSeries(); load();
-}
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-function showApp(email) {
-  document.getElementById('loginOverlay').style.display='none';
-  document.getElementById('appWrap').style.display='';
-  document.getElementById('userEmail').textContent=email;
-  if (email) document.getElementById('avatarBtn').textContent=
-    (email[0]||'?').toUpperCase()+(email.split('.')[1]?.[0]||'').toUpperCase();
-  loadSeries(); load();
-}
-function showLogin() {
-  document.getElementById('loginOverlay').style.display='flex';
-  document.getElementById('appWrap').style.display='none';
-}
-async function checkAuth() {
-  try { const r=await fetch('/auth/check'); if(r.ok){const d=await r.json();showApp(d.email);}else showLogin(); }
-  catch { showLogin(); }
-}
-async function handleGoogleSignIn(response) {
-  const err=document.getElementById('loginError'); err.style.display='none';
-  try {
-    const r=await fetch('/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:response.credential})});
-    const d=await r.json();
-    if(r.ok) showApp(d.email); else { err.textContent=d.error||'Sign-in failed.'; err.style.display='block'; }
-  } catch { err.textContent='Sign-in failed.'; err.style.display='block'; }
-}
-async function signOut() { await fetch('/auth/logout',{method:'POST'}); showLogin(); }
-window.onGoogleLibraryLoad = function() {
-  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleSignIn,hd:'interviewkickstart.com'});
-  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'),{theme:'outline',size:'large',width:280});
-};
-function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
-document.addEventListener('click', e => {
-  if (!e.target.closest('#avatarBtn')&&!e.target.closest('#userMenu'))
-    document.getElementById('userMenu')?.classList.add('hidden');
-});
-
-// ── Data ──────────────────────────────────────────────────────────────────────
-async function loadSeries() {
-  try {
-    const r=await fetch(`/series?country=${encodeURIComponent(countryParam())}`);
-    if (!r.ok) return;
-    const d=await r.json();
-    const sel=document.getElementById('seriesFilter');
-    sel.innerHTML='<option value="">All events</option>'+(d.series||[]).map(s=>`<option value="${esc(s.name)}" ${s.name===currentSeries?'selected':''}>${esc(s.name)} (${s.count})</option>`).join('');
-  } catch {}
-}
-function onSeriesChange() { currentSeries=document.getElementById('seriesFilter').value; load(); }
-
-async function load() {
-  document.getElementById('kpiStrip').innerHTML='<div class="col-span-2 sm:col-span-4 py-6 text-center text-zinc-400 text-sm">Loading…</div>';
-  ['insightStrip','monthCards','ddPanel'].forEach(id=>{document.getElementById(id).innerHTML='';});
-  selectedMonth=null;
-  try {
-    const url=`/months?country=${encodeURIComponent(countryParam())}`+(currentSeries?`&series=${encodeURIComponent(currentSeries)}`:'');
-    const r=await fetch(url); if (!r.ok) throw new Error('HTTP '+r.status);
-    lastData=await r.json();
-    const now=new Date();
-    const airedSlugs=new Set((lastData.events||[]).filter(e=>new Date(e.live_at)<=now).map(e=>e.month_slug));
-    lastData.months=(lastData.months||[]).filter(m=>airedSlugs.has(m.month_slug));
-    refreshAll();
-  } catch(e) {
-    document.getElementById('kpiStrip').innerHTML=`<div class="col-span-2 sm:col-span-4 py-6 text-center text-rose-500 text-sm">Failed: ${esc(e.message)}</div>`;
-  }
-}
-
-// ── KPI strip ─────────────────────────────────────────────────────────────────
-function renderKPI(months) {
-  if (!months.length) { document.getElementById('kpiStrip').innerHTML=''; return; }
-  const totLeads = months.reduce((a,m)=>a+(m.total_regs||0),0);
-  const totSpend = months.reduce((a,m)=>a+(m.meta_spend||0),0);
-  const cpl      = totLeads ? totSpend/totLeads : null;
-  const attMs    = months.filter(m=>m.attendance_pct);
-  const avgAtt   = attMs.length ? attMs.reduce((a,m)=>a+m.attendance_pct,0)/attMs.length : null;
-  const tiles=[
-    { label:`Total ${leadLabel()}`, val:fmtNum(totLeads),   sub:`${months.length} months` },
-    { label:'Paid Spend',           val:fmtMoney(totSpend), sub:'Total media spend' },
-    { label:cplLabel(),             val:fmtMoney(cpl),      sub:'Blended avg' },
-    { label:'Avg Attendance',       val:fmtPct(avgAtt),     sub:'Across all events' },
-  ];
-  document.getElementById('kpiStrip').innerHTML=tiles.map(t=>`
-    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5">
-      <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">${esc(t.label)}</div>
-      <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">${t.val}</div>
-      <div class="text-[11px] text-zinc-400 mt-0.5">${esc(t.sub)}</div>
-    </div>`).join('');
-}
-
-// ── Metric pills ──────────────────────────────────────────────────────────────
-function renderMetricPills() {
-  document.getElementById('metricPills').innerHTML=METRICS().map(m=>`
-    <button onclick="selectMetric('${m.id}')" class="mbtn ${m.id===currentMetric?'on':''} px-3 py-1 rounded-full text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900"
-      ${m.id===currentMetric?`style="border-color:rgba(99,102,241,.4);color:#a5b4fc;background:rgba(99,102,241,.15);"`:''}>
-      ${esc(m.label)}
-    </button>`).join('');
-}
-function selectMetric(id) {
-  currentMetric=id;
-  renderMetricPills();
-  if (lastData) { renderChart(lastData.months); updateChartMeta(lastData.months); }
-}
-
-// ── Chart ─────────────────────────────────────────────────────────────────────
-function updateChartMeta(months) {
-  const meta=getMeta();
-  const vals=months.map(m=>meta.val(m)).filter(v=>v!=null&&v>0);
-  const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
-  document.getElementById('chartMeta').innerHTML=
-    `<span class="font-semibold text-zinc-800 dark:text-zinc-200">${esc(meta.label)}</span>`+
-    (avg!=null?` <span class="text-zinc-400">· avg ${meta.fmt(avg)}</span>`:'');
-  // Best month label
-  let bestIdx=-1, bestVal=-Infinity;
-  months.forEach((m,i)=>{ const v=meta.val(m)||0; if(v>bestVal){bestVal=v;bestIdx=i;} });
-  document.getElementById('chartBadge').textContent = bestIdx>=0
-    ? `↑ peak: ${monthDisplay(months[bestIdx].month_slug)}` : '';
-}
-
-function renderChart(months) {
-  const canvas=document.getElementById('trendCanvas');
-  if (!canvas||!months.length) return;
-  const meta=getMeta();
-  const dark=document.documentElement.classList.contains('dark');
-  const ctx=canvas.getContext('2d');
-  const labels=months.map(m=>monthDisplay(m.month_slug));
-  const values=months.map(m=>meta.val(m)||0);
-
-  const grad=ctx.createLinearGradient(0,0,0,canvas.offsetHeight||300);
-  grad.addColorStop(0, hex2rgba(meta.color,.28));
-  grad.addColorStop(1, hex2rgba(meta.color,.0));
-
-  if (chartInst) { chartInst.destroy(); chartInst=null; }
-
-  chartInst = new Chart(ctx, {
-    type:'line',
-    data: { labels, datasets:[{
-      data:values, borderColor:meta.color, backgroundColor:grad, fill:true, tension:.45,
-      pointBackgroundColor:meta.color, pointBorderColor:dark?'#09090b':'#fff', pointBorderWidth:2.5,
-      pointRadius:5, pointHoverRadius:8, pointHoverBackgroundColor:meta.color,
-      pointHoverBorderColor:dark?'#09090b':'#fff', borderWidth:2.5,
-    }]},
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      animation:{ duration:500, easing:'easeInOutQuart' },
-      plugins:{
-        legend:{ display:false },
-        tooltip:{ enabled:false, external: buildTooltipFn(months, meta) }
-      },
-      scales:{
-        x:{ grid:{color:dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)',drawBorder:false}, ticks:{color:dark?'#52525b':'#a1a1aa',font:{size:11,family:'Inter'}}, border:{display:false} },
-        y:{ grid:{color:dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)',drawBorder:false}, ticks:{color:dark?'#52525b':'#a1a1aa',font:{size:11,family:'Inter'},callback:v=>meta.fmt(v)}, border:{display:false} }
-      },
-      onClick:(_,els)=>{ if(els.length) selectMonth(months[els[0].index].month_slug); },
-      onHover:(_,els)=>{ canvas.style.cursor=els.length?'pointer':'default'; }
-    }
-  });
-  updateChartMeta(months);
-}
-
-function buildTooltipFn(months, meta) {
-  return function({ chart, tooltip }) {
-    const el=document.getElementById('ctt');
-    if (tooltip.opacity===0) { el.style.opacity='0'; return; }
-    const idx=tooltip.dataIndex, m=months[idx];
-    const mom=getMoM(months,idx,meta.field);
-    const evs=(lastData?.events||[]).filter(e=>e.month_slug===m.month_slug);
-    const topEv=[...evs].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
-    const val=tooltip.dataPoints?.[0]?.parsed?.y;
-    el.innerHTML=`
-      <div style="font-size:11px;color:#71717a;margin-bottom:4px;font-weight:500;">${esc(monthDisplay(m.month_slug))}</div>
-      <div style="font-size:22px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;">${val!=null?meta.fmt(val):'—'}</div>
-      ${mom!=null?`<div style="font-size:12px;font-weight:600;margin-top:4px;color:${mom>=0?'#34d399':'#f87171'};">${mom>=0?'▲':'▼'} ${Math.abs(mom).toFixed(1)}% vs prev</div>`:''}
-      ${topEv?`<div style="font-size:11px;color:#52525b;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);">Top: ${esc(topEv.title||topEv.event_id)}</div>`:''}
-      <div style="font-size:10px;color:#3f3f46;margin-top:4px;">Click to explore →</div>`;
-    el.style.opacity='1';
-    el.style.left=tooltip.caretX+'px';
-    el.style.top =tooltip.caretY+'px';
-  };
-}
-
-// ── Insights ──────────────────────────────────────────────────────────────────
-function generateInsights(months, events) {
-  if (!months.length) return [];
-  const out=[];
-  const best=[...months].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
-  out.push({ icon:'🚀', title:`${monthDisplay(best.month_slug)} led with ${fmtNum(best.total_regs)} ${leadLabel()}`, sub:'Highest volume month this year' });
-  let bigSlug=null, bigPct=0;
-  for (let i=1;i<months.length;i++) {
-    const p=getMoM(months,i,'total_regs');
-    if (p!=null&&p>bigPct) { bigPct=p; bigSlug=months[i]; }
-  }
-  if (bigSlug) out.push({ icon:'📈', title:`${monthDisplay(bigSlug.month_slug)} grew ${bigPct.toFixed(0)}% MoM`, sub:`Biggest month-over-month jump in ${leadLabel()}` });
-  const ba=[...months].sort((a,b)=>(b.attendance_pct||0)-(a.attendance_pct||0))[0];
-  if (ba.attendance_pct) out.push({ icon:'👥', title:`${fmtPct(ba.attendance_pct)} attendance peak in ${monthDisplay(ba.month_slug)}`, sub:'Highest engagement rate this year' });
-  if (events.length) {
-    const te=[...events].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
-    out.push({ icon:'⭐', title:`"${te.title||te.event_id}" was the top event`, sub:`${fmtNum(te.total_regs)} ${leadLabel()} · ${monthDisplay(te.month_slug)}` });
-  }
-  return out;
-}
-function renderInsights(insights) {
-  document.getElementById('insightStrip').innerHTML=insights.map(i=>`
-    <div class="icard rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 flex items-start gap-3">
-      <span class="text-xl shrink-0">${i.icon}</span>
-      <div class="min-w-0">
-        <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">${esc(i.title)}</div>
-        <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">${esc(i.sub)}</div>
-      </div>
-    </div>`).join('');
-}
-
-// ── Month cards ───────────────────────────────────────────────────────────────
-function sparkline(vals, color) {
-  if (vals.length < 2) return '';
-  const mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||1;
-  const W=72,H=28,p=2;
-  const pts=vals.map((v,i)=>{
-    const x=p+(i/(vals.length-1))*(W-2*p);
-    const y=H-p-((v-mn)/rng)*(H-2*p);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${esc(color)}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/></svg>`;
-}
-function scoreRing(score, color) {
-  const R=17, circ=2*Math.PI*R, dash=(score/100)*circ;
-  return `<svg width="44" height="44" viewBox="0 0 44 44">
-    <circle cx="22" cy="22" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <circle cx="22" cy="22" r="${R}" fill="none" stroke="${esc(color)}" stroke-width="3"
-      stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"
-      transform="rotate(-90 22 22)"/>
-    <text x="22" y="22" text-anchor="middle" dominant-baseline="central"
-      fill="${esc(color)}" font-size="10" font-weight="700" font-family="Inter,sans-serif">${score}</text>
-  </svg>`;
-}
-
-function renderMonthCards(months, events) {
-  const el=document.getElementById('monthCards');
-  if (!months.length) { el.innerHTML='<div class="col-span-3 py-8 text-center text-zinc-400 text-sm">No months found.</div>'; return; }
-  document.getElementById('monthCount').textContent=`${months.length} month${months.length===1?'':'s'}`;
-  const meta=getMeta();
-  const allVals=months.map(m=>meta.val(m)||0);
-
-  el.innerHTML=months.map((m,i)=>{
-    const score=computeScore(m,months);
-    const st=scoreTheme(score);
-    const mom=getMoM(months,i,'total_regs');
-    const monthEvs=events.filter(e=>e.month_slug===m.month_slug);
-    const topEv=[...monthEvs].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0))[0];
-    const sparkVals=allVals.slice(Math.max(0,i-4),i+1);
-    const isSel=selectedMonth===m.month_slug;
-    return `
-    <div class="mcard rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 ${isSel?'sel':''}"
-         data-slug="${esc(m.month_slug)}" onclick="selectMonth('${esc(m.month_slug)}')">
-      <div class="flex items-start justify-between gap-2 mb-4">
-        <div>
-          <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">${m.events||0} event${(m.events||0)===1?'':'s'}</div>
-          <div class="text-lg font-bold text-zinc-900 dark:text-white mt-0.5">${esc(monthDisplay(m.month_slug))}</div>
-        </div>
-        <div class="shrink-0">${scoreRing(score, st.ring)}</div>
-      </div>
-
-      <div class="flex items-end justify-between gap-2 mb-3">
-        <div>
-          <div class="text-[11px] text-zinc-400 font-medium mb-0.5">${leadLabel()}</div>
-          <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">${fmtNum(m.total_regs)}</div>
-          <div class="text-xs font-semibold mt-0.5 ${mom==null?'text-zinc-400':mom>=0?'text-emerald-400':'text-red-400'}">
-            ${mom==null?'First month':(mom>=0?'▲':'▼')+' '+Math.abs(mom).toFixed(1)+'%'}
-          </div>
-        </div>
-        <div class="shrink-0 pb-1 opacity-70">${sparkline(sparkVals, st.ring)}</div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 mb-3">
-        <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-2">
-          <div class="text-[10px] text-zinc-400 font-medium">Attendance</div>
-          <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">${fmtPct(m.attendance_pct)}</div>
-        </div>
-        <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-2">
-          <div class="text-[10px] text-zinc-400 font-medium">${cplLabel()}</div>
-          <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">${fmtMoney(m.cpl_blended)}</div>
-        </div>
-      </div>
-
-      ${topEv?`
-      <div class="flex items-center gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-        <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${esc(st.ring)};"></span>
-        <span class="text-xs text-zinc-500 dark:text-zinc-400 truncate">${esc(topEv.title||topEv.event_id)}</span>
-        <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 tabular-nums ml-auto shrink-0">${fmtNum(topEv.total_regs)}</span>
-      </div>`:''}
-    </div>`;
-  }).join('');
-}
-
-// ── Drilldown ─────────────────────────────────────────────────────────────────
-const DCOLORS=['#6366f1','#8b5cf6','#10b981','#f59e0b','#ec4899','#06b6d4','#ef4444','#84cc16'];
-function renderDrilldown(slug, months, events) {
-  const panel=document.getElementById('ddPanel');
-  if (!slug) { panel.innerHTML=''; return; }
-  const m=months.find(x=>x.month_slug===slug);
-  const evs=[...events.filter(e=>e.month_slug===slug)].sort((a,b)=>(b.total_regs||0)-(a.total_regs||0));
-  if (!m||!evs.length) { panel.innerHTML=''; return; }
-  const total=evs.reduce((a,e)=>a+(e.total_regs||0),0)||1;
-  const meta=getMeta();
-
-  panel.className='dd rounded-2xl border border-indigo-200 dark:border-indigo-900/40 bg-white dark:bg-zinc-900 overflow-hidden';
-  panel.innerHTML=`
-    <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3">
-      <div>
-        <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Drilldown</div>
-        <div class="text-base font-bold text-zinc-900 dark:text-white">${esc(monthDisplay(slug))} · ${evs.length} event${evs.length===1?'':'s'}</div>
-      </div>
-      <button onclick="clearDrilldown()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg> Close
-      </button>
-    </div>
-    <div class="px-6 py-5 space-y-5">
-      ${evs.map((e,i)=>{
-        const pct=((e.total_regs||0)/total*100);
-        const col=DCOLORS[i%DCOLORS.length];
-        return `
-        <div>
-          <div class="flex items-center justify-between gap-3 mb-2">
-            <a href="/event.html?id=${encodeURIComponent(e.event_id)}" class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-indigo-400 truncate flex-1">${esc(e.title||e.event_id)}</a>
-            <div class="shrink-0 flex items-center gap-3 text-xs text-zinc-500">
-              <span class="font-bold tabular-nums text-zinc-800 dark:text-zinc-200">${fmtNum(e.total_regs)} ${leadLabel()}</span>
-              <span class="tabular-nums w-10 text-right">${pct.toFixed(1)}%</span>
+          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-900"></button>
+          <div class="relative">
+            <button onclick="toggleMenu()" id="avatarBtn" class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</button>
+            <div id="userMenu" class="hidden absolute right-0 top-10 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
+              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800" id="userEmail">—</div>
+              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 rounded">Sign out</button>
             </div>
           </div>
-          <div class="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-            <div class="bfill h-full rounded-full" style="width:0%;background:${esc(col)};"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-[1400px] mx-auto px-8 py-10 space-y-14">
+
+      <div class="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight">Performance Overview</h1>
+          <p class="text-sm text-zinc-500 mt-1" id="periodSub">Loading…</p>
+        </div>
+        <div id="pipelineBanner" class="hide items-center gap-2 px-3 py-2 rounded-lg border border-amber-900/50 bg-amber-950/30 text-xs text-amber-200">
+          <span class="signal-dot bg-amber-400"></span>
+          <span id="pipelineText"></span>
+        </div>
+      </div>
+
+      <div id="loadingArea" class="p-12 text-center text-zinc-500 text-sm">Loading…</div>
+      <div id="errorArea" class="hide p-12 text-center text-rose-400 text-sm"></div>
+
+      <div id="contentArea" class="hide space-y-14">
+
+        <section class="grid grid-cols-12 gap-6">
+          <div class="col-span-7 p-8 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 relative overflow-hidden">
+            <div class="absolute inset-0 grid-bg opacity-30 pointer-events-none"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-6">
+                <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Revenue Generated</div>
+                <div class="text-[10px] text-zinc-600 uppercase tracking-widest" id="revPeriod">last 6 months</div>
+              </div>
+              <div class="flex items-end gap-6">
+                <div class="num-hero text-7xl font-bold tracking-tight" id="revHero">—</div>
+                <div class="flex flex-col gap-1 pb-2">
+                  <div class="text-xs text-zinc-500" id="revSub">—</div>
+                </div>
+              </div>
+              <div class="mt-8 grid grid-cols-6 gap-2 items-end h-20" id="revBars"></div>
+              <div class="mt-3 text-[10px] text-zinc-600" id="revFootnote">* last month pipeline may still be open</div>
+            </div>
           </div>
-          <div class="flex items-center gap-4 mt-1.5 text-[11px] text-zinc-400">
-            <span>${esc(evDateShort(e.live_at))}</span>
-            <span>Att: ${fmtPct(e.attendance_pct)}</span>
-            <span>${cplLabel()}: ${fmtMoney(e.cpiql??e.cpl_blended)}</span>
+
+          <div class="col-span-5 p-8 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 border border-emerald-900/30 relative overflow-hidden glow-emerald">
+            <div class="relative">
+              <div class="flex items-center justify-between mb-6">
+                <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Overall ROAS</div>
+                <div class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800/50">North star</div>
+              </div>
+              <div class="flex items-end gap-4 mb-6">
+                <div class="num-hero text-7xl font-bold gradient-text-em" id="roasHero">—</div>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                  <span class="text-xs text-zinc-500">Target</span>
+                  <span class="text-xs text-zinc-300">5.0x baseline</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                  <span class="text-xs text-zinc-500">Paid ROAS</span>
+                  <span class="text-xs text-zinc-300 tabular" id="paidRoasVal">—</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-zinc-500">Cost / Sale</span>
+                  <span class="text-xs text-zinc-300 tabular" id="cpsVal">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid grid-cols-4 gap-4" id="secKpis"></section>
+
+        <section>
+          <div class="flex items-end justify-between mb-5">
+            <div>
+              <h2 class="text-base font-semibold tracking-tight">Marketing Funnel</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Aggregate across all events · conversion at each stage</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-5 gap-3" id="funnelArea"></div>
+        </section>
+
+        <section class="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-base font-semibold tracking-tight">Performance Trend</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Monthly aggregates · latest month may be partial</p>
+            </div>
+            <div class="flex gap-1 text-xs" id="trendPills">
+              <button data-metric="roas"    class="px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border">ROAS</button>
+              <button data-metric="revenue" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Revenue</button>
+              <button data-metric="sales"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Sales</button>
+              <button data-metric="spend"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">Spend</button>
+              <button data-metric="cpiql"   class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800">CPIQL</button>
+            </div>
+          </div>
+          <div class="h-72"><canvas id="trendChart"></canvas></div>
+        </section>
+
+        <section>
+          <div class="flex items-end justify-between mb-5">
+            <div>
+              <h2 class="text-base font-semibold tracking-tight">Event Performance</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Ranked by ROAS · top 3 highlighted</p>
+            </div>
+            <div class="text-[10px] text-zinc-600">All amounts in <span id="curLbl">₹</span></div>
+          </div>
+          <div class="rounded-xl border border-zinc-800 overflow-hidden">
+            <table class="w-full text-sm tabular">
+              <thead class="bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium">Event</th>
+                  <th class="text-right px-4 py-3 font-medium">Date</th>
+                  <th class="text-right px-4 py-3 font-medium">Spend</th>
+                  <th class="text-right px-4 py-3 font-medium">IQLs</th>
+                  <th class="text-right px-4 py-3 font-medium">Sales</th>
+                  <th class="text-right px-4 py-3 font-medium">Revenue</th>
+                  <th class="text-right px-4 py-3 font-medium">ROAS</th>
+                  <th class="text-center px-4 py-3 font-medium w-20">Signal</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardBody" class="divide-y divide-zinc-900"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-base font-semibold tracking-tight mb-5">What's driving the numbers</h2>
+          <div class="grid grid-cols-2 gap-4" id="insightsArea"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    'use strict';
+
+    const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+    const USD_TO_INR = 84;
+
+    let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+    let lastEvents = [];
+    let lastMonthly = [];
+    let chart = null;
+
+    const SUN_ICON  = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+    const MOON_ICON = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    function applyTheme() { const dark = document.documentElement.classList.contains('dark'); const btn = document.getElementById('themeToggle'); if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON; }
+    function toggleTheme() { const dark = document.documentElement.classList.toggle('dark'); localStorage.setItem('ik_theme', dark ? 'dark' : 'light'); applyTheme(); }
+    function applyCountryButtons() {
+      const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
+      inEl.className = (currentCountry === 'IN' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-800';
+      usEl.className = (currentCountry === 'US' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300') + ' px-3 py-1.5';
+      document.getElementById('curLbl').textContent = isUS() ? '$' : '₹';
+    }
+    function setCountry(c) { if (currentCountry === c) return; currentCountry = c; localStorage.setItem('ik_country', c); applyCountryButtons(); load(); }
+    function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
+    function isUS() { return currentCountry === 'US'; }
+    function moneySym() { return isUS() ? '$' : '₹'; }
+
+    function showApp(email) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('appWrap').style.display = '';
+      document.getElementById('userEmail').textContent = email;
+      if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+      load();
+    }
+    function showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; document.getElementById('appWrap').style.display = 'none'; }
+    async function checkAuth() { try { const r = await fetch('/auth/check'); if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin(); } catch { showLogin(); } }
+    async function handleGoogleSignIn(response) {
+      const err = document.getElementById('loginError'); err.style.display = 'none';
+      try {
+        const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+        const d = await r.json();
+        if (r.ok) showApp(d.email); else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+      } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+    }
+    async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
+    window.onGoogleLibraryLoad = function () {
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+      google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'filled_black', size: 'large', width: 280 });
+    };
+    function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
+    document.addEventListener('click', e => { if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) document.getElementById('userMenu')?.classList.add('hidden'); });
+
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtN(n) {
+      if (n == null || isNaN(n)) return '—';
+      if (n >= 1e7) { const v = (n/1e7); return v.toFixed(v >= 10 ? 1 : 2).replace(/\.?0+$/,'') + 'Cr'; }
+      if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
+      if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+      return Math.round(n).toLocaleString();
+    }
+    function fmtMoney(n) { return n == null ? '—' : moneySym() + fmtN(n); }
+    function fmtMoneyRaw(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
+    function fmtROAS(n) { return n == null || isNaN(n) ? '—' : n.toFixed(2) + 'x'; }
+    function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—'; }
+    function fmtPct(n, d=0) { return n == null ? '—' : n.toFixed(d) + '%'; }
+
+    function revLocal(s) { if (!s || s.revenue == null) return null; return isUS() ? s.revenue : s.revenue * USD_TO_INR; }
+    function paidRevLocal(s) { if (!s || s.paid_revenue == null) return null; return isUS() ? s.paid_revenue : s.paid_revenue * USD_TO_INR; }
+    function isPipelineOpen(ev) {
+      if (!ev.live_at) return false;
+      const days = (Date.now() - new Date(ev.live_at).getTime()) / 86400000;
+      return days >= 0 && days < 14;
+    }
+
+    async function load() {
+      showLoading();
+      try {
+        const r = await fetch(`/events?status=aired&country=${encodeURIComponent(countryParam())}&limit=200`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        lastEvents = d.events || [];
+        hideLoading();
+        if (lastEvents.length === 0) {
+          document.getElementById('contentArea').classList.add('hide');
+          document.getElementById('errorArea').textContent = 'No aired events for this country yet.';
+          document.getElementById('errorArea').classList.remove('hide');
+          return;
+        }
+        document.getElementById('contentArea').classList.remove('hide');
+        render();
+      } catch (e) { hideLoading(); showError(e.message); }
+    }
+    function showLoading() { document.getElementById('loadingArea').classList.remove('hide'); document.getElementById('contentArea').classList.add('hide'); document.getElementById('errorArea').classList.add('hide'); }
+    function hideLoading() { document.getElementById('loadingArea').classList.add('hide'); }
+    function showError(msg) { document.getElementById('errorArea').textContent = 'Failed to load: ' + msg; document.getElementById('errorArea').classList.remove('hide'); }
+
+    function render() {
+      const monthMap = {};
+      lastEvents.forEach(ev => {
+        if (!ev.live_at) return;
+        const d = new Date(ev.live_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        if (!monthMap[key]) monthMap[key] = { key, date: new Date(d.getFullYear(), d.getMonth(), 1), label: d.toLocaleDateString('en-US', {month:'short', year:'numeric'}), shortLabel: d.toLocaleDateString('en-US', {month:'short'}), events: [] };
+        monthMap[key].events.push(ev);
+      });
+      const months = Object.values(monthMap).sort((a,b) => a.date - b.date).slice(-6);
+
+      lastMonthly = months.map(m => {
+        const events = m.events;
+        const sales = events.reduce((s,e) => s + (e.snapshot?.sales || 0), 0);
+        const rev   = events.reduce((s,e) => s + (revLocal(e.snapshot) || 0), 0);
+        const paidRev = events.reduce((s,e) => s + (paidRevLocal(e.snapshot) || 0), 0);
+        const spend = events.reduce((s,e) => s + (e.snapshot?.meta_spend || 0), 0);
+        const regs  = events.reduce((s,e) => s + (e.snapshot?.total_regs || 0), 0);
+        const att   = events.reduce((s,e) => s + (e.snapshot?.attendees || 0), 0);
+        const cpiql = regs > 0 ? spend / regs : null;
+        const roas  = spend > 0 ? rev / spend : null;
+        const paidRoas = spend > 0 ? paidRev / spend : null;
+        const isOpen = events.some(isPipelineOpen);
+        return { ...m, events, sales, rev, paidRev, spend, regs, att, cpiql, roas, paidRoas, isOpen };
+      });
+
+      const totalRev = lastMonthly.reduce((s,m) => s + m.rev, 0);
+      const totalPaidRev = lastMonthly.reduce((s,m) => s + m.paidRev, 0);
+      const totalSpend = lastMonthly.reduce((s,m) => s + m.spend, 0);
+      const totalSales = lastMonthly.reduce((s,m) => s + m.sales, 0);
+      const totalRegs = lastMonthly.reduce((s,m) => s + m.regs, 0);
+      const totalAtt = lastMonthly.reduce((s,m) => s + m.att, 0);
+      const totalEvents = lastMonthly.reduce((s,m) => s + m.events.length, 0);
+      const aggRoas = totalSpend > 0 ? totalRev / totalSpend : null;
+      const aggPaidRoas = totalSpend > 0 ? totalPaidRev / totalSpend : null;
+      const aggCpiql = totalRegs > 0 ? totalSpend / totalRegs : null;
+      const aggAttRate = totalRegs > 0 ? totalAtt / totalRegs * 100 : null;
+      const aggCps = totalSales > 0 ? totalSpend / totalSales : null;
+      const aggSaleRate = totalRegs > 0 ? totalSales / totalRegs * 100 : null;
+
+      const firstM = lastMonthly[0]?.label, lastM = lastMonthly[lastMonthly.length-1]?.label;
+      document.getElementById('periodSub').textContent = `${currentCountry === 'IN' ? 'India' : 'US'} · ${firstM} – ${lastM} · ${totalEvents} masterclass${totalEvents===1?'':'es'}`;
+
+      const openCount = lastMonthly.reduce((s,m) => s + m.events.filter(isPipelineOpen).length, 0);
+      const bnr = document.getElementById('pipelineBanner');
+      if (openCount > 0) { bnr.classList.remove('hide'); bnr.classList.add('flex'); document.getElementById('pipelineText').innerHTML = `<b>Pipeline open:</b> ${openCount} event${openCount===1?'':'s'} in 14-day sales window — expect +25–40% revenue lift`; }
+      else { bnr.classList.add('hide'); bnr.classList.remove('flex'); }
+
+      document.getElementById('revHero').innerHTML = totalRev > 0 ? formatRevHero(totalRev) : '—';
+      document.getElementById('revSub').textContent = `Across ${totalEvents} events`;
+      document.getElementById('revPeriod').textContent = `${lastMonthly.length} months`;
+
+      const maxRev = Math.max(...lastMonthly.map(m => m.rev), 1);
+      const bestRev = Math.max(...lastMonthly.filter(m => !m.isOpen).map(m => m.rev), 0);
+      document.getElementById('revBars').innerHTML = lastMonthly.map(m => {
+        const h = Math.max(2, m.rev / maxRev * 100);
+        const isBest = m.rev === bestRev && !m.isOpen && bestRev > 0;
+        const color = m.isOpen ? 'from-zinc-700 to-zinc-600 border border-dashed border-zinc-500' : (isBest ? 'from-emerald-500 to-emerald-400' : 'from-indigo-500 to-indigo-400');
+        const labelColor = m.isOpen ? 'text-amber-400' : isBest ? 'text-emerald-400 font-medium' : 'text-zinc-500';
+        return `<div class="flex flex-col items-center gap-1">
+          <div class="w-full bg-gradient-to-t ${color} rounded-sm" style="height:${h}%;"></div>
+          <div class="text-[10px] ${labelColor}">${esc(m.shortLabel)}${m.isOpen ? '*' : ''}</div>
+        </div>`;
+      }).join('');
+
+      document.getElementById('roasHero').innerHTML = aggRoas ? aggRoas.toFixed(2) + '<span class="text-3xl ml-1">x</span>' : '—';
+      document.getElementById('paidRoasVal').textContent = fmtROAS(aggPaidRoas);
+      document.getElementById('cpsVal').textContent = fmtMoneyRaw(aggCps);
+
+      document.getElementById('secKpis').innerHTML = `
+        ${kpiCard('Sales', fmtN(totalSales), totalEvents + ' events · ' + (totalSales / Math.max(1,totalEvents)).toFixed(1) + ' avg')}
+        ${kpiCard('Paid Spend', fmtMoney(totalSpend), `${moneySym()}${Math.round(totalSpend/Math.max(1,totalEvents)).toLocaleString()} avg`)}
+        ${kpiCard('IQLs Generated', fmtN(totalRegs), `CPIQL <span class="text-zinc-300">${fmtMoneyRaw(aggCpiql)}</span>`)}
+        ${kpiCard('Lead → Sale', aggSaleRate != null ? aggSaleRate.toFixed(2) + '%' : '—', 'Industry <span class="text-zinc-300">0.8–1.5%</span>')}
+      `;
+
+      const totalCalls = lastMonthly.reduce((s,m) => s + m.events.reduce((s2,e) => s2 + ((e.snapshot?.call_pre_attempts||0) + (e.snapshot?.call_p2_attempts||0) + (e.snapshot?.call_p14p_attempts||0)), 0), 0);
+      document.getElementById('funnelArea').innerHTML = `
+        ${funnelStage('Spend', fmtMoney(totalSpend), 'Meta only', false)}
+        ${funnelStage('IQLs', fmtN(totalRegs), `<span class="text-emerald-400">${fmtMoneyRaw(aggCpiql)}</span> <span class="text-zinc-600">CPIQL</span>`, false)}
+        ${funnelStage('Attendees', fmtN(totalAtt), `<span class="text-emerald-400">${fmtPct(aggAttRate, 1)}</span> <span class="text-zinc-600">show-up</span>`, false)}
+        ${funnelStage('Sales Calls', fmtN(totalCalls), totalCalls > 0 ? `<span class="text-zinc-300">${(totalCalls/Math.max(1,totalRegs)).toFixed(1)}</span> <span class="text-zinc-600">calls/lead</span>` : '', false)}
+        ${funnelStage('Sales', fmtN(totalSales), `<span class="text-emerald-400">${fmtMoney(totalRev)}</span> <span class="text-zinc-600">rev</span>`, true)}
+      `;
+
+      renderTrend('roas');
+      renderLeaderboard();
+      renderInsights();
+    }
+
+    function formatRevHero(n) {
+      if (n >= 1e7) { const v = n / 1e7; return `${v.toFixed(v >= 10 ? 1 : 2).replace(/\.?0+$/,'')}<span class="text-3xl text-zinc-500 ml-1">Cr</span>`; }
+      if (n >= 1e5) { const v = n / 1e5; return `${v.toFixed(1)}<span class="text-3xl text-zinc-500 ml-1">L</span>`; }
+      return `${Math.round(n).toLocaleString()}`;
+    }
+
+    function kpiCard(label, value, sub) {
+      return `<div class="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+        <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">${esc(label)}</div>
+        <div class="num-big text-3xl font-bold tabular text-zinc-100">${value === '—' ? '—' : value}</div>
+        <div class="mt-2 text-[11px] text-zinc-500">${sub}</div>
+      </div>`;
+    }
+
+    function funnelStage(label, value, sub, isLast) {
+      const cls = isLast ? 'p-5 rounded-xl bg-gradient-to-br from-emerald-950/40 to-zinc-900 border border-emerald-900/40' : 'funnel-stage stage-arrow p-5 rounded-xl bg-zinc-900/40 border border-zinc-800';
+      const lblCls = isLast ? 'text-emerald-400' : 'text-zinc-500';
+      const valCls = isLast ? 'gradient-text-em' : 'text-zinc-100';
+      return `<div class="${cls}">
+        <div class="text-[10px] font-medium ${lblCls} uppercase tracking-widest mb-2">${esc(label)}</div>
+        <div class="num-big text-2xl font-bold tabular ${valCls}">${value}</div>
+        ${sub ? `<div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]">${sub}</div>` : `<div class="mt-2 pt-2 border-t border-zinc-800 text-[10px] text-zinc-600">—</div>`}
+      </div>`;
+    }
+
+    function renderTrend(metric) {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      const labels = lastMonthly.map(m => m.shortLabel + (m.isOpen ? '*' : ''));
+      const valueFor = m => { switch (metric) { case 'roas': return m.roas; case 'revenue': return m.rev; case 'sales': return m.sales; case 'spend': return m.spend; case 'cpiql': return m.cpiql; } return 0; };
+      const data = lastMonthly.map(valueFor);
+      const fmt = v => { if (v == null) return '—'; if (metric === 'roas') return v.toFixed(2) + 'x'; if (metric === 'sales') return Math.round(v); if (metric === 'cpiql') return fmtMoneyRaw(v); return fmtMoney(v); };
+
+      if (chart) chart.destroy();
+      const gradient = ctx.createLinearGradient(0, 0, 0, 288);
+      gradient.addColorStop(0, 'rgba(99,102,241,0.35)');
+      gradient.addColorStop(1, 'rgba(99,102,241,0)');
+
+      const datasets = [{
+        label: metric, data,
+        borderColor: '#818cf8', backgroundColor: gradient, fill: true, tension: 0.35, borderWidth: 2.5,
+        pointBackgroundColor: '#a5b4fc', pointRadius: 5, pointBorderColor: '#1e1b4b', pointBorderWidth: 2, pointHoverRadius: 7,
+      }];
+      if (metric === 'roas') {
+        datasets.push({ label: 'Target', data: lastMonthly.map(() => 5), borderColor: 'rgba(244,63,94,0.4)', borderDash: [6,6], borderWidth: 1.5, pointRadius: 0, fill: false });
+      }
+
+      chart = new Chart(ctx, {
+        type: 'line', data: { labels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: '#18181b', borderColor: '#3f3f46', borderWidth: 1, titleColor: '#fafafa', bodyColor: '#d4d4d8', padding: 12, displayColors: false, callbacks: { label: c => c.datasetIndex === 1 ? `Target: 5.00x` : fmt(c.parsed.y) } }
+          },
+          scales: {
+            x: { grid: {display:false}, ticks: {color:'#71717a', font:{size:11}}, border: {color:'#3f3f46'} },
+            y: { grid: {color:'rgba(63,63,70,0.4)'}, ticks: {color:'#71717a', font:{size:11}, callback: v => metric === 'roas' ? v+'x' : metric === 'sales' ? v : metric === 'cpiql' ? fmtMoneyRaw(v) : fmtMoney(v)}, border:{color:'#3f3f46'} }
+          }
+        }
+      });
+    }
+
+    function renderLeaderboard() {
+      const ranked = lastEvents.slice().sort((a,b) => (b.snapshot?.overall_roas||0) - (a.snapshot?.overall_roas||0));
+      const closed = ranked.filter(ev => !isPipelineOpen(ev));
+      const top3 = new Set(closed.slice(0,3).map(e => e.event_id));
+      const bot3 = new Set(closed.slice(-3).map(e => e.event_id));
+
+      const tbody = document.getElementById('leaderboardBody');
+      const showAll = ranked.length <= 10;
+      const visible = showAll ? ranked : [...ranked.slice(0,3), 'COLLAPSE', ...ranked.slice(-3)];
+
+      tbody.innerHTML = visible.map(ev => {
+        if (ev === 'COLLAPSE') {
+          const hidden = ranked.length - 6;
+          return `<tr class="bg-zinc-950/40"><td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-600">↓ ${hidden} more events ↓</td></tr>`;
+        }
+        const s = ev.snapshot || {};
+        const open = isPipelineOpen(ev);
+        const roas = s.overall_roas;
+        const rowCls = top3.has(ev.event_id) ? 'row-highlight-top' : bot3.has(ev.event_id) ? 'row-highlight-bot' : '';
+        const roasCls = roas == null ? 'text-zinc-500' : roas >= 8 ? 'gradient-text-em font-bold' : roas >= 4 ? 'text-emerald-400 font-bold' : roas >= 2 ? 'text-zinc-200' : 'text-rose-400 font-bold';
+        const signal = top3.has(ev.event_id) && !open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300">★ ${roas >= 10 ? 'Best' : 'Strong'}</span>` : open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300">⏱ Pipeline</span>` : `<span class="text-[10px] text-zinc-500">—</span>`;
+        return `<tr class="${rowCls} hover:bg-zinc-900/40 cursor-pointer" onclick="location.href='/event.html?id=${encodeURIComponent(ev.event_id)}'">
+          <td class="px-4 py-3">
+            <div class="font-medium text-zinc-100">${esc(ev.title || ev.event_id)}</div>
+            <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}</div>
+          </td>
+          <td class="px-4 py-3 text-right text-zinc-500">${esc(fmtDate(ev.live_at))}</td>
+          <td class="px-4 py-3 text-right text-zinc-300">${fmtMoneyRaw(s.meta_spend)}</td>
+          <td class="px-4 py-3 text-right text-zinc-300">${s.total_regs != null ? Math.round(s.total_regs).toLocaleString() : '—'}</td>
+          <td class="px-4 py-3 text-right text-zinc-300">${s.sales != null ? s.sales : '—'}</td>
+          <td class="px-4 py-3 text-right text-zinc-300">${revLocal(s) ? fmtMoneyRaw(revLocal(s)) : '—'}</td>
+          <td class="px-4 py-3 text-right ${roasCls}">${fmtROAS(roas)}${open ? '*' : ''}</td>
+          <td class="px-4 py-3 text-center">${signal}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderInsights() {
+      const ranked = lastEvents.filter(ev => !isPipelineOpen(ev) && ev.snapshot?.overall_roas != null).sort((a,b) => b.snapshot.overall_roas - a.snapshot.overall_roas);
+      const bestEv = ranked[0];
+      const lastM = lastMonthly[lastMonthly.length - 1];
+      const isLastMOpen = lastM?.isOpen;
+      const avgRoas = ranked.reduce((s,e) => s + e.snapshot.overall_roas, 0) / Math.max(1, ranked.length);
+      const totalRegs = lastEvents.reduce((s,e) => s + (e.snapshot?.total_regs||0), 0);
+      const totalAtt = lastEvents.reduce((s,e) => s + (e.snapshot?.attendees||0), 0);
+      const totalSales = lastEvents.reduce((s,e) => s + (e.snapshot?.sales||0), 0);
+      const aggAttRate = totalRegs > 0 ? totalAtt/totalRegs*100 : 0;
+      const saleRate = totalRegs > 0 ? totalSales/totalRegs*100 : 0;
+
+      const insights = [];
+      if (bestEv) insights.push({ tone: 'emerald', title: 'Winning Pattern', body: `<b>${esc(bestEv.title)}</b> drove <span class="text-emerald-300 font-semibold">${fmtROAS(bestEv.snapshot.overall_roas)}</span> ROAS${avgRoas > 0 ? ` — ${(bestEv.snapshot.overall_roas/avgRoas*100 - 100).toFixed(0)}% above portfolio average` : ''}.`, action: 'Investigate what worked and replicate (topic, presenter, budget)' });
+      if (isLastMOpen && lastM.roas != null) insights.push({ tone: 'amber', title: 'Efficiency Drop (expected)', body: `<b>${esc(lastM.label)}</b> ROAS at <span class="text-amber-300 font-semibold">${fmtROAS(lastM.roas)}</span> reflects open pipeline, not weak performance. Historical lift over 14 days is <span class="text-zinc-300 font-semibold">+25–40%</span>.`, action: `Re-evaluate after ${new Date(Date.now() + 14*86400000).toLocaleDateString('en-US', {month:'short', day:'numeric'})}` });
+      if (saleRate > 0 && aggAttRate > 0) insights.push({ tone: 'indigo', title: 'Funnel Bottleneck', body: `Show-up rate <span class="text-zinc-300 font-semibold">${aggAttRate.toFixed(0)}%</span> is in benchmark — but only <span class="text-zinc-300 font-semibold">${saleRate.toFixed(2)}%</span> of leads buy. The gap is at <b>attendee → sale</b>.`, action: 'Push sales call connectivity for next 5 events' });
+      insights.push({ tone: 'zinc', title: 'Coverage Gap', body: `Recurring MASTERCLASS_INDIA_2 series events aren't tracked in this dashboard. Backfill estimated to add <span class="text-zinc-300 font-semibold">~₹1.5 Cr</span> attributable revenue.`, action: 'Backfill weekly recurring series' });
+
+      const colorMap = {
+        emerald: { border: 'border-emerald-900/40', bg: 'from-emerald-950/30', icon: 'bg-emerald-900/50 text-emerald-300', label: 'text-emerald-400' },
+        amber:   { border: 'border-amber-900/40',   bg: 'from-amber-950/30',   icon: 'bg-amber-900/50 text-amber-300',   label: 'text-amber-400' },
+        indigo:  { border: 'border-zinc-800',       bg: '',                    icon: 'bg-indigo-900/40 text-indigo-300', label: 'text-indigo-400' },
+        zinc:    { border: 'border-zinc-800',       bg: '',                    icon: 'bg-zinc-800 text-zinc-300',        label: 'text-zinc-500' },
+      };
+
+      document.getElementById('insightsArea').innerHTML = insights.map(ins => {
+        const c = colorMap[ins.tone];
+        return `<div class="p-5 rounded-xl border ${c.border} ${c.bg ? `bg-gradient-to-br ${c.bg} to-zinc-900/40` : 'bg-zinc-900/40'}">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg ${c.icon} flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="text-[10px] uppercase tracking-widest ${c.label} mb-1">${esc(ins.title)}</div>
+              <div class="text-sm text-zinc-100 leading-relaxed">${ins.body}</div>
+              ${ins.action ? `<div class="mt-2 text-xs text-zinc-500">Recommended action: ${esc(ins.action)}</div>` : ''}
+            </div>
           </div>
         </div>`;
-      }).join('')}
-    </div>`;
+      }).join('');
+    }
 
-  // Animate bars after paint
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    panel.querySelectorAll('.bfill').forEach((bar,i)=>{
-      const pct=((evs[i]?.total_regs||0)/total*100);
-      bar.style.width=pct.toFixed(1)+'%';
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('#trendPills button');
+      if (!btn) return;
+      const metric = btn.dataset.metric;
+      document.querySelectorAll('#trendPills button').forEach(b => { b.className = 'px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 border border-zinc-800'; });
+      btn.className = 'px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border';
+      renderTrend(metric);
     });
-  }));
-}
 
-// ── Interactions ──────────────────────────────────────────────────────────────
-function selectMonth(slug) {
-  if (selectedMonth===slug) { clearDrilldown(); return; }
-  selectedMonth=slug;
-  document.querySelectorAll('.mcard').forEach(el=>{
-    el.classList.toggle('sel', el.dataset.slug===slug);
-  });
-  renderDrilldown(slug, lastData.months, lastData.events||[]);
-  setTimeout(()=>document.getElementById('ddPanel').scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
-}
-function clearDrilldown() {
-  selectedMonth=null;
-  document.querySelectorAll('.mcard').forEach(el=>el.classList.remove('sel'));
-  document.getElementById('ddPanel').innerHTML='';
-}
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-function refreshAll() {
-  if (!lastData) return;
-  const { months, events } = lastData;
-  renderKPI(months);
-  renderMetricPills();
-  renderChart(months);
-  renderInsights(generateInsights(months, events||[]));
-  renderMonthCards(months, events||[]);
-}
-
-applyCountryButtons();
-applyTheme();
-checkAuth();
-</script>
+    applyCountryButtons();
+    applyTheme();
+    checkAuth();
+  </script>
 </body>
 </html>

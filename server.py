@@ -307,7 +307,8 @@ SELECT
   s.call_p2_attempts,  s.call_p2_connects,  s.call_p2_talk_mins,  s.call_p2_covered,
   s.call_p7_attempts,  s.call_p7_connects,  s.call_p7_talk_mins,  s.call_p7_covered,
   s.call_p14_attempts, s.call_p14_connects, s.call_p14_talk_mins, s.call_p14_covered,
-  s.call_p14p_attempts,s.call_p14p_connects,s.call_p14p_talk_mins,s.call_p14p_covered
+  s.call_p14p_attempts,s.call_p14p_connects,s.call_p14p_talk_mins,s.call_p14p_covered,
+  s.sales, s.revenue, s.paid_revenue, s.overall_roas, s.paid_roas
 FROM `{BQ_APP_PROJECT}.events.event` e
 LEFT JOIN latest_snap s USING (event_id)
 WHERE {' AND '.join(where)}
@@ -335,7 +336,8 @@ LIMIT {limit}"""
                      'call_p2_attempts',  'call_p2_connects',  'call_p2_talk_mins',  'call_p2_covered',
                      'call_p7_attempts',  'call_p7_connects',  'call_p7_talk_mins',  'call_p7_covered',
                      'call_p14_attempts', 'call_p14_connects', 'call_p14_talk_mins', 'call_p14_covered',
-                     'call_p14p_attempts','call_p14p_connects','call_p14p_talk_mins','call_p14p_covered')
+                     'call_p14p_attempts','call_p14p_connects','call_p14p_talk_mins','call_p14p_covered',
+                     'sales', 'revenue', 'paid_revenue', 'overall_roas', 'paid_roas')
         for r in rows:
             d = _row_to_dict(r)
             ev = {k: v for k, v in d.items() if k not in snap_keys}
@@ -961,9 +963,14 @@ ORDER BY l.registration_date, l.channel"""
                         label=f'emails/{ev.event_id}',
                         default={'email_sent': None, 'email_delivered': None, 'email_opened': None, 'email_clicked': None})
 
+    # ─── 6. Sales & Revenue ───────────────────────────────────────────────────
+    sales_data = _safe_query(_query_sales_india, src_client, date_literal, wt_param,
+                             label=f'sales/{ev.event_id}',
+                             default={'sales': None, 'revenue': None, 'paid_revenue': None})
+
     snap_row = _cumulative_snapshot_row(ev.event_id, daily, ev.live_at, now, now_iso,
                                         cohort=cohort, attendance=attendance,
-                                        call_data=call_data, email=email)
+                                        call_data=call_data, email=email, sales_data=sales_data)
     return daily_rows, snap_row
 
 def _safe_query(fn, *args, label, default, **kw):
@@ -1212,6 +1219,41 @@ FROM per_lead"""
         'calls_connected':  pre_conn,
         'avg_talk_seconds': avg_talk_sec,
         'extras':           extras,
+    }
+
+def _query_sales_india(src_client, date_literal, wt_param):
+    """Returns sales count, total revenue, paid (Meta/Facebook) revenue for India events."""
+    from google.cloud import bigquery
+    q = f"""
+SELECT
+  COUNTIF(Sale_date IS NOT NULL)                                         AS sales,
+  SUM(CASE WHEN Sale_date IS NOT NULL THEN net_revenue END)              AS revenue,
+  SUM(CASE WHEN Sale_date IS NOT NULL AND Channel = 'Facebook'
+           THEN net_revenue END)                                         AS paid_revenue
+FROM (
+  SELECT Sale_date, net_revenue, Channel,
+    ROW_NUMBER() OVER (
+      PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")
+      ORDER BY formatted_date ASC
+    ) AS rnk,
+    DATE(event_start_date_time, "Asia/Kolkata") AS web_scheduled_date,
+    dupe_flag, webinar_type, dupe_logic, work_ex
+  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+  WHERE dupe_logic = 1
+)
+WHERE rnk = 1
+  AND web_scheduled_date IN ({date_literal})
+  AND webinar_type = @wt
+  AND dupe_flag = 0
+  AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')"""
+    r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    if not r:
+        return {'sales': 0, 'revenue': 0.0, 'paid_revenue': 0.0}
+    row = r[0]
+    return {
+        'sales':        int(row['sales'] or 0),
+        'revenue':      float(row['revenue'] or 0.0),
+        'paid_revenue': float(row['paid_revenue'] or 0.0),
     }
 
 def _query_emails_india(src_client, date_literal, wt_param):
@@ -1538,7 +1580,7 @@ FROM leads l LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id"""
 
 def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
                               cohort=None, attendance=None, call_data=None, email=None,
-                              extra=None):
+                              extra=None, sales_data=None):
     """Sum daily buckets to a single point-in-time snapshot row, merging in
     cohort + attendance + calls + email + extra (country-specific) metrics if available."""
     meta_regs   = sum(b['meta_regs']   for b in daily.values())
@@ -1576,10 +1618,19 @@ def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
         'us_l10x_email_regs': None, 'us_l10x_bot_regs': None,
         'us_ni_base_regs': None, 'us_other_regs': None,
         'extras': None,
+        'sales': None, 'revenue': None, 'paid_revenue': None,
+        'overall_roas': None, 'paid_roas': None,
     }
     for partial in (cohort, attendance, call_data, email, extra):
         if partial:
             row.update(partial)
+    if sales_data:
+        row.update(sales_data)
+        spend = row.get('meta_spend') or 0
+        rev   = sales_data.get('revenue') or 0
+        paid_rev = sales_data.get('paid_revenue') or 0
+        row['overall_roas'] = round(rev / spend, 2) if spend > 0 else None
+        row['paid_roas']    = round(paid_rev / spend, 2) if spend > 0 else None
     return row
 
 def run_daily_snapshot():

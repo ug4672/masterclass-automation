@@ -1,580 +1,904 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Masterclass Hub — Interview Kickstart</title>
-  <script>tailwind = { config: { darkMode: 'class' } };
-    // Apply theme before render to avoid a white flash on dark-mode load.
-    (function() {
-      const t = localStorage.getItem('ik_theme') || 'light';
-      if (t === 'dark') document.documentElement.classList.add('dark');
+  <script>
+    (function () {
+      const t = localStorage.getItem('ik_theme') || 'dark';
+      if (t !== 'dark') document.documentElement.classList.remove('dark');
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body class="min-h-screen">
-
-<!-- ─── Login overlay ─────────────────────────────────────────────────────── -->
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <div class="login-logo">IK</div>
-    <h2 class="login-title">Masterclass Hub</h2>
-    <p class="login-sub">Sign in with your IK Google account to continue</p>
-    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
-    <p id="loginError" class="login-error"></p>
-  </div>
-</div>
-
-<!-- ─── App ──────────────────────────────────────────────────────────────── -->
-<div id="appWrap" style="display:none;">
-
-  <!-- Global header (shared across pages — keep in sync with event.html / months.html). -->
-  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
-      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
-        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
-        <div class="hidden sm:block">
-          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
-          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
-        </div>
-      </a>
-
-      <nav class="flex items-center gap-1 text-sm">
-        <a href="/hub.html"    class="nav-link nav-link-active px-3 py-1.5 rounded-md font-medium whitespace-nowrap">Hub</a>
-        <a href="/months.html" class="nav-link px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
-        <a href="/compare.html" class="nav-link px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
-      </nav>
-
-      <div class="flex items-center gap-2 shrink-0">
-        <div class="flex items-center bg-zinc-100 rounded-lg p-0.5 gap-0.5" id="countrySwitcher">
-          <button onclick="setCountry('IN')" id="ctryIN" class="px-2.5 py-1 rounded-md text-xs font-semibold">IN</button>
-          <button onclick="setCountry('US')" id="ctryUS" class="px-2.5 py-1 rounded-md text-xs font-semibold">US</button>
-        </div>
-        <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
-        </button>
-        <a href="/Masterclass%20Automation.html" class="hidden sm:flex items-center gap-1.5 bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition no-underline">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New
-        </a>
-        <div class="relative">
-          <button onclick="toggleMenu()" class="ml-1 w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold" id="avatarBtn">UG</button>
-          <div id="userMenu" class="hidden absolute right-0 top-11 bg-white border border-zinc-200 rounded-lg shadow-lg p-1 w-56 z-50">
-            <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-100" id="userEmail">—</div>
-            <a href="/Masterclass%20Automation.html?settings=1" class="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Settings (legacy)</a>
-            <a href="/Masterclass%20Automation.html" class="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Old tabbed UI</a>
-            <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded">Sign out</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 fade-up">
-    <div class="flex items-end justify-between gap-4 flex-wrap">
-      <div>
-        <h1 id="pageHeading" class="text-xl font-semibold text-zinc-900 tracking-tight">Upcoming masterclasses</h1>
-        <p class="text-sm text-zinc-500 mt-1 inline-flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          <span>Live data · synced with daily snapshot</span>
-        </p>
-      </div>
-      <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1">
-        <button id="tabUpcoming" onclick="switchTab('upcoming')" class="px-3 py-1.5 rounded-md bg-white text-zinc-900 font-medium text-sm shadow-sm whitespace-nowrap">Upcoming</button>
-        <button id="tabAired" onclick="switchTab('aired')" class="px-3 py-1.5 rounded-md text-zinc-500 font-medium text-sm hover:text-zinc-900 whitespace-nowrap">Past</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
-    <div id="bentoArea" class="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:min-h-[440px]"></div>
-  </section>
-
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-12">
-    <div id="smallCardsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </section>
-
-  <footer class="border-t border-zinc-200/80 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between text-xs text-zinc-500">
-      <div>© 2026 Interview Kickstart · Internal use</div>
-      <div class="flex items-center gap-4"><a href="/Masterclass%20Automation.html" class="hover:text-zinc-900">Legacy UI</a></div>
-    </div>
-  </footer>
-</div>
-
-<script>
-'use strict';
-
-const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-const TOPIC_VAR = {
-  ai_agents: '--topic-ai', system_design: '--topic-system', behavioral: '--topic-behavioral',
-  data: '--topic-data', ml: '--topic-ml', distributed: '--topic-distributed',
-};
-const TOPIC_LABEL = {
-  ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
-  data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
-};
-
-let currentStatus  = 'upcoming';
-let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
-
-// ── Theme ───────────────────────────────────────────────────────────────────
-const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
-const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-function applyTheme() {
-  const dark = document.documentElement.classList.contains('dark');
-  const btn  = document.getElementById('themeToggle');
-  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
-}
-function toggleTheme() {
-  const dark = document.documentElement.classList.toggle('dark');
-  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
-  applyTheme();
-}
-
-function applyCountryButtons() {
-  const on  = 'bg-white text-zinc-900 shadow-sm';
-  const off = 'text-zinc-500 hover:text-zinc-900';
-  const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
-  if (!inEl) return;
-  const base = 'px-2.5 py-1 rounded-md text-xs font-semibold ';
-  inEl.className = base + (currentCountry === 'IN' ? on : off);
-  usEl.className = base + (currentCountry === 'US' ? on : off);
-}
-function setCountry(c) {
-  if (currentCountry === c) return;
-  currentCountry = c;
-  localStorage.setItem('ik_country', c);
-  applyCountryButtons();
-  load();
-}
-function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
-
-// ── Auth ────────────────────────────────────────────────────────────────────
-function showApp(email) {
-  document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('appWrap').style.display = '';
-  document.getElementById('userEmail').textContent = email;
-  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
-  load();
-}
-function showLogin() {
-  document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('appWrap').style.display = 'none';
-}
-async function checkAuth() {
-  try {
-    const r = await fetch('/auth/check');
-    if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
-  } catch { showLogin(); }
-}
-async function handleGoogleSignIn(response) {
-  const err = document.getElementById('loginError');
-  err.style.display = 'none';
-  try {
-    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
-    const d = await r.json();
-    if (r.ok) showApp(d.email);
-    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
-  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
-}
-async function signOut() {
-  await fetch('/auth/logout', { method: 'POST' });
-  showLogin();
-}
-window.onGoogleLibraryLoad = function () {
-  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
-  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
-};
-function toggleMenu() {
-  document.getElementById('userMenu').classList.toggle('hidden');
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
-    document.getElementById('userMenu')?.classList.add('hidden');
-  }
-});
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-function fmtDateTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone: 'Asia/Kolkata' }) + ' IST';
-}
-function fmtCountdown(iso) {
-  if (!iso) return '—';
-  const diffMs = new Date(iso) - new Date();
-  if (diffMs < 0) {
-    const hAgo = Math.round(-diffMs / 3600000);
-    return hAgo < 24 ? `Aired ${hAgo}h ago` : `Aired ${Math.round(hAgo/24)}d ago`;
-  }
-  const h = diffMs / 3600000;
-  if (h < 24) return `Live in ${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`;
-  return `In ${Math.floor(h/24)} days`;
-}
-function fmtNum(n) {
-  if (n == null) return '—';
-  if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-  return Math.round(n).toLocaleString();
-}
-function fmtMoney(n, sym) { return n == null ? '—' : (sym || '₹') + Math.round(n).toLocaleString(); }
-function isUSCountry(c) { const s = (c || '').toLowerCase(); return s === 'us' || s === 'usa'; }
-function moneySym(c) { return isUSCountry(c) ? '$' : '₹'; }
-function cplLabel(c)  { return isUSCountry(c) ? 'CPGQL' : 'CPIQL'; }
-function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
-function initials(name) {
-  if (!name) return 'IK';
-  return name.split(/\s+/).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase();
-}
-function topicVar(t)   { return TOPIC_VAR[t]   || '--topic-ai'; }
-function topicLabel(t) { return TOPIC_LABEL[t] || 'General'; }
-
-function goalPct(ev) {
-  const t = ev.snapshot?.total_regs, g = ev.goal_regs;
-  return (t != null && g > 0) ? Math.min(100, 100 * t / g) : null;
-}
-
-// Crude pacing: behind if regs/goal < 0.5 with <72h to live; else neutral.
-// (Refine in v2 with go_live_date for proper time-elapsed math.)
-function pacing(ev) {
-  const s = ev.snapshot || {};
-  if (s.total_regs == null || ev.goal_regs == null || !ev.goal_regs) return null;
-  const ratio = s.total_regs / ev.goal_regs;
-  const hrs   = s.hours_to_live;
-  if (hrs == null) return null;
-  if (hrs < 0) return null;
-  if (hrs < 72 && ratio < 0.5) return { label: '↘ behind', color: 'rose' };
-  if (ratio >= 0.8) return { label: '↗ on pace', color: 'emerald' };
-  return { label: '— neutral', color: 'zinc' };
-}
-
-// ── Data ────────────────────────────────────────────────────────────────────
-async function load() {
-  document.getElementById('bentoArea').innerHTML = '<div class="lg:col-span-3 lg:row-span-2 p-8 text-center text-zinc-400 text-sm">Loading…</div>';
-  try {
-    const r = await fetch(`/events?status=${currentStatus}&country=${encodeURIComponent(countryParam())}`);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    render(d.events || []);
-  } catch (e) {
-    document.getElementById('bentoArea').innerHTML = `<div class="lg:col-span-3 lg:row-span-2 p-8 text-center text-rose-600 text-sm">Failed to load: ${esc(e.message)}</div>`;
-    document.getElementById('smallCardsArea').innerHTML = '';
-  }
-}
-
-let lastEvents = [];
-let selectedIds = new Set();
-let sortKey = 'live_at', sortDir = 'desc';
-
-function render(events) {
-  lastEvents = events;
-  const bento = document.getElementById('bentoArea');
-  if (currentStatus === 'upcoming') {
-    // Restore bento grid layout when switching back from Past.
-    bento.className = 'grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:min-h-[440px]';
-    renderBento(events.slice(0, 3));
-    renderSmall(events.slice(3));
-  } else {
-    // Past view → sortable table with multi-select.
-    // Drop the bento grid classes so the table can take full width and natural height.
-    bento.className = '';
-    bento.innerHTML = '';
-    renderPastTable(events);
-  }
-}
-
-function renderBento(top3) {
-  const el = document.getElementById('bentoArea');
-  if (top3.length === 0) {
-    el.innerHTML = `<div class="lg:col-span-3 lg:row-span-2 p-12 text-center text-zinc-500 bg-white border border-dashed border-zinc-200 rounded-2xl">
-      <div class="text-base font-medium mb-1">No ${currentStatus === 'upcoming' ? 'upcoming' : 'aired'} events</div>
-      <div class="text-xs">Create one from the “New masterclass” button.</div>
-    </div>`;
-    return;
-  }
-  el.innerHTML = heroCard(top3[0]) + (top3[1] ? medCard(top3[1]) : '<div></div>') + (top3[2] ? medCard(top3[2]) : '<div></div>');
-}
-
-function heroCard(ev) {
-  const s = ev.snapshot || {};
-  const urgent = s.hours_to_live != null && s.hours_to_live < 24 && s.hours_to_live > -4;
-  const goalP  = goalPct(ev);
-  return `
-    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card card-hover rounded-2xl lg:col-span-2 lg:row-span-2 p-5 sm:p-7 cursor-pointer block no-underline topic-glow"
-       style="--topic: var(${topicVar(ev.topic)});">
-      <div class="absolute top-0 left-5 right-5 sm:left-7 sm:right-7 h-0.5 topic-strip rounded-b-full"></div>
-      <div class="relative h-full flex flex-col">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${urgent ? 'bg-rose-500' : 'bg-zinc-300'}"></span>
-            <span class="text-[11px] uppercase tracking-wider font-semibold ${urgent ? 'text-rose-600' : 'text-zinc-500'}">${esc(fmtCountdown(ev.live_at))}</span>
-          </div>
-          <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">${esc(topicLabel(ev.topic))}</span>
-        </div>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.15] text-zinc-900 tracking-tight max-w-2xl">${esc(ev.title)}</h2>
-        <div class="flex-1"></div>
-        <div class="flex items-center gap-3 mt-8 mb-6">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 ring-2 ring-white flex items-center justify-center text-white text-sm font-semibold">${esc(initials(ev.instructor_name))}</div>
-          <div>
-            <div class="text-sm font-semibold text-zinc-900">${esc(ev.instructor_name || '—')}</div>
-            <div class="text-xs text-zinc-500">${esc(ev.instructor_role || '')}</div>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-3 sm:gap-8 pt-5 border-t border-zinc-100">
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Live at</div>
-            <div class="text-sm font-medium text-zinc-900 mt-1">${esc(fmtDateTime(ev.live_at))}</div>
-          </div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Final regs' : 'Registered'}</div>
-            <div class="text-sm font-medium text-zinc-900 mt-1">${fmtNum(s.total_regs)}${ev.goal_regs ? ` <span class="text-zinc-500">/ ${fmtNum(ev.goal_regs)}</span>` : ''}</div>
-          </div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${currentStatus === 'aired' ? 'Attendance' : cplLabel(ev.country)}</div>
-            <div class="text-sm font-medium text-zinc-900 mt-1">${currentStatus === 'aired' ? fmtPct(s.attendance_pct) : fmtMoney(s.cpiql, moneySym(ev.country))}</div>
-          </div>
-        </div>
-      </div>
-    </a>`;
-}
-
-function medCard(ev) {
-  const s = ev.snapshot || {};
-  return `
-    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card card-hover rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
-       style="--topic: var(${topicVar(ev.topic)});">
-      <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
-      <div class="flex items-center justify-between mb-3">
-        <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">${esc(topicLabel(ev.topic))}</span>
-        <span class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">${esc(fmtCountdown(ev.live_at))}</span>
-      </div>
-      <h3 class="text-base font-semibold leading-snug text-zinc-900 tracking-tight">${esc(ev.title)}</h3>
-      <div class="flex items-center gap-2 mt-5 pt-4 border-t border-zinc-100">
-        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 via-orange-500 to-rose-500 flex items-center justify-center text-white text-[10px] font-semibold">${esc(initials(ev.instructor_name))}</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-zinc-900 truncate">${esc(ev.instructor_name || '—')}</div>
-          <div class="text-[10px] text-zinc-500 truncate">${esc(ev.instructor_role || '')}</div>
-        </div>
-        <div class="text-right">
-          <div class="text-sm font-semibold text-zinc-900">${fmtNum(s.total_regs)}</div>
-          <div class="text-[10px] text-zinc-500">${currentStatus === 'aired' ? 'final' : 'regs'}</div>
-        </div>
-      </div>
-    </a>`;
-}
-
-function renderSmall(rest) {
-  const el = document.getElementById('smallCardsArea');
-  if (rest.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = rest.map(smallCard).join('');
-}
-
-function smallCard(ev) {
-  const s = ev.snapshot || {};
-  const goalP = goalPct(ev);
-  const p     = pacing(ev);
-  return `
-    <a href="/event.html?id=${encodeURIComponent(ev.event_id)}"
-       class="card card-hover rounded-2xl p-5 cursor-pointer block no-underline topic-glow"
-       style="--topic: var(${topicVar(ev.topic)}); ${p?.color === 'rose' ? 'border-color: rgb(254 205 211);' : ''}">
-      <div class="absolute top-0 left-5 right-5 h-0.5 topic-strip rounded-b-full"></div>
-      <div class="flex items-center justify-between mb-3">
-        <span class="topic-chip text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">${esc(topicLabel(ev.topic))}</span>
-        <span class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">${esc(fmtDate(ev.live_at))} · ${esc(ev.country || '')}</span>
-      </div>
-      <h3 class="text-base font-semibold leading-snug text-zinc-900 tracking-tight mb-4">${esc(ev.title)}</h3>
-      ${goalP != null ? `
-      <div class="mb-4">
-        <div class="flex items-baseline justify-between mb-1.5">
-          <div class="text-xs"><span class="font-semibold text-zinc-900">${fmtNum(s.total_regs)}</span><span class="text-zinc-500"> / ${fmtNum(ev.goal_regs)}</span></div>
-          ${p ? `<div class="text-[10px] font-medium text-${p.color}-600">${esc(p.label)}</div>` : ''}
-        </div>
-        <div class="h-1 progress-track rounded-full overflow-hidden">
-          <div class="${p?.color === 'rose' ? 'bg-rose-500' : 'topic-fill'} h-full" style="width: ${goalP.toFixed(0)}%;"></div>
-        </div>
-      </div>` : ''}
-      <div class="flex items-center gap-2 pt-4 border-t border-zinc-100">
-        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-600 flex items-center justify-center text-white text-[9px] font-semibold">${esc(initials(ev.instructor_name))}</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-[11px] font-medium text-zinc-900 truncate">${esc(ev.instructor_name || '—')}</div>
-          <div class="text-[10px] text-zinc-500 truncate">${esc(ev.instructor_role || '')}</div>
-        </div>
-      </div>
-    </a>`;
-}
-
-// ── Past table (multi-select + sort + Compare action) ──────────────────────
-function renderPastTable(events) {
-  document.getElementById('smallCardsArea').innerHTML = '';
-  if (events.length === 0) {
-    document.getElementById('bentoArea').innerHTML = `
-      <div class="card rounded-2xl p-12 text-center text-zinc-500">
-        <div class="text-sm font-medium text-zinc-900 mb-1">No past ${currentCountry === 'US' ? 'US' : 'India'} events yet</div>
-        <div class="text-xs">Past masterclasses will appear here once they air.</div>
-      </div>`;
-    return;
-  }
-  const sorted = sortEvents(events.slice());
-
-  const sortIcon = (key) => {
-    const isActive = sortKey === key;
-    if (!isActive) return `<svg class="w-3 h-3 text-zinc-300 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
-    return sortDir === 'asc'
-      ? `<svg class="w-3 h-3 text-zinc-700 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>`
-      : `<svg class="w-3 h-3 text-zinc-700 inline-block ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
-  };
-  const headerCell = (key, label, align) => {
-    const isActive = sortKey === key;
-    return `<button onclick="toggleSort('${key}')" class="text-[10px] uppercase tracking-wider font-semibold inline-flex items-center ${align==='right'?'justify-end w-full':''} ${isActive ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}">${esc(label)}${sortIcon(key)}</button>`;
-  };
-
-  // Topic dot uses the same color tokens as the bento cards — keeps Past visually connected to the rest of the app.
-  const topicDot = (topic) => `<span class="inline-block w-1.5 h-1.5 rounded-full shrink-0" style="background: hsl(var(${topicVar(topic)}));"></span>`;
-
-  // 4px accent column up front, then checkbox, then content. Tighter than v1 but
-  // legible at 1280px and degrades to horizontal scroll below ~720px.
-  const colTpl = '4px 32px 100px minmax(200px,2.6fr) minmax(120px,1.3fr) 96px 96px 88px';
-  const headRow = `
-    <div class="grid items-center gap-3 px-4 sm:px-5 py-2.5 border-b border-zinc-200 bg-zinc-50/60" style="grid-template-columns:${colTpl};">
-      <div></div>
-      <div><input type="checkbox" id="selectAllCk" onchange="toggleSelectAll(this.checked)" class="w-3.5 h-3.5 rounded border-zinc-300 cursor-pointer"/></div>
-      <div>${headerCell('live_at', 'Date')}</div>
-      <div>${headerCell('title', 'Event')}</div>
-      <div>${headerCell('instructor', 'Instructor')}</div>
-      <div>${headerCell('regs', leadLabelForCountry(), 'right')}</div>
-      <div>${headerCell('cpl', cplLabelForCountry(), 'right')}</div>
-      <div>${headerCell('att', 'Att %', 'right')}</div>
-    </div>`;
-
-  const rows = sorted.map(ev => {
-    const s = ev.snapshot || {};
-    const isSel = selectedIds.has(ev.event_id);
-    const rowBg = isSel ? 'bg-zinc-50' : 'hover:bg-zinc-50/60';
-    return `
-      <div class="grid items-center gap-3 px-4 sm:px-5 py-3 border-b border-zinc-100 last:border-0 transition-colors ${rowBg}" style="grid-template-columns:${colTpl};">
-        <div class="h-full" style="background: hsl(var(${topicVar(ev.topic)}) / .8);"></div>
-        <div><input type="checkbox" data-id="${esc(ev.event_id)}" onchange="toggleSelect('${esc(ev.event_id)}', this.checked)" ${isSel ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-zinc-300 cursor-pointer"/></div>
-        <div class="text-xs text-zinc-500 tabular-nums whitespace-nowrap">${esc(fmtDate(ev.live_at))}</div>
-        <div class="min-w-0 flex items-center gap-2">
-          ${topicDot(ev.topic)}
-          <div class="min-w-0">
-            <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="text-sm font-medium text-zinc-900 hover:topic-fg no-underline truncate block leading-tight">${esc(ev.title || ev.event_id)}</a>
-            ${ev.series ? `<div class="text-[10px] text-zinc-500 truncate mt-0.5">${esc(ev.series)}</div>` : ''}
-          </div>
-        </div>
-        <div class="text-xs text-zinc-600 truncate">${esc(ev.instructor_name || '—')}</div>
-        <div class="text-right text-sm font-semibold text-zinc-900 tabular-nums">${fmtNum(s.total_regs)}</div>
-        <div class="text-right text-sm text-zinc-700 tabular-nums">${fmtMoneyForCountry(s.cpiql)}</div>
-        <div class="text-right text-sm text-zinc-700 tabular-nums">${s.attendance_pct != null ? s.attendance_pct.toFixed(1) + '%' : '—'}</div>
-      </div>`;
-  }).join('');
-
-  document.getElementById('bentoArea').innerHTML = `
-    <div class="card rounded-2xl overflow-hidden">
-      <div class="overflow-x-auto">
-        <div class="min-w-[820px]">
-          ${headRow}
-          ${rows}
-        </div>
-      </div>
-    </div>
-    <div class="mt-3 text-[11px] text-zinc-500 flex items-center justify-between px-1">
-      <span>${sorted.length} event${sorted.length===1?'':'s'}</span>
-      <span class="hidden sm:inline">Tip: click a column header to sort. Select 2+ rows to compare.</span>
-    </div>`;
-  renderCompareBar();
-}
-
-function sortEvents(events) {
-  const dir = sortDir === 'asc' ? 1 : -1;
-  const get = ev => {
-    const s = ev.snapshot || {};
-    switch (sortKey) {
-      case 'live_at':    return ev.live_at ? new Date(ev.live_at).getTime() : 0;
-      case 'title':      return (ev.title || '').toLowerCase();
-      case 'instructor': return (ev.instructor_name || '').toLowerCase();
-      case 'regs':       return s.total_regs || 0;
-      case 'cpl':        return s.cpiql || 0;
-      case 'att':        return s.attendance_pct || 0;
+  <link rel="preconnect" href="https://rsms.me/">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+  <style>
+    html, body { font-family: 'Inter', system-ui, sans-serif; }
+    body { font-feature-settings: 'cv02','cv03','cv04','cv11','ss01'; -webkit-font-smoothing: antialiased; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .num-hero { letter-spacing: -0.04em; line-height: 0.95; }
+    .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
+    .pill-active { background: linear-gradient(180deg,#312e81 0%,#1e1b4b 100%); border-color:#6366f1; color:#c7d2fe; }
+    .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .gradient-text-rose { background: linear-gradient(135deg,#fda4af,#f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .row-top { background: linear-gradient(90deg, rgba(34,197,94,0.04), transparent 60%); border-left: 2px solid #10b981; }
+    .row-bot { background: linear-gradient(90deg, rgba(244,63,94,0.04), transparent 60%); border-left: 2px solid #f43f5e; }
+    .row-mid { border-left: 2px solid transparent; }
+    .signal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .topic-strip { background: linear-gradient(90deg, var(--topic, #6366f1), transparent 70%); }
+    .topic-glow { position: relative; }
+    .topic-glow::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(circle at top right, var(--topic, transparent), transparent 50%);
+      opacity: 0.06; pointer-events: none;
     }
-    return 0;
-  };
-  return events.sort((a, b) => {
-    const va = get(a), vb = get(b);
-    if (va < vb) return -1 * dir;
-    if (va > vb) return  1 * dir;
-    return 0;
-  });
-}
+    .live-pulse { background: linear-gradient(90deg, #f43f5e, #ec4899); animation: liveGlow 1.5s ease-in-out infinite; }
+    @keyframes liveGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,0.7); } 50% { box-shadow: 0 0 0 8px rgba(244,63,94,0); } }
+    .pacing-bar { height: 4px; border-radius: 2px; background: rgba(63,63,70,0.5); position: relative; overflow: hidden; }
+    .pacing-bar > div { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .card-attn { box-shadow: 0 0 0 1px rgba(244,63,94,0.25), 0 8px 32px -12px rgba(244,63,94,0.35); }
+    .hide { display: none !important; }
 
-function toggleSort(key) {
-  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-  else { sortKey = key; sortDir = 'desc'; }
-  renderPastTable(lastEvents);
-}
+    /* Login overlay */
+    .login-overlay { position: fixed; inset: 0; background: #0a0a0b; display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .login-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 40px; max-width: 380px; width: 90%; text-align: center; }
+    .login-logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg,#6366f1,#22d3ee); display: flex; align-items: center; justify-content: center; color: #0a0a0b; font-weight: 700; font-size: 18px; margin: 0 auto 20px; }
+    .login-title { font-size: 18px; font-weight: 600; color: #fafafa; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: #a1a1aa; margin-bottom: 24px; }
+    .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
 
-function toggleSelect(id, checked) {
-  if (checked) selectedIds.add(id); else selectedIds.delete(id);
-  renderCompareBar();
-}
-function toggleSelectAll(checked) {
-  if (checked) lastEvents.forEach(e => selectedIds.add(e.event_id));
-  else selectedIds.clear();
-  renderPastTable(lastEvents);
-}
+  <!-- Login overlay -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">M</div>
+      <div class="login-title">Masterclass Hub</div>
+      <div class="login-sub">Sign in with your IK Google account to continue</div>
+      <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+      <p id="loginError" class="login-error"></p>
+    </div>
+  </div>
 
-function renderCompareBar() {
-  const n = selectedIds.size;
-  let bar = document.getElementById('compareBar');
-  if (n < 2) { if (bar) bar.remove(); return; }
-  const html = `
-    <div id="compareBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-zinc-900 text-white rounded-full shadow-lg px-5 py-2.5 flex items-center gap-3 text-sm">
-      <span class="font-medium">${n} selected</span>
-      <button onclick="clearSelection()" class="text-zinc-400 hover:text-white text-xs">clear</button>
-      <a href="/compare.html?ids=${Array.from(selectedIds).map(encodeURIComponent).join(',')}" class="bg-white text-zinc-900 rounded-full px-3 py-1 text-xs font-semibold hover:bg-zinc-100 no-underline">Compare →</a>
-    </div>`;
-  if (bar) bar.outerHTML = html; else document.body.insertAdjacentHTML('beforeend', html);
-}
-function clearSelection() {
-  selectedIds.clear();
-  renderPastTable(lastEvents);
-}
+  <div id="appWrap" style="display:none;">
 
-function leadLabelForCountry() { return currentCountry === 'US' ? 'GQLs' : 'IQLs'; }
-function cplLabelForCountry()  { return currentCountry === 'US' ? 'CPGQL' : 'CPIQL'; }
-function fmtMoneyForCountry(n) {
-  if (n == null) return '—';
-  const sym = currentCountry === 'US' ? '$' : '₹';
-  return sym + Math.round(n).toLocaleString();
-}
+    <!-- ── HEADER ────────────────────────────────────────────────── -->
+    <header class="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
+      <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+          <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
+            <div class="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-xs">M</div>
+            <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
+          </a>
+          <nav class="flex items-center gap-1 text-sm">
+            <a href="/hub.html"     class="px-3 py-1.5 rounded-md bg-zinc-900 text-zinc-100 font-medium no-underline">Hub</a>
+            <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Months</a>
+            <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100 font-medium no-underline">Compare</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs" id="countrySwitcher">
+            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-800">India</button>
+            <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">US</button>
+          </div>
+          <a href="/Masterclass%20Automation.html" class="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 px-3 py-1.5 rounded-lg text-xs font-semibold no-underline">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New
+          </a>
+          <button onclick="toggleTheme()" id="themeToggle" title="Toggle theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-900"></button>
+          <div class="relative">
+            <button onclick="toggleMenu()" id="avatarBtn" class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</button>
+            <div id="userMenu" class="hidden absolute right-0 top-10 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
+              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800" id="userEmail">—</div>
+              <a href="/Masterclass%20Automation.html" class="block px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 rounded no-underline">Legacy UI</a>
+              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 rounded">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
-function switchTab(status) {
-  if (currentStatus === status) return;
-  currentStatus = status;
-  selectedIds.clear();
-  renderCompareBar();
-  const base = 'px-3 py-1.5 rounded-md font-medium text-sm whitespace-nowrap ';
-  document.getElementById('tabUpcoming').className = base + (status === 'upcoming' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
-  document.getElementById('tabAired').className    = base + (status === 'aired'    ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900');
-  document.getElementById('pageHeading').textContent = status === 'upcoming' ? 'Upcoming masterclasses' : 'Recently aired';
-  load();
-}
+    <main class="max-w-[1400px] mx-auto px-8 py-10 space-y-10">
 
-applyCountryButtons();
-applyTheme();
-checkAuth();
-</script>
+      <!-- HEADING + TAB SWITCHER -->
+      <div class="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight" id="pageTitle">Upcoming masterclasses</h1>
+          <p class="text-sm text-zinc-500 mt-1" id="pageSub">Live data · synced with daily snapshot</p>
+        </div>
+        <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
+          <button onclick="switchTab('upcoming')" id="tabUp"   class="px-4 py-2 bg-zinc-900 text-zinc-100 border-r border-zinc-800 font-medium">Upcoming</button>
+          <button onclick="switchTab('aired')"    id="tabPast" class="px-4 py-2 text-zinc-500 hover:text-zinc-300 font-medium">Past</button>
+        </div>
+      </div>
+
+      <!-- ── UPCOMING VIEW ────────────────────────────────────────────── -->
+      <div id="upcomingView">
+        <section id="commandBar"   class="grid grid-cols-4 gap-4 mb-10"></section>
+        <section id="thisWeekArea" class="mb-12"></section>
+        <section id="next2Area"    class="mb-12"></section>
+        <section id="futureArea"></section>
+      </div>
+
+      <!-- ── PAST VIEW ────────────────────────────────────────────────── -->
+      <div id="pastView" class="hide">
+        <section id="monthlyArea" class="mb-10"></section>
+
+        <section class="mb-5">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-2">
+              <input id="pastSearch" oninput="renderPast()" type="text" placeholder="Search title, instructor…" class="w-72 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700">
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-zinc-500">Sort by</span>
+              <select id="pastSort" onchange="renderPast()" class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 focus:outline-none">
+                <option value="roas">ROAS (highest first)</option>
+                <option value="revenue">Revenue</option>
+                <option value="sales">Sales</option>
+                <option value="date">Date (newest)</option>
+                <option value="cpiql">CPIQL (lowest)</option>
+                <option value="regs">Registrations</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section id="pastTableArea"></section>
+        <section id="learningsArea" class="mt-12"></section>
+      </div>
+
+      <div id="loadingArea" class="hide p-12 text-center text-zinc-500 text-sm">Loading…</div>
+      <div id="errorArea"   class="hide p-12 text-center text-rose-400 text-sm"></div>
+
+    </main>
+  </div>
+
+  <script>
+    'use strict';
+
+    const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+    const USD_TO_INR = 84;
+    const TOPIC_COLORS = {
+      ai_agents: '#a855f7', system_design: '#3b82f6', behavioral: '#f59e0b',
+      data: '#10b981', ml: '#ec4899', distributed: '#6366f1',
+    };
+    const TOPIC_LABELS = {
+      ai_agents: 'AI & Agents', system_design: 'System Design', behavioral: 'Behavioral',
+      data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
+    };
+
+    let currentStatus  = 'upcoming';
+    let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+    let lastEvents = [];
+    let selectedIds = new Set();
+    let showAllPast = false;
+
+    // ── Theme ────────────────────────────────────────────────
+    const SUN_ICON  = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+    const MOON_ICON = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    function applyTheme() {
+      const dark = document.documentElement.classList.contains('dark');
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+    }
+    function toggleTheme() {
+      const dark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+      applyTheme();
+    }
+
+    function applyCountryButtons() {
+      const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
+      const on  = 'px-3 py-1.5 bg-zinc-900 text-zinc-100 border-r border-zinc-800';
+      const off = 'px-3 py-1.5 text-zinc-500 hover:text-zinc-300';
+      const onLast  = 'px-3 py-1.5 bg-zinc-900 text-zinc-100';
+      const offLast = 'px-3 py-1.5 text-zinc-500 hover:text-zinc-300';
+      inEl.className = currentCountry === 'IN' ? on : (off + ' border-r border-zinc-800');
+      usEl.className = currentCountry === 'US' ? onLast : offLast;
+    }
+    function setCountry(c) {
+      if (currentCountry === c) return;
+      currentCountry = c;
+      localStorage.setItem('ik_country', c);
+      applyCountryButtons();
+      load();
+    }
+    function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
+    function isUS() { return currentCountry === 'US'; }
+    function moneySym() { return isUS() ? '$' : '₹'; }
+
+    // ── Auth ────────────────────────────────────────────────
+    function showApp(email) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('appWrap').style.display = '';
+      document.getElementById('userEmail').textContent = email;
+      if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+      load();
+    }
+    function showLogin() {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('appWrap').style.display = 'none';
+    }
+    async function checkAuth() {
+      try {
+        const r = await fetch('/auth/check');
+        if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin();
+      } catch { showLogin(); }
+    }
+    async function handleGoogleSignIn(response) {
+      const err = document.getElementById('loginError');
+      err.style.display = 'none';
+      try {
+        const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+        const d = await r.json();
+        if (r.ok) showApp(d.email);
+        else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+      } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+    }
+    async function signOut() {
+      await fetch('/auth/logout', { method: 'POST' });
+      showLogin();
+    }
+    window.onGoogleLibraryLoad = function () {
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+      google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'filled_black', size: 'large', width: 280 });
+    };
+    function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) {
+        document.getElementById('userMenu')?.classList.add('hidden');
+      }
+    });
+
+    // ── Helpers ─────────────────────────────────────────────
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    function fmtDateLong(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    }
+    function fmtTime(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone: 'Asia/Kolkata' });
+    }
+    function fmtCountdown(iso) {
+      if (!iso) return '—';
+      const diffMs = new Date(iso) - new Date();
+      if (diffMs < 0) {
+        const hAgo = Math.round(-diffMs / 3600000);
+        return hAgo < 24 ? `Aired ${hAgo}h ago` : `Aired ${Math.round(hAgo/24)}d ago`;
+      }
+      const h = diffMs / 3600000;
+      if (h < 24) return `in ${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`;
+      const d = Math.floor(h/24);
+      return d === 1 ? 'tomorrow' : `in ${d} days`;
+    }
+    function fmtN(n) {
+      if (n == null || isNaN(n)) return '—';
+      if (n >= 1e7) return (n/1e7).toFixed(2).replace(/\.00$/,'').replace(/0$/,'') + 'Cr';
+      if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
+      if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+      return Math.round(n).toLocaleString();
+    }
+    function fmtNRaw(n) {
+      if (n == null || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString();
+    }
+    function fmtMoney(n) { return n == null ? '—' : moneySym() + fmtN(n); }
+    function fmtMoneyRaw(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
+    function fmtPct(n) { return n == null ? '—' : n.toFixed(1) + '%'; }
+    function fmtROAS(n) { return n == null || isNaN(n) ? '—' : n.toFixed(2) + 'x'; }
+    function initials(name) {
+      if (!name) return 'IK';
+      return name.split(/\s+/).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase();
+    }
+    function topicColor(t) { return TOPIC_COLORS[t] || '#6366f1'; }
+    function topicLabel(t) { return TOPIC_LABELS[t] || 'General'; }
+
+    function goalPct(ev) {
+      const t = ev.snapshot?.total_regs, g = ev.goal_regs;
+      return (t != null && g > 0) ? Math.min(150, 100 * t / g) : null;
+    }
+
+    // Classify event into one of: live, at_risk, on_track, watch, queued, setup
+    function statusFor(ev) {
+      const s = ev.snapshot || {};
+      const hrs = s.hours_to_live;
+      const g = goalPct(ev);
+      if (currentStatus === 'aired') return 'done';
+      if (!ev.live_at || ev.goal_regs == null) return 'setup';
+      if (hrs == null || s.total_regs == null) return 'queued';
+      if (hrs < 24 && hrs > -2) return 'live';
+      if (g != null && g < 70 && hrs < 168) return 'at_risk';
+      if (g != null && g >= 100) return 'on_track';
+      if (g != null && g >= 70)  return 'watch';
+      return 'watch';
+    }
+
+    function statusBadge(st) {
+      switch (st) {
+        case 'live':     return { label: 'Going live',   cls: 'live-pulse text-white' };
+        case 'at_risk':  return { label: 'Goal at risk', cls: 'bg-amber-900/30 text-amber-300 border border-amber-900/50' };
+        case 'on_track': return { label: 'On track',     cls: 'bg-emerald-900/30 text-emerald-300 border border-emerald-900/50' };
+        case 'watch':    return { label: 'Watch',        cls: 'bg-zinc-800 text-zinc-400 border border-zinc-700' };
+        case 'queued':   return { label: 'Queued',       cls: 'bg-indigo-900/30 text-indigo-300 border border-indigo-900/50' };
+        case 'setup':    return { label: 'Setup',        cls: 'bg-amber-900/30 text-amber-300 border border-amber-900/50' };
+        default:         return { label: '', cls: '' };
+      }
+    }
+
+    // Compute INR revenue (BQ stores USD)
+    function revINR(s) {
+      const r = s?.revenue;
+      return r == null ? null : r * USD_TO_INR;
+    }
+    function paidRevINR(s) {
+      const r = s?.paid_revenue;
+      return r == null ? null : r * USD_TO_INR;
+    }
+
+    // ── Data load ───────────────────────────────────────────
+    async function load() {
+      showLoading();
+      try {
+        const r = await fetch(`/events?status=${currentStatus}&country=${encodeURIComponent(countryParam())}&limit=200`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        lastEvents = d.events || [];
+        hideLoading();
+        render();
+      } catch (e) {
+        hideLoading();
+        showError(e.message);
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('upcomingView').classList.add('hide');
+      document.getElementById('pastView').classList.add('hide');
+      document.getElementById('errorArea').classList.add('hide');
+      document.getElementById('loadingArea').classList.remove('hide');
+    }
+    function hideLoading() {
+      document.getElementById('loadingArea').classList.add('hide');
+    }
+    function showError(msg) {
+      document.getElementById('errorArea').classList.remove('hide');
+      document.getElementById('errorArea').textContent = 'Failed to load: ' + msg;
+    }
+
+    function render() {
+      if (currentStatus === 'upcoming') {
+        document.getElementById('upcomingView').classList.remove('hide');
+        document.getElementById('pastView').classList.add('hide');
+        renderUpcoming();
+      } else {
+        document.getElementById('upcomingView').classList.add('hide');
+        document.getElementById('pastView').classList.remove('hide');
+        renderPast();
+      }
+    }
+
+    // ── UPCOMING ────────────────────────────────────────────
+    function renderUpcoming() {
+      const events = lastEvents.slice().sort((a,b) => new Date(a.live_at||0) - new Date(b.live_at||0));
+
+      // Buckets: this-week (≤7d), next-2w (8-14d), future (>14d)
+      const now = Date.now();
+      const oneWk = 7 * 86400000, twoWk = 14 * 86400000;
+      const thisWeek = [], next2 = [], future = [];
+      events.forEach(ev => {
+        const t = ev.live_at ? new Date(ev.live_at).getTime() : null;
+        if (t == null) { future.push(ev); return; }
+        const diff = t - now;
+        if (diff < oneWk) thisWeek.push(ev);
+        else if (diff < twoWk) next2.push(ev);
+        else future.push(ev);
+      });
+
+      // Command bar
+      const goalsAtRisk = events.filter(ev => statusFor(ev) === 'at_risk').length;
+      const liveThisWk = thisWeek.length;
+      const totalSpendActive = events.reduce((sum, ev) => {
+        const hrs = ev.snapshot?.hours_to_live;
+        if (hrs != null && hrs > 0 && hrs < 168 * 2) return sum + (ev.snapshot?.meta_spend || 0);
+        return sum;
+      }, 0);
+      const setupNeeded = events.filter(ev => statusFor(ev) === 'setup').length;
+
+      document.getElementById('commandBar').innerHTML = `
+        ${kpiCard({
+          label: 'Live this week',
+          value: liveThisWk,
+          sub: thisWeek.slice(0,3).map(ev => fmtDateLong(ev.live_at).split(',')[0]).join(' · ') || 'none scheduled',
+          urgent: liveThisWk > 0,
+        })}
+        ${kpiCard({
+          label: 'Goals at risk',
+          value: goalsAtRisk,
+          sub: 'Pacing < 70% to target',
+          warn: goalsAtRisk > 0,
+        })}
+        ${kpiCard({
+          label: 'Active spend (2w)',
+          value: fmtMoneyRaw(totalSpendActive),
+          sub: `Across ${events.filter(e => (e.snapshot?.meta_spend||0) > 0).length} campaigns`,
+        })}
+        ${kpiCard({
+          label: 'Pipeline',
+          value: events.length + ' events',
+          sub: setupNeeded ? `${setupNeeded} missing setup` : 'All configured',
+          warn: setupNeeded > 0,
+        })}
+      `;
+
+      // This week (heroes)
+      const tw = document.getElementById('thisWeekArea');
+      if (thisWeek.length === 0) {
+        tw.innerHTML = `
+          <h2 class="text-base font-semibold tracking-tight mb-3">This week</h2>
+          <div class="p-8 text-center rounded-xl border border-dashed border-zinc-800 text-zinc-500 text-sm">No events airing in the next 7 days</div>`;
+      } else {
+        tw.innerHTML = `
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-semibold tracking-tight">This week</h2>
+              ${thisWeek.some(ev => statusFor(ev) === 'live' || statusFor(ev) === 'at_risk') ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-900/40 text-rose-300 border border-rose-900/60 uppercase tracking-widest">Urgent</span>' : ''}
+            </div>
+            <span class="text-[11px] text-zinc-600">${thisWeek.length} event${thisWeek.length===1?'':'s'}</span>
+          </div>
+          <div class="grid ${thisWeek.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-5">
+            ${thisWeek.slice(0,2).map(heroCard).join('')}
+          </div>
+          ${thisWeek.length > 2 ? `<div class="mt-5 grid grid-cols-3 gap-3">${thisWeek.slice(2).map(midCard).join('')}</div>` : ''}
+        `;
+      }
+
+      // Next 2 weeks (rows)
+      const n2 = document.getElementById('next2Area');
+      if (next2.length === 0) {
+        n2.innerHTML = '';
+      } else {
+        n2.innerHTML = `
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-base font-semibold tracking-tight">Next 2 weeks</h2>
+            <span class="text-[11px] text-zinc-600">Sorted by air date</span>
+          </div>
+          <div class="space-y-2.5">${next2.map(rowCard).join('')}</div>
+        `;
+      }
+
+      // Future pipeline
+      const fa = document.getElementById('futureArea');
+      if (future.length === 0) {
+        fa.innerHTML = '';
+      } else {
+        const dates = future.slice(0, 5).map(ev => fmtDate(ev.live_at) || 'TBD').join(', ');
+        fa.innerHTML = `
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-semibold tracking-tight">Pipeline · later than 2 weeks</h2>
+            <span class="text-[11px] text-zinc-600">${future.length} event${future.length===1?'':'s'}</span>
+          </div>
+          <div class="text-xs text-zinc-500 p-4 rounded-xl border border-dashed border-zinc-800 bg-zinc-950">
+            <span class="text-zinc-300">${dates}</span>${future.length > 5 ? ` <span class="text-zinc-600">+ ${future.length - 5} more</span>` : ''}
+          </div>`;
+      }
+    }
+
+    function kpiCard({label, value, sub, urgent, warn}) {
+      const cls = urgent
+        ? 'bg-gradient-to-br from-rose-950/40 to-zinc-900 border-rose-900/40 card-attn'
+        : warn
+        ? 'bg-zinc-900/50 border-zinc-800'
+        : 'bg-zinc-900/50 border-zinc-800';
+      const valCls = urgent ? 'text-rose-200' : warn ? 'text-amber-400' : 'text-zinc-100';
+      const dot = urgent ? '<span class="signal-dot bg-rose-400"></span>' : '';
+      return `
+        <div class="p-5 rounded-xl border ${cls}">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-[10px] font-medium ${urgent ? 'text-rose-300' : 'text-zinc-500'} uppercase tracking-widest">${esc(label)}</div>
+            ${dot}
+          </div>
+          <div class="num-big text-3xl font-bold tabular ${valCls}">${typeof value === 'number' ? value : esc(value)}</div>
+          <div class="mt-2 text-[11px] text-zinc-${urgent ? '400' : '500'}">${esc(sub)}</div>
+        </div>`;
+    }
+
+    function heroCard(ev) {
+      const s = ev.snapshot || {};
+      const st = statusFor(ev);
+      const badge = statusBadge(st);
+      const color = topicColor(ev.topic);
+      const g = goalPct(ev);
+      const cardBorder = st === 'live' ? 'border-rose-900/40 card-attn' : st === 'at_risk' ? 'border-amber-900/40' : 'border-zinc-800';
+      const pacingColor = g == null ? 'zinc' : g >= 100 ? 'emerald' : g >= 70 ? 'zinc' : 'amber';
+      const pacingFill = pacingColor === 'emerald' ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                       : pacingColor === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                       : 'bg-zinc-600';
+      const recommendation = st === 'at_risk' ? `<div class="text-[10px] text-amber-300/80 mt-2">→ Increase Meta budget or extend by 1–2 days</div>` : '';
+
+      return `
+        <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="topic-glow p-7 rounded-2xl bg-zinc-900 border ${cardBorder} cursor-pointer block no-underline relative overflow-hidden" style="--topic:${color};">
+          <div class="absolute top-0 left-0 right-0 h-1 topic-strip"></div>
+          <div class="relative">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest ${badge.cls}">${esc(badge.label)}</span>
+                <span class="text-[11px] text-zinc-400 font-medium">${esc(fmtCountdown(ev.live_at))}</span>
+              </div>
+              <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-1 rounded text-zinc-300" style="background:${color}22;color:${color};">${esc(topicLabel(ev.topic))}</span>
+            </div>
+            <h3 class="text-2xl font-bold leading-tight mb-4 tracking-tight text-zinc-50">${esc(ev.title || '—')}</h3>
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold">${esc(initials(ev.instructor_name))}</div>
+              <div>
+                <div class="text-sm font-medium text-zinc-100">${esc(ev.instructor_name || '—')}</div>
+                <div class="text-[11px] text-zinc-500">${esc(ev.instructor_role || '')}</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mb-5 pb-5 border-b border-zinc-800">
+              <div>
+                <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Registered</div>
+                <div class="text-lg font-bold tabular ${g != null && g < 70 ? 'text-amber-400' : 'text-zinc-100'}">${fmtNRaw(s.total_regs)}${ev.goal_regs ? `<span class="text-xs text-zinc-500"> / ${fmtNRaw(ev.goal_regs)}</span>` : ''}</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">CPIQL</div>
+                <div class="text-lg font-bold tabular ${s.cpiql && s.cpiql < 200 ? 'text-emerald-400' : 'text-zinc-100'}">${fmtMoneyRaw(s.cpiql)}</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Spend</div>
+                <div class="text-lg font-bold tabular text-zinc-100">${fmtMoneyRaw(s.meta_spend)}</div>
+              </div>
+            </div>
+            ${g != null ? `
+            <div class="space-y-2">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-zinc-500">Goal pacing</span>
+                <span class="text-${pacingColor}-400 font-semibold">${g.toFixed(0)}% ${g >= 100 ? '· ahead' : g >= 70 ? '· on pace' : '· behind'}</span>
+              </div>
+              <div class="pacing-bar"><div class="${pacingFill}" style="width: ${Math.min(100,g).toFixed(0)}%;"></div></div>
+              ${recommendation}
+            </div>` : ''}
+          </div>
+        </a>`;
+    }
+
+    function midCard(ev) {
+      const s = ev.snapshot || {};
+      const color = topicColor(ev.topic);
+      return `
+        <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="topic-glow p-5 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 block no-underline relative overflow-hidden" style="--topic:${color};">
+          <div class="absolute top-0 left-0 right-0 h-0.5 topic-strip"></div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded" style="background:${color}22;color:${color};">${esc(topicLabel(ev.topic))}</span>
+            <span class="text-[10px] text-zinc-500 font-medium">${esc(fmtCountdown(ev.live_at))}</span>
+          </div>
+          <h3 class="text-sm font-semibold leading-snug text-zinc-100 mb-4">${esc(ev.title || '—')}</h3>
+          <div class="flex justify-between items-end pt-3 border-t border-zinc-800">
+            <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}</div>
+            <div class="text-sm font-bold tabular text-zinc-100">${fmtNRaw(s.total_regs)}<span class="text-[10px] text-zinc-500"> regs</span></div>
+          </div>
+        </a>`;
+    }
+
+    function rowCard(ev) {
+      const s = ev.snapshot || {};
+      const st = statusFor(ev);
+      const badge = statusBadge(st);
+      const color = topicColor(ev.topic);
+      const g = goalPct(ev);
+      const d = ev.live_at ? new Date(ev.live_at) : null;
+      const dow = d ? d.toLocaleDateString('en-US', {weekday:'short'}) : 'TBD';
+      const dateStr = d ? d.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—';
+      const timeStr = d ? d.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZone:'Asia/Kolkata'}) : '';
+      const pacingTxt = g != null ? `${g.toFixed(0)}% paced` : (st === 'setup' ? 'no goal set' : '—');
+      const pacingCls = g == null ? 'text-zinc-500' : g >= 100 ? 'text-emerald-400' : g >= 70 ? 'text-zinc-400' : 'text-amber-400';
+
+      return `
+        <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="topic-glow grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 block no-underline" style="--topic:${color};">
+          <div class="col-span-1">
+            <div class="text-[10px] uppercase tracking-widest text-zinc-500">${esc(dow)}</div>
+            <div class="text-base font-bold tracking-tight text-zinc-100">${esc(dateStr)}</div>
+            <div class="text-[10px] text-zinc-500 mt-0.5">${esc(timeStr)}</div>
+          </div>
+          <div class="col-span-4">
+            <div class="text-sm font-semibold tracking-tight text-zinc-100">${esc(ev.title || '—')}</div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">${esc(ev.instructor_name || '—')}${ev.instructor_role ? ' · ' + esc(ev.instructor_role) : ''}</div>
+          </div>
+          <div class="col-span-2 text-right">
+            <div class="text-sm font-bold tabular text-zinc-100">${fmtNRaw(s.total_regs)} ${ev.goal_regs ? `<span class="text-zinc-500 text-xs">/ ${fmtNRaw(ev.goal_regs)}</span>` : ''}</div>
+            <div class="text-[10px] ${pacingCls} mt-0.5">${esc(pacingTxt)}</div>
+          </div>
+          <div class="col-span-2 text-right">
+            <div class="text-sm font-bold tabular ${s.cpiql && s.cpiql < 200 ? 'text-emerald-400' : 'text-zinc-100'}">${fmtMoneyRaw(s.cpiql)}</div>
+            <div class="text-[10px] text-zinc-500 mt-0.5">CPIQL</div>
+          </div>
+          <div class="col-span-2 text-right">
+            <div class="text-sm font-bold tabular text-zinc-100">${fmtMoneyRaw(s.meta_spend)}</div>
+            <div class="text-[10px] text-zinc-500 mt-0.5">spent</div>
+          </div>
+          <div class="col-span-1 text-right">
+            <span class="text-[10px] px-2 py-1 rounded font-semibold uppercase tracking-widest ${badge.cls}">${esc(badge.label)}</span>
+          </div>
+        </a>`;
+    }
+
+    // ── PAST ───────────────────────────────────────────────
+    function renderPast() {
+      let events = lastEvents.slice();
+      const q = (document.getElementById('pastSearch')?.value || '').toLowerCase().trim();
+      if (q) events = events.filter(ev =>
+        (ev.title || '').toLowerCase().includes(q) ||
+        (ev.instructor_name || '').toLowerCase().includes(q)
+      );
+
+      const sort = document.getElementById('pastSort')?.value || 'roas';
+      const score = ev => {
+        const s = ev.snapshot || {};
+        switch (sort) {
+          case 'roas':    return s.overall_roas ?? 0;
+          case 'revenue': return revINR(s) ?? 0;
+          case 'sales':   return s.sales ?? 0;
+          case 'date':    return ev.live_at ? new Date(ev.live_at).getTime() : 0;
+          case 'cpiql':   return -(s.cpiql ?? Infinity);
+          case 'regs':    return s.total_regs ?? 0;
+        }
+        return 0;
+      };
+      events.sort((a,b) => score(b) - score(a));
+
+      renderMonthly();
+      renderPastTable(events);
+      renderLearnings(events);
+    }
+
+    function renderMonthly() {
+      // Group by year-month of live_at
+      const months = {};
+      lastEvents.forEach(ev => {
+        if (!ev.live_at) return;
+        const d = new Date(ev.live_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        if (!months[key]) months[key] = { key, label: d.toLocaleDateString('en-US', {month:'short', year:'numeric'}), events: [] };
+        months[key].events.push(ev);
+      });
+      const sortedKeys = Object.keys(months).sort();
+      const lastSix = sortedKeys.slice(-6);
+      if (lastSix.length === 0) { document.getElementById('monthlyArea').innerHTML = ''; return; }
+
+      const monthlyData = lastSix.map(k => {
+        const m = months[k];
+        const sales = m.events.reduce((s,e) => s + (e.snapshot?.sales || 0), 0);
+        const rev   = m.events.reduce((s,e) => s + (revINR(e.snapshot) || 0), 0);
+        const spend = m.events.reduce((s,e) => s + (e.snapshot?.meta_spend || 0), 0);
+        const roas  = spend > 0 ? rev/spend : null;
+        const isOpen = m.events.some(e => {
+          if (!e.live_at) return false;
+          const days = (Date.now() - new Date(e.live_at).getTime()) / 86400000;
+          return days < 14;
+        });
+        return { ...m, sales, rev, spend, roas, isOpen };
+      });
+
+      const bestRoas = Math.max(...monthlyData.filter(m => !m.isOpen).map(m => m.roas || 0));
+
+      document.getElementById('monthlyArea').innerHTML = `
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-base font-semibold tracking-tight">Last ${lastSix.length} month${lastSix.length===1?'':'s'}</h2>
+          <a href="/months.html" class="text-[11px] text-zinc-500 hover:text-zinc-300 no-underline">Go to Months view →</a>
+        </div>
+        <div class="grid grid-cols-${Math.min(6, lastSix.length)} gap-3">
+          ${monthlyData.map(m => {
+            const isBest = !m.isOpen && m.roas === bestRoas && m.roas > 0;
+            const cls = isBest ? 'bg-gradient-to-br from-emerald-950/30 to-zinc-900 border-emerald-900/40'
+                    : m.isOpen ? 'bg-amber-950/20 border-amber-900/40'
+                    : 'bg-zinc-900/40 border-zinc-800';
+            return `
+              <div class="p-4 rounded-xl border ${cls}">
+                <div class="flex items-center justify-between">
+                  <div class="text-[10px] font-semibold ${isBest ? 'text-emerald-300' : m.isOpen ? 'text-amber-300' : 'text-zinc-500'} uppercase tracking-widest">${esc(m.label)}</div>
+                  ${isBest ? '<span class="text-[9px] text-emerald-300">★ Best</span>' : m.isOpen ? '<span class="text-[9px] text-amber-300">⏱ open</span>' : ''}
+                </div>
+                <div class="num-big text-2xl font-bold tabular mt-2">${m.events.length} <span class="text-xs text-zinc-500 font-normal">events</span></div>
+                <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+                  <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">${fmtNRaw(m.sales) || 0}</span></div>
+                  <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">${m.rev > 0 ? fmtMoney(m.rev) : '—'}</span></div>
+                  <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="${isBest ? 'gradient-text-em' : m.roas == null ? 'text-zinc-500' : m.roas >= 5 ? 'text-emerald-400' : m.roas >= 2 ? 'text-zinc-300' : 'text-amber-400'} tabular">${m.roas != null ? fmtROAS(m.roas) + (m.isOpen ? '*' : '') : '—'}</span></div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function renderPastTable(events) {
+      if (events.length === 0) {
+        document.getElementById('pastTableArea').innerHTML = `<div class="card rounded-2xl p-12 text-center text-zinc-500 border border-zinc-800">No past events match your filters</div>`;
+        return;
+      }
+
+      // Determine top/bottom 3 by ROAS (excluding pipeline-open)
+      const closed = events.filter(ev => !isPipelineOpen(ev) && ev.snapshot?.overall_roas != null).sort((a,b) => (b.snapshot.overall_roas||0) - (a.snapshot.overall_roas||0));
+      const top3 = new Set(closed.slice(0, 3).map(e => e.event_id));
+      const bot3 = new Set(closed.slice(-3).map(e => e.event_id));
+
+      // Collapse middle?
+      const showAll = showAllPast || events.length <= 9;
+      const visibleRows = showAll ? events : [...events.slice(0, 3), 'COLLAPSE', ...events.slice(-3)];
+
+      const rows = visibleRows.map(ev => {
+        if (ev === 'COLLAPSE') {
+          const hidden = events.length - 6;
+          return `<tr class="bg-zinc-950/40 cursor-pointer hover:bg-zinc-900/50" onclick="showAllPast = true; renderPast();">
+            <td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-600 hover:text-zinc-400">↓ ${hidden} more event${hidden===1?'':'s'} ↓</td>
+          </tr>`;
+        }
+        return tableRow(ev, top3, bot3);
+      }).join('');
+
+      document.getElementById('pastTableArea').innerHTML = `
+        <div class="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/30">
+          <table class="w-full text-sm tabular">
+            <thead class="bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium w-10"><input type="checkbox" class="rounded" id="selAll" onchange="toggleSelAll(this.checked)"></th>
+                <th class="text-left px-4 py-3 font-medium">Event</th>
+                <th class="text-right px-4 py-3 font-medium">Date</th>
+                <th class="text-right px-4 py-3 font-medium">IQLs / Att%</th>
+                <th class="text-right px-4 py-3 font-medium">Spend</th>
+                <th class="text-right px-4 py-3 font-medium">Sales / Rev</th>
+                <th class="text-right px-4 py-3 font-medium">ROAS</th>
+                <th class="text-center px-4 py-3 font-medium w-24">Signal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-900">${rows}</tbody>
+          </table>
+        </div>
+        <div class="mt-4 flex items-center justify-between text-[11px] text-zinc-500">
+          <div>Showing ${showAll ? events.length : Math.min(6, events.length)} of ${events.length}${!showAll ? ` · <button class="text-zinc-300 hover:text-zinc-100 underline" onclick="showAllPast = true; renderPast();">show all</button>` : ''}</div>
+          <div>* ROAS reflects open pipeline · expect 25–40% lift over 2 weeks</div>
+        </div>`;
+
+      renderCompareBar();
+    }
+
+    function isPipelineOpen(ev) {
+      if (!ev.live_at) return false;
+      const days = (Date.now() - new Date(ev.live_at).getTime()) / 86400000;
+      return days >= 0 && days < 14;
+    }
+
+    function tableRow(ev, top3, bot3) {
+      const s = ev.snapshot || {};
+      const isSel = selectedIds.has(ev.event_id);
+      const open = isPipelineOpen(ev);
+      const roas = s.overall_roas;
+      const rowCls = top3.has(ev.event_id) ? 'row-top' : bot3.has(ev.event_id) ? 'row-bot' : 'row-mid';
+      const roasCls = roas == null ? 'text-zinc-500'
+                    : roas >= 8 ? 'gradient-text-em font-bold text-base'
+                    : roas >= 4 ? 'text-emerald-400 font-bold'
+                    : roas >= 2 ? 'text-zinc-200 font-semibold'
+                    : 'text-rose-400 font-bold';
+      const signalBadge = top3.has(ev.event_id) && !open
+        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 font-semibold uppercase tracking-widest">★ Best</span>'
+        : open
+        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300 font-semibold uppercase tracking-widest">⏱ Pipeline</span>'
+        : bot3.has(ev.event_id)
+        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-rose-900/40 text-rose-300 font-semibold uppercase tracking-widest">Bottom</span>'
+        : '<span class="text-[10px] text-zinc-500">—</span>';
+
+      return `
+        <tr class="${rowCls} hover:bg-zinc-900/40 cursor-pointer" onclick="goToEvent(event, '${esc(ev.event_id)}')">
+          <td class="px-4 py-3" onclick="event.stopPropagation();"><input type="checkbox" class="rounded" data-id="${esc(ev.event_id)}" ${isSel?'checked':''} onchange="toggleSel('${esc(ev.event_id)}', this.checked)"></td>
+          <td class="px-4 py-3">
+            <div class="font-medium text-zinc-100">${esc(ev.title || ev.event_id)}</div>
+            <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}${ev.instructor_role ? ' · ' + esc(ev.instructor_role) : ''}</div>
+          </td>
+          <td class="px-4 py-3 text-right text-zinc-400">${esc(fmtDate(ev.live_at))}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="text-zinc-100">${fmtNRaw(s.total_regs)}</div>
+            <div class="text-[11px] text-zinc-500">${s.attendance_pct != null ? s.attendance_pct.toFixed(0) + '% att' : '—'}</div>
+          </td>
+          <td class="px-4 py-3 text-right text-zinc-100">${fmtMoneyRaw(s.meta_spend)}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="font-medium text-zinc-100">${s.sales != null ? s.sales : '—'}</div>
+            <div class="text-[11px] text-zinc-500">${revINR(s) ? fmtMoney(revINR(s)) : '—'}</div>
+          </td>
+          <td class="px-4 py-3 text-right ${roasCls}">${fmtROAS(roas)}${open ? '*' : ''}</td>
+          <td class="px-4 py-3 text-center">${signalBadge}</td>
+        </tr>`;
+    }
+
+    function goToEvent(e, id) {
+      // Don't navigate if clicking on checkbox or other interactive element
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+      window.location.href = '/event.html?id=' + encodeURIComponent(id);
+    }
+
+    function renderLearnings(events) {
+      const closed = events.filter(ev => !isPipelineOpen(ev) && ev.snapshot?.overall_roas != null);
+      if (closed.length < 6) { document.getElementById('learningsArea').innerHTML = ''; return; }
+      const top3 = [...closed].sort((a,b) => (b.snapshot.overall_roas||0) - (a.snapshot.overall_roas||0)).slice(0,3);
+      const bot3 = [...closed].sort((a,b) => (a.snapshot.overall_roas||0) - (b.snapshot.overall_roas||0)).slice(0,3);
+
+      document.getElementById('learningsArea').innerHTML = `
+        <h2 class="text-base font-semibold tracking-tight mb-5">What we learned</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-5 rounded-xl border border-emerald-900/40 bg-gradient-to-br from-emerald-950/30 to-zinc-900/40">
+            <div class="text-[10px] uppercase tracking-widest text-emerald-300 mb-3">Top 3 by ROAS</div>
+            <div class="space-y-3">
+              ${top3.map(ev => `
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm text-zinc-100 truncate">${esc(ev.title || ev.event_id)} <span class="text-zinc-500 text-[11px]">(${esc(fmtDate(ev.live_at))})</span></div>
+                  <div class="text-sm font-bold ${ev.snapshot.overall_roas >= 8 ? 'gradient-text-em' : 'text-emerald-400'} whitespace-nowrap">${fmtROAS(ev.snapshot.overall_roas)}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div class="p-5 rounded-xl border border-zinc-800 bg-zinc-900/40">
+            <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Bottom 3 (excl. pipeline)</div>
+            <div class="space-y-3">
+              ${bot3.map(ev => `
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm text-zinc-100 truncate">${esc(ev.title || ev.event_id)} <span class="text-zinc-500 text-[11px]">(${esc(fmtDate(ev.live_at))})</span></div>
+                  <div class="text-sm font-bold ${ev.snapshot.overall_roas < 2 ? 'text-rose-400' : 'text-zinc-300'} whitespace-nowrap">${fmtROAS(ev.snapshot.overall_roas)}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── Multi-select for Compare ───────────────────────────
+    function toggleSel(id, checked) {
+      if (checked) selectedIds.add(id); else selectedIds.delete(id);
+      renderCompareBar();
+    }
+    function toggleSelAll(checked) {
+      if (checked) lastEvents.forEach(e => selectedIds.add(e.event_id));
+      else selectedIds.clear();
+      renderPast();
+    }
+    function renderCompareBar() {
+      const n = selectedIds.size;
+      let bar = document.getElementById('compareBar');
+      if (n < 2) { if (bar) bar.remove(); return; }
+      const html = `
+        <div id="compareBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-zinc-900 text-white rounded-full shadow-lg px-5 py-2.5 flex items-center gap-3 text-sm border border-zinc-700">
+          <span class="font-medium">${n} selected</span>
+          <button onclick="clearSel()" class="text-zinc-400 hover:text-white text-xs">clear</button>
+          <a href="/compare.html?ids=${Array.from(selectedIds).map(encodeURIComponent).join(',')}" class="bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 rounded-full px-3 py-1 text-xs font-semibold no-underline">Compare →</a>
+        </div>`;
+      if (bar) bar.outerHTML = html; else document.body.insertAdjacentHTML('beforeend', html);
+    }
+    function clearSel() {
+      selectedIds.clear();
+      renderPast();
+      renderCompareBar();
+    }
+
+    function switchTab(status) {
+      if (currentStatus === status) return;
+      currentStatus = status;
+      selectedIds.clear();
+      showAllPast = false;
+      renderCompareBar();
+      document.getElementById('tabUp').className   = 'px-4 py-2 border-r border-zinc-800 font-medium ' + (status === 'upcoming' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300');
+      document.getElementById('tabPast').className = 'px-4 py-2 font-medium ' + (status === 'aired' ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300');
+      document.getElementById('pageTitle').textContent = status === 'upcoming' ? 'Upcoming masterclasses' : 'Past masterclasses';
+      document.getElementById('pageSub').textContent   = status === 'upcoming' ? 'Live data · synced with daily snapshot' : 'Ranked by ROAS · click row to drill in';
+      load();
+    }
+
+    applyCountryButtons();
+    applyTheme();
+    checkAuth();
+  </script>
 </body>
 </html>
