@@ -72,6 +72,18 @@ def _row_to_dict(r):
             out[k] = v
     return out
 
+def _cell_to_str(v):
+    """Format a BQ value for a Google Sheets cell."""
+    if v is None:
+        return ''
+    if isinstance(v, (datetime.date, datetime.datetime)):
+        return v.isoformat()
+    if isinstance(v, decimal.Decimal):
+        return float(v)
+    if isinstance(v, (dict, list)):
+        return json.dumps(v, default=str)
+    return v if isinstance(v, (int, float, bool)) else str(v)
+
 def _generate_event_id(body):
     """Slug: <first-4-title-words>-<instructor-initials>-<mmm-dd>."""
     title      = (body.get('title') or '').strip()
@@ -144,6 +156,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'error': 'Not authenticated'})
                 return
             self._list_series(p)
+            return
+        if path == '/event/poll-qna-export':
+            if not _session_email(self):
+                self._json_response(401, {'error': 'Not authenticated'})
+                return
+            self._poll_qna_export(p)
             return
         super().do_GET()
 
@@ -576,6 +594,142 @@ ORDER BY e.live_at DESC"""
             save_snapshot_config(body)
             self._json_response(200, {'ok': True})
         except Exception as e:
+            self._json_response(500, {'error': str(e)})
+
+    def _poll_qna_export(self, parsed_url):
+        """Pull poll + Q&A data for an event from the Zoom views, write to a fresh
+        Google Sheet (one tab each), share with IK domain, return the URL."""
+        qs = urllib.parse.parse_qs(parsed_url.query)
+        event_id = qs.get('event_id', [None])[0] or qs.get('id', [None])[0]
+        if not event_id:
+            self._json_response(400, {'error': 'Missing event_id'})
+            return
+        try:
+            from google.cloud import bigquery
+            from googleapiclient.discovery import build
+            from google.auth import default
+
+            client = bigquery.Client(project=BQ_APP_PROJECT)
+            ev_rows = list(client.query(
+                f"SELECT title, live_at, country FROM `{BQ_APP_PROJECT}.events.event` WHERE event_id = @eid",
+                job_config=bigquery.QueryJobConfig(query_parameters=[bigquery.ScalarQueryParameter('eid', 'STRING', event_id)])
+            ).result())
+            if not ev_rows:
+                self._json_response(404, {'error': f'Event not found: {event_id}'})
+                return
+            ev = ev_rows[0]
+            title = ev['title'] or ''
+            live_at = ev['live_at']
+            country = (ev['country'] or '').strip()
+            is_us = country.lower() in ('us', 'usa', 'united states')
+            tz = 'America/Los_Angeles' if is_us else 'Asia/Kolkata'
+            date_col = 'webinar_date_pst' if is_us else 'webinar_date_ist'
+            event_date = live_at.astimezone(__import__('datetime').timezone.utc).date() if live_at else None
+            if event_date is None:
+                self._json_response(400, {'error': 'Event has no live_at date'})
+                return
+
+            src = bigquery.Client(project='ik-marketing-data')
+
+            # Poll rows
+            poll_q = f"""
+              SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_polls_view`
+              WHERE webinar_topic = @t AND DATE(webinar_date, '{tz}') = @d
+            """
+            poll_job = src.query(poll_q, job_config=bigquery.QueryJobConfig(query_parameters=[
+                bigquery.ScalarQueryParameter('t', 'STRING', title),
+                bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
+            ]))
+            poll_rows = list(poll_job.result())
+            poll_fields = [f.name for f in poll_job.schema] if poll_job.schema else []
+
+            # Q&A rows
+            qna_q = f"""
+              SELECT * FROM `ik-marketing-data.Webinar_analytics.zoom_webinar_qa_json_view`
+              WHERE webinar_type = @t AND DATE(webinar_date, '{tz}') = @d
+            """
+            qna_job = src.query(qna_q, job_config=bigquery.QueryJobConfig(query_parameters=[
+                bigquery.ScalarQueryParameter('t', 'STRING', title),
+                bigquery.ScalarQueryParameter('d', 'DATE', event_date.isoformat()),
+            ]))
+            qna_rows = list(qna_job.result())
+            qna_fields = [f.name for f in qna_job.schema] if qna_job.schema else []
+
+            def to_table(fields, rows):
+                if not fields:
+                    return [['No data']]
+                out = [fields]
+                for r in rows:
+                    out.append([_cell_to_str(r.get(f)) for f in fields])
+                if len(out) == 1:
+                    out.append(['(no rows matched ' + title + ' on ' + event_date.isoformat() + ')'])
+                return out
+
+            poll_table = to_table(poll_fields, poll_rows)
+            qna_table  = to_table(qna_fields, qna_rows)
+
+            # Create the Google Sheet
+            creds, _ = default(scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+            sheets = build('sheets', 'v4', credentials=creds, cache_discovery=False)
+            drive  = build('drive',  'v3', credentials=creds, cache_discovery=False)
+
+            sheet_title = f"Poll & Q&A — {title} ({event_date.isoformat()})"[:99]
+            created = sheets.spreadsheets().create(body={
+                'properties': {'title': sheet_title},
+                'sheets': [
+                    {'properties': {'title': 'Polls', 'gridProperties': {'rowCount': max(50, len(poll_table) + 10), 'columnCount': max(20, len(poll_fields) + 2)}}},
+                    {'properties': {'title': 'Q&A',   'gridProperties': {'rowCount': max(50, len(qna_table)  + 10), 'columnCount': max(20, len(qna_fields)  + 2)}}},
+                ],
+            }, fields='spreadsheetId,spreadsheetUrl').execute()
+            spreadsheet_id = created['spreadsheetId']
+            spreadsheet_url = created['spreadsheetUrl']
+
+            sheets.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id, body={
+                'valueInputOption': 'RAW',
+                'data': [
+                    {'range': 'Polls!A1', 'values': poll_table},
+                    {'range': 'Q&A!A1',   'values': qna_table},
+                ],
+            }).execute()
+
+            # Header formatting (bold + frozen row 1) on each sheet
+            sheet_ids = {s['properties']['title']: s['properties']['sheetId'] for s in sheets.spreadsheets().get(spreadsheetId=spreadsheet_id, fields='sheets.properties').execute()['sheets']}
+            sheets.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body={'requests': [
+                {'updateSheetProperties': {'properties': {'sheetId': sid, 'gridProperties': {'frozenRowCount': 1}}, 'fields': 'gridProperties.frozenRowCount'}}
+                for sid in sheet_ids.values()
+            ] + [
+                {'repeatCell': {'range': {'sheetId': sid, 'startRowIndex': 0, 'endRowIndex': 1},
+                                'cell': {'userEnteredFormat': {'textFormat': {'bold': True}, 'backgroundColor': {'red': 0.94, 'green': 0.94, 'blue': 0.96}}},
+                                'fields': 'userEnteredFormat(textFormat,backgroundColor)'}}
+                for sid in sheet_ids.values()
+            ]}).execute()
+
+            # Share with IK domain (anyone in interviewkickstart.com can view)
+            try:
+                drive.permissions().create(fileId=spreadsheet_id, body={
+                    'type': 'domain', 'domain': 'interviewkickstart.com', 'role': 'reader',
+                }, sendNotificationEmail=False, supportsAllDrives=True).execute()
+            except Exception as ee:
+                # Domain sharing may fail if Drive policy restricts it — fall back to public-link reader
+                try:
+                    drive.permissions().create(fileId=spreadsheet_id, body={
+                        'type': 'anyone', 'role': 'reader',
+                    }).execute()
+                except Exception:
+                    pass
+
+            self._json_response(200, {
+                'ok': True,
+                'spreadsheet_url': spreadsheet_url,
+                'spreadsheet_id': spreadsheet_id,
+                'poll_rows': len(poll_rows),
+                'qna_rows': len(qna_rows),
+                'event_title': title,
+                'event_date': event_date.isoformat(),
+            })
+        except Exception as e:
+            import traceback
+            print(f'[poll-qna-export] error: {e}\n{traceback.format_exc()}')
             self._json_response(500, {'error': str(e)})
 
     def _run_snapshot(self):

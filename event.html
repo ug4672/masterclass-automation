@@ -157,6 +157,29 @@ function getEventId() {
   return new URLSearchParams(window.location.search).get('id') || '';
 }
 
+async function exportPollQna(eventId) {
+  const btn = document.getElementById('pollReportBtn');
+  const lbl = document.getElementById('pollReportLbl');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  const original = lbl.textContent;
+  lbl.textContent = 'Building sheet…';
+  btn.classList.add('opacity-60');
+  try {
+    const r = await fetch(`/event/poll-qna-export?event_id=${encodeURIComponent(eventId)}`);
+    const d = await r.json();
+    if (!r.ok || !d.spreadsheet_url) throw new Error(d.error || 'Failed to build sheet');
+    window.open(d.spreadsheet_url, '_blank', 'noopener');
+    lbl.textContent = `Opened (${d.poll_rows} polls · ${d.qna_rows} Q&A)`;
+    setTimeout(() => { lbl.textContent = original; btn.disabled = false; btn.classList.remove('opacity-60'); }, 4000);
+  } catch (e) {
+    lbl.textContent = 'Failed: ' + e.message;
+    btn.classList.remove('opacity-60');
+    btn.classList.add('text-rose-600');
+    setTimeout(() => { lbl.textContent = original; btn.disabled = false; btn.classList.remove('text-rose-600'); }, 5000);
+  }
+}
+
 async function load() {
   const id = getEventId();
   if (!id) {
@@ -229,6 +252,10 @@ function render(data) {
               Join Zoom
             </a>` : ''}
             ${ev.landing_url ? `<a href="${esc(ev.landing_url)}" target="_blank" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5 no-underline">Landing ↗</a>` : ''}
+            ${isAired ? `<button id="pollReportBtn" onclick="exportPollQna('${esc(ev.event_id)}')" class="px-3.5 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span id="pollReportLbl">Poll & Q&A Report</span>
+            </button>` : ''}
           </div>
           <div class="text-right">
             <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">${isAired ? 'Aired on' : 'Goes live'}</div>
