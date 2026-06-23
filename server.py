@@ -188,6 +188,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._save_snapshot_config()
         elif self.path == '/events':
             self._create_event()
+        elif self.path.startswith('/events/'):
+            # Per-event refresh: POST /events/<id>/refresh
+            p = urllib.parse.urlparse(self.path)
+            if p.path.endswith('/refresh'):
+                eid = urllib.parse.unquote(p.path[len('/events/'):-len('/refresh')])
+                self._refresh_event(eid)
+            else:
+                self.send_response(404)
+                self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
@@ -511,10 +520,19 @@ ORDER BY e.live_at DESC"""
                     f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_snapshot`
                         WHERE event_id = @eid
                         ORDER BY snapshot_at DESC LIMIT 1""", param)
+                # Align daily rows with the same snapshot run as the cumulative
+                # snapshot above. Without this, a refresh that writes fewer dates
+                # than a previous run leaves stale per-date rows from older runs,
+                # so daily-sum > cumulative (bento KPI). Filtering by the latest
+                # snapshot_at guarantees both views come from one point in time.
                 daily_fut = ex.submit(run,
                     f"""SELECT * FROM `{BQ_APP_PROJECT}.history.event_daily`
                         WHERE event_id = @eid
-                        QUALIFY ROW_NUMBER() OVER (PARTITION BY registration_date ORDER BY snapshot_at DESC) = 1
+                          AND snapshot_at = (
+                            SELECT MAX(snapshot_at)
+                            FROM `{BQ_APP_PROJECT}.history.event_snapshot`
+                            WHERE event_id = @eid
+                          )
                         ORDER BY registration_date""", param)
 
                 ev_rows = ev_fut.result()
@@ -735,6 +753,57 @@ ORDER BY e.live_at DESC"""
         except Exception as e:
             self._json_response(500, {'error': str(e)})
 
+    def _refresh_event(self, event_id):
+        """Per-event snapshot. Runs the same _build_event_snapshot path the cron
+        uses, but for a single event_id picked by the caller. Skips the cron's
+        active-window filter so the user can refresh older events too.
+        Writes new rows to history.event_daily + history.event_snapshot."""
+        from google.cloud import bigquery
+        if not event_id or '/' in event_id:
+            self._json_response(400, {'error': 'Invalid event_id'})
+            return
+        try:
+            client = bigquery.Client(project=BQ_APP_PROJECT)
+            rows = list(client.query(
+                f"SELECT event_id, country, webinar_type, live_at, day2_live_at "
+                f"FROM `{BQ_APP_PROJECT}.events.event` WHERE event_id = @eid",
+                job_config=bigquery.QueryJobConfig(query_parameters=[
+                    bigquery.ScalarQueryParameter('eid', 'STRING', event_id)
+                ])
+            ).result())
+            if not rows:
+                self._json_response(404, {'error': 'Event not found'})
+                return
+            ev = rows[0]
+            now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+            now_iso = now.isoformat().replace('+00:00', 'Z')
+            result = _build_event_snapshot(client, ev, now, now_iso)
+            if result is None:
+                self._json_response(400, {'error': f'Country "{ev.country}" snapshot not supported. India and US only.'})
+                return
+            daily_rows, snap_row = result
+            if daily_rows:
+                errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_daily', daily_rows)
+                if errs:
+                    self._json_response(500, {'error': 'event_daily insert failed', 'details': errs})
+                    return
+            errs = client.insert_rows_json(f'{BQ_APP_PROJECT}.history.event_snapshot', [snap_row])
+            if errs:
+                self._json_response(500, {'error': 'event_snapshot insert failed', 'details': errs})
+                return
+            self._json_response(200, {
+                'ok': True,
+                'event_id': event_id,
+                'daily_rows': len(daily_rows),
+                'snapshot_at': snap_row.get('snapshot_at'),
+            })
+        except Exception as e:
+            import traceback, sys
+            tb = traceback.format_exc()
+            sys.stderr.write(f'[refresh-event] {event_id} error: {e}\n{tb}\n')
+            sys.stderr.flush()
+            self._json_response(500, {'error': str(e), 'traceback': tb.splitlines()[-6:]})
+
     def _auth_verify(self):
         length = int(self.headers.get('Content-Length', 0))
         body   = json.loads(self.rfile.read(length)) if length else {}
@@ -859,22 +928,27 @@ def send_slack_dm(token, user_id, text):
     post('https://slack.com/api/chat.postMessage', {'channel': ch['channel']['id'], 'text': text})
 
 def _do_snapshot(days_back=14):
-    """Two independent paths: (1) legacy Slack DM from snapshot_config;
-    (2) per-event BQ snapshot writes to history.event_daily + history.event_snapshot.
-    Failure of one doesn't block the other. days_back widens the active-event window
-    for backfilling older events."""
+    """Per-event BQ snapshot — writes to history.event_daily + history.event_snapshot.
+    days_back widens the active-event window for backfilling older events.
+
+    The legacy Slack DM path (_snapshot_to_slack) is currently DISABLED — its
+    spend-join logic uses naive LIKE matching while _snapshot_events_to_bq uses
+    REGEXP-normalised matching, producing slightly different numbers in the
+    daily Slack DM vs the event page. Re-enable below once the dedup logic is
+    ported from server.py:1024-1034. Manual "Send to Slack" on the legacy Leads
+    tab still works (separate code path)."""
     errors = []
-    try:
-        _snapshot_to_slack()
-    except Exception as e:
-        errors.append(f'slack: {e}')
-        print(f'  [snapshot/slack] error: {e}')
+    # try:
+    #     _snapshot_to_slack()
+    # except Exception as e:
+    #     errors.append(f'slack: {e}')
+    #     print(f'  [snapshot/slack] error: {e}')
     try:
         _snapshot_events_to_bq(days_back=days_back)
     except Exception as e:
         errors.append(f'bq: {e}')
         print(f'  [snapshot/bq] error: {e}')
-    if len(errors) == 2:
+    if errors:
         raise Exception('; '.join(errors))
 
 def _snapshot_to_slack():
@@ -904,8 +978,12 @@ WITH leads AS (
 spends AS (
   SELECT DATE(campaign_date) AS spend_date, campaign_name, SUM(cost) AS total_spend
   FROM `ik-marketing-data.India_Leads.Combined_India_Spend`
+  -- Same exclusions as US (2026-06-22), kept for parity if this legacy
+  -- _snapshot_to_slack path is ever re-enabled.
   WHERE (LOWER(campaign_name) LIKE '%l10x%' OR LOWER(campaign_name) LIKE '%masterclass%')
     AND (LOWER(campaign_name) LIKE '%meta%' OR LOWER(campaign_name) LIKE '%facebook%' OR LOWER(campaign_name) LIKE '%l10x%')
+    AND LOWER(campaign_name) NOT LIKE '%recorded_masterclass%'
+    AND LOWER(campaign_name) NOT LIKE '%holiday_offer%'
   GROUP BY spend_date, campaign_name
 )
 SELECT l.registration_date, l.channel, l.utm_campaign, l.total_leads, SUM(s.total_spend) AS total_spend
@@ -928,6 +1006,17 @@ ORDER BY l.registration_date, l.channel, l.utm_campaign"""
 # Channel classifiers — match the existing Slack snapshot logic.
 _RE_META = re.compile(r'facebook|fb', re.I)
 _RE_CRM  = re.compile(r'email|whatsapp|whats.?app', re.I)
+
+# Per-event spend corrections — added when source pipeline drops days.
+# Survives nightly cron overwrites: applied inside _cumulative_snapshot_row.
+# meta_spend is in the event's local currency (INR for India, USD for US).
+SPEND_CORRECTIONS = {
+    # May 3, 2026 spend was dropped from Combined_India_Spend for the 5
+    # Pilot_Meta_L10X_India_01_AI_Launchpad_9_10_May* campaigns.
+    # User-verified (2026-06-23) from Meta Ads Manager:
+    #   May1 ₹14,842 + May2 ₹9,783 + May3 ₹12,994 ≈ ₹37,619.
+    'ai-launchpad-master-ai-may09': 37619.0,
+}
 
 def _snapshot_events_to_bq(days_back=14):
     """For each active event, query lead funnel and write rows to
@@ -1017,8 +1106,12 @@ WITH leads AS (
 spends AS (
   SELECT DATE(campaign_date) AS spend_date, campaign_name, SUM(cost) AS total_spend
   FROM `ik-marketing-data.India_Leads.Combined_India_Spend`
+  -- Same exclusions as US (2026-06-22): drop evergreen/promo L10X campaigns
+  -- that aren't tied to a specific event.
   WHERE (LOWER(campaign_name) LIKE '%l10x%' OR LOWER(campaign_name) LIKE '%masterclass%')
     AND (LOWER(campaign_name) LIKE '%meta%' OR LOWER(campaign_name) LIKE '%facebook%' OR LOWER(campaign_name) LIKE '%l10x%')
+    AND LOWER(campaign_name) NOT LIKE '%recorded_masterclass%'
+    AND LOWER(campaign_name) NOT LIKE '%holiday_offer%'
   GROUP BY spend_date, campaign_name
 ),
 matched_campaigns AS (
@@ -1087,34 +1180,35 @@ ORDER BY l.registration_date, l.channel"""
             'extras':            None,
         })
 
-    # ─── 2. Cohort (role category + work_ex) ──────────────────────────────────
-    cohort = _safe_query(_query_cohort_india, src_client, date_literal, wt_param,
-                         label=f'cohort/{ev.event_id}',
-                         default={'role_sde': None, 'role_ml': None, 'role_fe': None,
-                                  'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
-                                  'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
-                                  'we_10_15': None, 'we_15_20': None, 'we_20p': None,
-                                  'we_other': None, 'we_10p': None})
+    # ─── 2-6. Sub-queries (cohort, attendance, calls, emails, sales) in parallel ──
+    # Each is an independent BigQuery scan; running them concurrently drops
+    # per-event snapshot time from sum(queries) to max(queries). _safe_query
+    # swallows per-query failures so one slow source doesn't take down the row.
+    cohort_default = {'role_sde': None, 'role_ml': None, 'role_fe': None,
+                      'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
+                      'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
+                      'we_10_15': None, 'we_15_20': None, 'we_20p': None,
+                      'we_other': None, 'we_10p': None}
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        f_cohort     = ex.submit(_safe_query, _query_cohort_india,     src_client, date_literal, wt_param, label=f'cohort/{ev.event_id}',     default=cohort_default)
+        f_attendance = ex.submit(_safe_query, _query_attendance_india, src_client, date_literal, wt_param, label=f'attendance/{ev.event_id}', default={'attendees': None, 'attendance_pct': None})
+        f_calls      = ex.submit(_safe_query, _query_calls_india,      src_client, date_literal, wt_param, label=f'calls/{ev.event_id}',      default={
+            'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None,
+            'call_total_leads': None,
+            'call_pre_attempts': None, 'call_pre_connects': None, 'call_pre_talk_mins': None, 'call_pre_covered': None,
+            'call_p2_attempts':  None, 'call_p2_connects':  None, 'call_p2_talk_mins':  None, 'call_p2_covered':  None,
+            'call_p7_attempts':  None, 'call_p7_connects':  None, 'call_p7_talk_mins':  None, 'call_p7_covered':  None,
+            'call_p14_attempts': None, 'call_p14_connects': None, 'call_p14_talk_mins': None, 'call_p14_covered': None,
+            'call_p14p_attempts':None, 'call_p14p_connects':None, 'call_p14p_talk_mins':None, 'call_p14p_covered':None,
+        })
+        f_email      = ex.submit(_safe_query, _query_emails_india,     src_client, date_literal, wt_param, label=f'emails/{ev.event_id}',     default={'email_sent': None, 'email_delivered': None, 'email_opened': None, 'email_clicked': None})
+        f_sales      = ex.submit(_safe_query, _query_sales_india,      src_client, date_literal, wt_param, label=f'sales/{ev.event_id}',      default={'sales': None, 'revenue': None, 'paid_revenue': None})
 
-    # ─── 3. Attendance from Zoom roster ───────────────────────────────────────
-    attendance = _safe_query(_query_attendance_india, src_client, date_literal, wt_param,
-                             label=f'attendance/{ev.event_id}',
-                             default={'attendees': None, 'attendance_pct': None})
-
-    # ─── 4. Call efforts ──────────────────────────────────────────────────────
-    call_data = _safe_query(_query_calls_india, src_client, date_literal, wt_param,
-                            label=f'calls/{ev.event_id}',
-                            default={'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None})
-
-    # ─── 5. Email reminder funnel ─────────────────────────────────────────────
-    email = _safe_query(_query_emails_india, src_client, date_literal, wt_param,
-                        label=f'emails/{ev.event_id}',
-                        default={'email_sent': None, 'email_delivered': None, 'email_opened': None, 'email_clicked': None})
-
-    # ─── 6. Sales & Revenue ───────────────────────────────────────────────────
-    sales_data = _safe_query(_query_sales_india, src_client, date_literal, wt_param,
-                             label=f'sales/{ev.event_id}',
-                             default={'sales': None, 'revenue': None, 'paid_revenue': None})
+        cohort     = f_cohort.result()
+        attendance = f_attendance.result()
+        call_data  = f_calls.result()
+        email      = f_email.result()
+        sales_data = f_sales.result()
 
     snap_row = _cumulative_snapshot_row(ev.event_id, daily, ev.live_at, now, now_iso,
                                         cohort=cohort, attendance=attendance,
@@ -1336,37 +1430,54 @@ SELECT
   SUM(p14p_calls) AS p14p_total_calls, SUM(p14p_conn) AS p14p_total_conn, SUM(p14p_talk_mins) AS p14p_total_talk_mins, COUNTIF(p14p_calls > 0) AS p14p_covered_leads
 FROM per_lead"""
     r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    empty = {
+        'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None,
+        'call_total_leads': None,
+        'call_pre_attempts': None, 'call_pre_connects': None, 'call_pre_talk_mins': None, 'call_pre_covered': None,
+        'call_p2_attempts':  None, 'call_p2_connects':  None, 'call_p2_talk_mins':  None, 'call_p2_covered':  None,
+        'call_p7_attempts':  None, 'call_p7_connects':  None, 'call_p7_talk_mins':  None, 'call_p7_covered':  None,
+        'call_p14_attempts': None, 'call_p14_connects': None, 'call_p14_talk_mins': None, 'call_p14_covered': None,
+        'call_p14p_attempts':None, 'call_p14p_connects':None, 'call_p14p_talk_mins':None, 'call_p14p_covered':None,
+    }
     if not r:
-        return {'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None, 'extras': None}
+        return empty
     row = r[0]
     n = lambda k: int(row[k] or 0)
     g = lambda k: float(row[k] or 0)
-    def bucket(prefix):
-        return {
-            'attempts':      n(f'{prefix}_total_calls'),
-            'connects':      n(f'{prefix}_total_conn'),
-            'talk_mins':     g(f'{prefix}_total_talk_mins'),
-            'covered_leads': n(f'{prefix}_covered_leads'),
-        }
-    extras = {
-        'call_buckets': {
-            'total_leads': n('total_leads'),
-            'pre':   bucket('pre'),
-            'p_2d':  bucket('p2'),
-            'p_7d':  bucket('p7'),
-            'p_14d': bucket('p14'),
-            'p_14p': bucket('p14p'),
-        }
-    }
-    # Back-compat top-level: pre-webinar values (existing semantics)
     pre_conn = n('pre_total_conn')
     pre_talk_mins = g('pre_total_talk_mins')
     avg_talk_sec = (pre_talk_mins * 60.0 / pre_conn) if pre_conn > 0 else None
+    # Write lifecycle stages to TOP-LEVEL columns the event page actually reads.
+    # The earlier `extras` JSON dict was rejected by BQ streaming insert because
+    # the table's `extras` column is typed STRUCT, not JSON — so every event's
+    # snapshot row was silently failing to insert. Top-level columns sidestep that.
     return {
+        # Back-compat top-level (pre-webinar values; existing semantics)
         'calls_attempted':  n('pre_total_calls'),
         'calls_connected':  pre_conn,
         'avg_talk_seconds': avg_talk_sec,
-        'extras':           extras,
+        # Lifecycle stages (consumed by event.html Call Efforts dashboard)
+        'call_total_leads':    n('total_leads'),
+        'call_pre_attempts':   n('pre_total_calls'),
+        'call_pre_connects':   n('pre_total_conn'),
+        'call_pre_talk_mins':  g('pre_total_talk_mins'),
+        'call_pre_covered':    n('pre_covered_leads'),
+        'call_p2_attempts':    n('p2_total_calls'),
+        'call_p2_connects':    n('p2_total_conn'),
+        'call_p2_talk_mins':   g('p2_total_talk_mins'),
+        'call_p2_covered':     n('p2_covered_leads'),
+        'call_p7_attempts':    n('p7_total_calls'),
+        'call_p7_connects':    n('p7_total_conn'),
+        'call_p7_talk_mins':   g('p7_total_talk_mins'),
+        'call_p7_covered':     n('p7_covered_leads'),
+        'call_p14_attempts':   n('p14_total_calls'),
+        'call_p14_connects':   n('p14_total_conn'),
+        'call_p14_talk_mins':  g('p14_total_talk_mins'),
+        'call_p14_covered':    n('p14_covered_leads'),
+        'call_p14p_attempts':  n('p14p_total_calls'),
+        'call_p14p_connects':  n('p14p_total_conn'),
+        'call_p14p_talk_mins': g('p14p_total_talk_mins'),
+        'call_p14p_covered':   n('p14p_covered_leads'),
     }
 
 def _query_sales_india(src_client, date_literal, wt_param):
@@ -1554,8 +1665,14 @@ spends AS (
   SELECT DATE(campaign_date, "America/Los_Angeles") AS spend_date,
          SUM(cost_usd_) AS total_spend
   FROM `ik-marketing-data.Google_Sheets.Combined_Spend_data`
+  -- Widened 2026-06-22: keep event-specific paid campaigns whose names contain
+  -- 'masterclass' but not l10x/meta/facebook (e.g., Pilot_Taboola_US_46_Masterclass_AI_Reinvent).
+  -- Then EXCLUDE non-event-specific evergreen/promo campaigns:
+  --   'recorded_masterclass' (Performance_Max_*, Quora_*_Recorded_Masterclass_*) — evergreen lead-gen
+  --   'holiday_offer'        (L10X_Meta_US_Holiday_Offer, _New, _Canada_*)        — promo, not tied to an event
   WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")
-    AND (LOWER(campaign_name) LIKE "%meta%" OR LOWER(campaign_name) LIKE "%facebook%" OR LOWER(campaign_name) LIKE "%l10x%")
+    AND LOWER(campaign_name) NOT LIKE "%recorded_masterclass%"
+    AND LOWER(campaign_name) NOT LIKE "%holiday_offer%"
   GROUP BY spend_date
 )
 SELECT l.registration_date, l.channel_bucket, l.total_leads, s.total_spend
@@ -1625,22 +1742,34 @@ ORDER BY l.registration_date, l.channel_bucket"""
             'extras':            None,
         })
 
-    # ─── 2. Cohort (role + work_ex) ────────────────────────────────────────────
-    cohort = _safe_query(_query_cohort_us, src_client, date_literal, wt_param,
-                         label=f'cohort/{ev.event_id}',
-                         default={'role_sde': None, 'role_ml': None, 'role_fe': None,
-                                  'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
-                                  'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
-                                  'we_10_15': None, 'we_15_20': None, 'we_20p': None,
-                                  'we_other': None, 'we_10p': None})
-
-    # ─── 3. Attendance from Zoom ──────────────────────────────────────────────
-    attendance = _safe_query(_query_attendance_us, src_client, date_literal, wt_param,
-                             label=f'attendance/{ev.event_id}',
-                             default={'attendees': None, 'attendance_pct': None})
+    # ─── 2-5. Cohort + Attendance + Calls + Sales in parallel ───────────────────
+    cohort_default = {'role_sde': None, 'role_ml': None, 'role_fe': None,
+                      'role_management': None, 'role_systems': None, 'role_null': None, 'role_other': None,
+                      'we_0_2': None, 'we_3_5': None, 'we_6_10': None,
+                      'we_10_15': None, 'we_15_20': None, 'we_20p': None,
+                      'we_other': None, 'we_10p': None}
+    calls_default = {
+        'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None,
+        'call_total_leads': None,
+        'call_pre_attempts': None, 'call_pre_connects': None, 'call_pre_talk_mins': None, 'call_pre_covered': None,
+        'call_p2_attempts':  None, 'call_p2_connects':  None, 'call_p2_talk_mins':  None, 'call_p2_covered':  None,
+        'call_p7_attempts':  None, 'call_p7_connects':  None, 'call_p7_talk_mins':  None, 'call_p7_covered':  None,
+        'call_p14_attempts': None, 'call_p14_connects': None, 'call_p14_talk_mins': None, 'call_p14_covered': None,
+        'call_p14p_attempts':None, 'call_p14p_connects':None, 'call_p14p_talk_mins':None, 'call_p14p_covered':None,
+    }
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        f_cohort     = ex.submit(_safe_query, _query_cohort_us,     src_client, date_literal, wt_param, label=f'cohort/{ev.event_id}',     default=cohort_default)
+        f_attendance = ex.submit(_safe_query, _query_attendance_us, src_client, date_literal, wt_param, label=f'attendance/{ev.event_id}', default={'attendees': None, 'attendance_pct': None})
+        f_calls      = ex.submit(_safe_query, _query_calls_us,      src_client, date_literal, wt_param, label=f'calls/{ev.event_id}',      default=calls_default)
+        f_sales      = ex.submit(_safe_query, _query_sales_us,      src_client, date_literal, wt_param, label=f'sales/{ev.event_id}',      default={'sales': None, 'revenue': None, 'paid_revenue': None})
+        cohort     = f_cohort.result()
+        attendance = f_attendance.result()
+        call_data  = f_calls.result()
+        sales_data = f_sales.result()
 
     snap_row = _cumulative_snapshot_row(ev.event_id, daily, ev.live_at, now, now_iso,
-                                        cohort=cohort, attendance=attendance, extra=us_totals)
+                                        cohort=cohort, attendance=attendance,
+                                        call_data=call_data, sales_data=sales_data, extra=us_totals)
     return daily_rows, snap_row
 
 def _query_cohort_us(src_client, date_literal, wt_param):
@@ -1739,6 +1868,184 @@ FROM leads l LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id"""
     pct      = (100.0 * attended / total) if total > 0 else None
     return {'attendees': attended, 'attendance_pct': pct}
 
+def _query_calls_us(src_client, date_literal, wt_param):
+    """US call lifecycle. Same shape as India: 5 windows (pre / 0-2D / 0-7D /
+    0-14D / 14D+) with attempts, connects (duration>120s), talk_mins, and
+    distinct covered leads per window.
+
+    Differences from India:
+      - Lead source = `Bq_data_Alumni` (was `US_Domain_combined_view`)
+      - PT timezone for event start (was Asia/Kolkata)
+      - leads_hubspot_id column (was hubspot_ID)
+      - No work_ex / student / 0-2 / 3-4 filter (US doesn't filter cohort)
+
+    Per user (2026-06-22): "use the same India call logic, swap the lead table".
+    The +12.5h / +13.5h timestamp adjust on `call_metadata.timestamp` is kept
+    as-is, matching India. If US numbers look off this is the first knob —
+    see QA_REPORT.md for context on why the shift is suspect."""
+    from google.cloud import bigquery
+    q = f"""
+WITH base AS (
+  SELECT leads_hubspot_id,
+    DATETIME(event_start_date_time, 'America/Los_Angeles') AS webinar_start_datetime_ch
+  FROM (
+    SELECT leads_hubspot_id, event_start_date_time, formatted_date,
+      DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,
+      dupe_flag, gql_flag, webinar_type, dupe_logic,
+      ROW_NUMBER() OVER (
+        PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+    WHERE dupe_logic = 1
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND webinar_type = @wt
+    AND dupe_flag = 0 AND gql_flag = 0
+),
+base_call AS (
+  SELECT activity_datetime, DATE(activity_datetime) AS activity_date, hubspot_id, call_duration FROM (
+    SELECT
+      CASE WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11,12,1,2,3)
+           THEN DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 13 HOUR + INTERVAL 30 MINUTE
+           ELSE DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 12 HOUR + INTERVAL 30 MINUTE
+      END AS activity_datetime,
+      CAST(hubspot_id AS STRING) AS hubspot_id,
+      duration AS call_duration,
+      ROW_NUMBER() OVER (PARTITION BY call_id ORDER BY
+        CASE WHEN EXTRACT(MONTH FROM DATE(DATETIME(timestamp, "Asia/Kolkata"))) IN (11,12,1,2,3)
+             THEN DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 13 HOUR + INTERVAL 30 MINUTE
+             ELSE DATETIME(timestamp, "Asia/Kolkata") + INTERVAL 12 HOUR + INTERVAL 30 MINUTE
+        END DESC) AS rn
+    FROM `ik-marketing-data.Marketing_data_new_logic.call_metadata`
+    WHERE DATETIME(timestamp, "Asia/Kolkata") >= DATETIME '2024-07-01'
+      AND CAST(hubspot_id AS STRING) IN (SELECT CAST(leads_hubspot_id AS STRING) FROM base)
+  ) WHERE rn = 1
+),
+final_merge AS (
+  SELECT b.leads_hubspot_id, b.webinar_start_datetime_ch,
+         bc.activity_datetime, bc.activity_date, bc.call_duration
+  FROM base b
+  LEFT JOIN base_call bc ON CAST(b.leads_hubspot_id AS STRING) = bc.hubspot_id
+),
+per_lead AS (
+  SELECT
+    leads_hubspot_id,
+    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN 1 END) AS pre_calls,
+    COUNT(CASE WHEN activity_datetime < webinar_start_datetime_ch AND call_duration > 120 THEN 1 END) AS pre_conn,
+    SUM(CASE WHEN activity_datetime < webinar_start_datetime_ch THEN call_duration / 60.0 END) AS pre_talk_mins,
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN activity_datetime END) AS p2_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN activity_datetime END) AS p2_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 2 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p2_talk_mins,
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN activity_datetime END) AS p7_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN activity_datetime END) AS p7_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 7 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p7_talk_mins,
+    COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14_talk_mins,
+    COUNT(DISTINCT CASE WHEN activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
+  FROM final_merge
+  GROUP BY leads_hubspot_id
+)
+SELECT
+  COUNT(*) AS total_leads,
+  SUM(pre_calls)  AS pre_total_calls,  SUM(pre_conn)  AS pre_total_conn,  SUM(pre_talk_mins)  AS pre_total_talk_mins,  COUNTIF(pre_calls > 0)  AS pre_covered_leads,
+  SUM(p2_calls)   AS p2_total_calls,   SUM(p2_conn)   AS p2_total_conn,   SUM(p2_talk_mins)   AS p2_total_talk_mins,   COUNTIF(p2_calls > 0)   AS p2_covered_leads,
+  SUM(p7_calls)   AS p7_total_calls,   SUM(p7_conn)   AS p7_total_conn,   SUM(p7_talk_mins)   AS p7_total_talk_mins,   COUNTIF(p7_calls > 0)   AS p7_covered_leads,
+  SUM(p14_calls)  AS p14_total_calls,  SUM(p14_conn)  AS p14_total_conn,  SUM(p14_talk_mins)  AS p14_total_talk_mins,  COUNTIF(p14_calls > 0)  AS p14_covered_leads,
+  SUM(p14p_calls) AS p14p_total_calls, SUM(p14p_conn) AS p14p_total_conn, SUM(p14p_talk_mins) AS p14p_total_talk_mins, COUNTIF(p14p_calls > 0) AS p14p_covered_leads
+FROM per_lead"""
+    r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    empty = {
+        'calls_attempted': None, 'calls_connected': None, 'avg_talk_seconds': None,
+        'call_total_leads': None,
+        'call_pre_attempts': None, 'call_pre_connects': None, 'call_pre_talk_mins': None, 'call_pre_covered': None,
+        'call_p2_attempts':  None, 'call_p2_connects':  None, 'call_p2_talk_mins':  None, 'call_p2_covered':  None,
+        'call_p7_attempts':  None, 'call_p7_connects':  None, 'call_p7_talk_mins':  None, 'call_p7_covered':  None,
+        'call_p14_attempts': None, 'call_p14_connects': None, 'call_p14_talk_mins': None, 'call_p14_covered': None,
+        'call_p14p_attempts':None, 'call_p14p_connects':None, 'call_p14p_talk_mins':None, 'call_p14p_covered':None,
+    }
+    if not r:
+        return empty
+    row = r[0]
+    n = lambda k: int(row[k] or 0)
+    g = lambda k: float(row[k] or 0)
+    pre_conn = n('pre_total_conn')
+    pre_talk_mins = g('pre_total_talk_mins')
+    avg_talk_sec = (pre_talk_mins * 60.0 / pre_conn) if pre_conn > 0 else None
+    return {
+        'calls_attempted':  n('pre_total_calls'),
+        'calls_connected':  pre_conn,
+        'avg_talk_seconds': avg_talk_sec,
+        'call_total_leads':    n('total_leads'),
+        'call_pre_attempts':   n('pre_total_calls'),
+        'call_pre_connects':   n('pre_total_conn'),
+        'call_pre_talk_mins':  g('pre_total_talk_mins'),
+        'call_pre_covered':    n('pre_covered_leads'),
+        'call_p2_attempts':    n('p2_total_calls'),
+        'call_p2_connects':    n('p2_total_conn'),
+        'call_p2_talk_mins':   g('p2_total_talk_mins'),
+        'call_p2_covered':     n('p2_covered_leads'),
+        'call_p7_attempts':    n('p7_total_calls'),
+        'call_p7_connects':    n('p7_total_conn'),
+        'call_p7_talk_mins':   g('p7_total_talk_mins'),
+        'call_p7_covered':     n('p7_covered_leads'),
+        'call_p14_attempts':   n('p14_total_calls'),
+        'call_p14_connects':   n('p14_total_conn'),
+        'call_p14_talk_mins':  g('p14_total_talk_mins'),
+        'call_p14_covered':    n('p14_covered_leads'),
+        'call_p14p_attempts':  n('p14p_total_calls'),
+        'call_p14p_connects':  n('p14p_total_conn'),
+        'call_p14p_talk_mins': g('p14p_total_talk_mins'),
+        'call_p14p_covered':   n('p14p_covered_leads'),
+    }
+
+def _query_sales_us(src_client, date_literal, wt_param):
+    """US sales: count, USD revenue, YouTube-paid USD revenue.
+    USD throughout (no INR conversion); paid-revenue filter is
+    LOWER(Channel) = 'youtube' (covers any case spelling)."""
+    from google.cloud import bigquery
+    q = f"""
+WITH sales AS (
+  SELECT Sale_date, net_revenue, Channel, dupe_flag
+  FROM (
+    SELECT Sale_date, net_revenue, Channel, dupe_flag, webinar_type,
+      DATE(event_start_date_time, "America/Los_Angeles") AS web_scheduled_date,
+      ROW_NUMBER() OVER (
+        PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "America/Los_Angeles")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+    WHERE dupe_logic = 1
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND webinar_type = @wt
+    AND dupe_flag = 0
+)
+SELECT
+  COUNTIF(Sale_date IS NOT NULL)                                          AS sales,
+  SUM(CASE WHEN Sale_date IS NOT NULL THEN net_revenue END)               AS revenue,
+  -- Paid channels for US masterclass: L10X (paid masterclass funnel) +
+  -- Google YouTube (YT ads). Matches the spend filter used upstream
+  -- (LIKE '%l10x%' OR '%meta%' / '%facebook%'). Verified against
+  -- Bq_data_Alumni distinct Channel values on 2026-06-22.
+  SUM(CASE WHEN Sale_date IS NOT NULL AND Channel IN ('L10X', 'Google YouTube')
+           THEN net_revenue END)                                          AS paid_revenue
+FROM sales"""
+    r = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+    if not r:
+        return {'sales': 0, 'revenue': 0.0, 'paid_revenue': 0.0}
+    row = r[0]
+    return {
+        'sales':        int(row['sales'] or 0),
+        'revenue':      float(row['revenue'] or 0.0),
+        'paid_revenue': float(row['paid_revenue'] or 0.0),
+    }
+
 def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
                               cohort=None, attendance=None, call_data=None, email=None,
                               extra=None, sales_data=None):
@@ -1750,6 +2057,12 @@ def _cumulative_snapshot_row(event_id, daily, live_at, now, now_iso,
     other_regs  = sum(b['other_regs']  for b in daily.values())
     other_spend = sum(b['other_spend'] for b in daily.values())
     total_regs  = meta_regs + crm_regs + other_regs
+
+    # Apply per-event spend correction (e.g., source pipeline dropped a day).
+    correction = SPEND_CORRECTIONS.get(event_id, 0)
+    if correction:
+        meta_spend += correction
+        print(f'  [snapshot/bq] {event_id}: applied spend correction +{correction:.0f}')
 
     hours_to_live = None
     if live_at is not None:
@@ -1811,4 +2124,4 @@ if __name__ == '__main__':
     threading.Thread(target=run_daily_snapshot, daemon=True).start()
     print(f'Serving at http://localhost:{PORT}')
     print(f'Open: http://localhost:{PORT}/Masterclass%20Automation.html')
-    http.server.HTTPServer(('', PORT), Handler).serve_forever()
+    http.server.ThreadingHTTPServer(('', PORT), Handler).serve_forever()

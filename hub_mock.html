@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masterclass Hub — Hub (Redesign Mock)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <link rel="preconnect" href="https://rsms.me/">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+  <style>
+    html, body { font-family: 'Inter', system-ui, sans-serif; }
+    body { font-feature-settings: 'cv02','cv03','cv04','cv11','ss01'; -webkit-font-smoothing: antialiased; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .num-hero { letter-spacing: -0.04em; line-height: 0.95; }
+    .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(244,244,245,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244,244,245,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .pill-active { background: linear-gradient(180deg,#312e81 0%,#1e1b4b 100%); border-color:#6366f1; color:#c7d2fe; }
+    .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .gradient-text-rose { background: linear-gradient(135deg,#fda4af,#f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .row-top { background: linear-gradient(90deg, rgba(34,197,94,0.04), transparent 60%); border-left: 2px solid #10b981; }
+    .row-bot { background: linear-gradient(90deg, rgba(244,63,94,0.04), transparent 60%); border-left: 2px solid #f43f5e; }
+    .row-mid { border-left: 2px solid transparent; }
+    .signal-dot {
+      width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .topic-strip { background: linear-gradient(90deg, var(--topic, #6366f1), transparent 70%); }
+    .topic-glow { position: relative; }
+    .topic-glow::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(circle at top right, var(--topic, transparent), transparent 50%);
+      opacity: 0.06; pointer-events: none;
+    }
+    .live-pulse {
+      background: linear-gradient(90deg, #f43f5e, #ec4899);
+      animation: liveGlow 1.5s ease-in-out infinite;
+    }
+    @keyframes liveGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,0.7); } 50% { box-shadow: 0 0 0 8px rgba(244,63,94,0); } }
+    .skeleton-rev { background: linear-gradient(135deg,#3f3f46,#52525b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0.6; }
+    .hide { display: none !important; }
+    .pacing-bar {
+      height: 4px; border-radius: 2px; background: rgba(63,63,70,0.5); position: relative; overflow: hidden;
+    }
+    .pacing-bar > div { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .card-attn { box-shadow: 0 0 0 1px rgba(244,63,94,0.25), 0 8px 32px -12px rgba(244,63,94,0.35); }
+    .card-good { box-shadow: 0 0 0 1px rgba(52,211,153,0.2), 0 8px 32px -12px rgba(52,211,153,0.25); }
+    .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
+
+  <!-- ── HEADER ────────────────────────────────────────────────── -->
+  <header class="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
+    <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-xs">M</div>
+          <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
+        </div>
+        <nav class="flex items-center gap-1 text-sm">
+          <a class="px-3 py-1.5 rounded-md bg-zinc-900 text-zinc-100 font-medium">Hub</a>
+          <a class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100">Months</a>
+          <a class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-100">Compare</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
+          <button class="px-3 py-1.5 bg-zinc-900 text-zinc-100 border-r border-zinc-800">India</button>
+          <button class="px-3 py-1.5 text-zinc-500 hover:text-zinc-300">US</button>
+        </div>
+        <button class="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 px-3 py-1.5 rounded-lg text-xs font-semibold">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New masterclass
+        </button>
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-8 py-10 space-y-10">
+
+    <!-- ── HEADING + TAB SWITCHER ───────────────────────────────────────────── -->
+    <div class="flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight" id="pageTitle">Upcoming masterclasses</h1>
+        <p class="text-sm text-zinc-500 mt-1" id="pageSub">Live data · synced 2 min ago</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
+          <button onclick="setTab('upcoming')" id="tabUp"  class="px-4 py-2 bg-zinc-900 text-zinc-100 border-r border-zinc-800 font-medium">Upcoming · 9</button>
+          <button onclick="setTab('past')"     id="tabPast" class="px-4 py-2 text-zinc-500 hover:text-zinc-300 font-medium">Past · 19</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPCOMING VIEW ────────────────────────────────────────────────── -->
+    <div id="upcomingView">
+
+      <!-- COMMAND BAR -->
+      <section class="grid grid-cols-4 gap-4 mb-10">
+
+        <div class="p-5 rounded-xl bg-gradient-to-br from-rose-950/40 to-zinc-900 border border-rose-900/40 card-attn">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-[10px] font-medium text-rose-300 uppercase tracking-widest">Live this week</div>
+            <span class="signal-dot bg-rose-400"></span>
+          </div>
+          <div class="num-big text-3xl font-bold tabular">3</div>
+          <div class="mt-2 text-[11px] text-zinc-400">Tonight · Wed · Sat</div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">Goals at risk</div>
+          <div class="num-big text-3xl font-bold tabular text-amber-400">2</div>
+          <div class="mt-2 text-[11px] text-zinc-500">Pacing &lt; 70% to target</div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">Spend today</div>
+          <div class="num-big text-3xl font-bold tabular">₹62K</div>
+          <div class="mt-2 text-[11px] text-zinc-500">Across 5 active campaigns</div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">Pipeline (4w)</div>
+          <div class="num-big text-3xl font-bold tabular">9 <span class="text-lg text-zinc-500">events</span></div>
+          <div class="mt-2 text-[11px] text-zinc-500">2 missing landing page</div>
+        </div>
+      </section>
+
+      <!-- THIS WEEK (urgent) -->
+      <section class="mb-12">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-semibold tracking-tight">This week</h2>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-900/40 text-rose-300 border border-rose-900/60 uppercase tracking-widest">Urgent</span>
+          </div>
+          <button class="text-[11px] text-zinc-500 hover:text-zinc-300">View all upcoming →</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-5">
+
+          <!-- HERO CARD 1 — Tonight (live in 3h) -->
+          <div class="topic-glow p-7 rounded-2xl bg-zinc-900 border border-rose-900/40 cursor-pointer card-attn relative overflow-hidden"
+               style="--topic:#f43f5e;">
+            <div class="absolute top-0 left-0 right-0 h-1 topic-strip"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md live-pulse text-white text-[10px] font-bold uppercase tracking-widest">Going live</span>
+                  <span class="text-[11px] text-zinc-400 font-medium">in 3h 12m</span>
+                </div>
+                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-1 rounded bg-rose-950/40 text-rose-300">AI Systems</span>
+              </div>
+
+              <h3 class="text-2xl font-bold leading-tight mb-4 tracking-tight">Building Production-Ready AI Systems with RAG</h3>
+
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold">SD</div>
+                <div>
+                  <div class="text-sm font-medium">Sarath Dandu</div>
+                  <div class="text-[11px] text-zinc-500">Sr Staff Engineer · Google</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4 mb-5 pb-5 border-b border-zinc-800">
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Registered</div>
+                  <div class="text-lg font-bold tabular">2,847<span class="text-xs text-zinc-500"> / 2,500</span></div>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">CPIQL</div>
+                  <div class="text-lg font-bold tabular text-emerald-400">₹147</div>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Spend</div>
+                  <div class="text-lg font-bold tabular">₹4.18L</div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="text-zinc-500">Goal pacing</span>
+                  <span class="text-emerald-400 font-semibold">114% · ahead</span>
+                </div>
+                <div class="pacing-bar"><div class="bg-gradient-to-r from-emerald-500 to-emerald-400" style="width: 100%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HERO CARD 2 — Wed (goal at risk) -->
+          <div class="topic-glow p-7 rounded-2xl bg-zinc-900 border border-amber-900/40 cursor-pointer relative overflow-hidden"
+               style="--topic:#f59e0b;">
+            <div class="absolute top-0 left-0 right-0 h-1 topic-strip"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-amber-900/30 border border-amber-800/40 text-amber-300 text-[10px] font-bold uppercase tracking-widest">Goal at risk</span>
+                  <span class="text-[11px] text-zinc-400 font-medium">Wed, Jun 24 · 7:30 PM</span>
+                </div>
+                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-1 rounded bg-amber-950/40 text-amber-300">Agents</span>
+              </div>
+
+              <h3 class="text-2xl font-bold leading-tight mb-4 tracking-tight">Multi-Agent Workflows for Real Products</h3>
+
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 flex items-center justify-center text-white text-xs font-bold">PS</div>
+                <div>
+                  <div class="text-sm font-medium">Pranav Shankar</div>
+                  <div class="text-[11px] text-zinc-500">Founding Engineer · Anthropic</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4 mb-5 pb-5 border-b border-zinc-800">
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Registered</div>
+                  <div class="text-lg font-bold tabular text-amber-400">682<span class="text-xs text-zinc-500"> / 1,200</span></div>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">CPIQL</div>
+                  <div class="text-lg font-bold tabular">₹241</div>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Spend</div>
+                  <div class="text-lg font-bold tabular">₹1.64L</div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="text-zinc-500">Goal pacing</span>
+                  <span class="text-amber-400 font-semibold">57% · 4 days to go</span>
+                </div>
+                <div class="pacing-bar"><div class="bg-gradient-to-r from-amber-500 to-amber-400" style="width: 57%;"></div></div>
+                <div class="text-[10px] text-amber-300/80 mt-2">→ Increase Meta budget by ~40% OR extend by 2 days</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEXT 2 WEEKS -->
+      <section class="mb-12">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-base font-semibold tracking-tight">Next 2 weeks</h2>
+          <div class="flex items-center gap-2 text-[11px] text-zinc-600">
+            <span>Sorted by air date</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+
+          <!-- Row 1 - on track -->
+          <div class="topic-glow grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 cursor-pointer" style="--topic:#10b981;">
+            <div class="col-span-1">
+              <div class="text-[10px] uppercase tracking-widest text-zinc-500">Sat</div>
+              <div class="text-base font-bold tracking-tight">Jun 28</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">7:30 PM</div>
+            </div>
+            <div class="col-span-4">
+              <div class="text-sm font-semibold tracking-tight">Mastering RAG Evaluation Frameworks</div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">Saurabh Goyal · Sr SDE @ Stripe</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">1,124 <span class="text-zinc-500 text-xs">/ 1,000</span></div>
+              <div class="text-[10px] text-emerald-400 mt-0.5">112% paced</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-emerald-400">₹163</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">CPIQL</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">₹1.83L</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">spent · 8 days in</div>
+            </div>
+            <div class="col-span-1 text-right">
+              <span class="text-[10px] px-2 py-1 rounded bg-emerald-900/30 text-emerald-300 border border-emerald-900/50 font-semibold uppercase tracking-widest">On track</span>
+            </div>
+          </div>
+
+          <!-- Row 2 - watch -->
+          <div class="topic-glow grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 cursor-pointer" style="--topic:#6366f1;">
+            <div class="col-span-1">
+              <div class="text-[10px] uppercase tracking-widest text-zinc-500">Mon</div>
+              <div class="text-base font-bold tracking-tight">Jun 30</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">7:30 PM</div>
+            </div>
+            <div class="col-span-4">
+              <div class="text-sm font-semibold tracking-tight">Inside Claude Code: Building Real Workflows</div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">Jash Solanki · Ex-Meta · Anthropic</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">412 <span class="text-zinc-500 text-xs">/ 800</span></div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">51% paced</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">₹208</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">CPIQL</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">₹85K</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">spent · 5 days in</div>
+            </div>
+            <div class="col-span-1 text-right">
+              <span class="text-[10px] px-2 py-1 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-semibold uppercase tracking-widest">Watch</span>
+            </div>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="topic-glow grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 cursor-pointer" style="--topic:#a855f7;">
+            <div class="col-span-1">
+              <div class="text-[10px] uppercase tracking-widest text-zinc-500">Sat</div>
+              <div class="text-base font-bold tracking-tight">Jul 05</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">7:30 PM</div>
+            </div>
+            <div class="col-span-4">
+              <div class="text-sm font-semibold tracking-tight">AI Launchpad — Master AI Engineering</div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">Sumit Mittal · Founder @ Trendytech</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular">0 <span class="text-zinc-500 text-xs">/ 3,000</span></div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">launching tomorrow</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-zinc-500">—</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">CPIQL</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-zinc-500">—</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">campaign queued</div>
+            </div>
+            <div class="col-span-1 text-right">
+              <span class="text-[10px] px-2 py-1 rounded bg-indigo-900/30 text-indigo-300 border border-indigo-900/50 font-semibold uppercase tracking-widest">Queued</span>
+            </div>
+          </div>
+
+          <!-- Row 4 -->
+          <div class="topic-glow grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 cursor-pointer" style="--topic:#ec4899;">
+            <div class="col-span-1">
+              <div class="text-[10px] uppercase tracking-widest text-zinc-500">Thu</div>
+              <div class="text-base font-bold tracking-tight">Jul 10</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">7:30 PM</div>
+            </div>
+            <div class="col-span-4">
+              <div class="text-sm font-semibold tracking-tight">DSA Masterclass — From Concept to Confidence</div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">Priya Ranjan · Sr Engineer @ Meta</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-zinc-500">—</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">/ 800 goal</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-zinc-500">—</div>
+              <div class="text-[10px] text-zinc-500 mt-0.5">CPIQL</div>
+            </div>
+            <div class="col-span-2 text-right">
+              <div class="text-sm font-bold tabular text-zinc-500">—</div>
+              <div class="text-[10px] text-amber-300 mt-0.5">no landing page yet</div>
+            </div>
+            <div class="col-span-1 text-right">
+              <span class="text-[10px] px-2 py-1 rounded bg-amber-900/30 text-amber-300 border border-amber-900/50 font-semibold uppercase tracking-widest">Setup</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FUTURE PIPELINE (collapsed) -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-semibold tracking-tight">Pipeline · later than 2 weeks</h2>
+          <button class="text-[11px] text-zinc-500 hover:text-zinc-300">Expand →</button>
+        </div>
+        <div class="text-xs text-zinc-500 p-4 rounded-xl border border-dashed border-zinc-800 bg-zinc-950">
+          3 more events scheduled · <span class="text-zinc-300">Jul 17, Jul 24, Aug 02</span> · all in setup phase
+        </div>
+      </section>
+    </div>
+
+    <!-- ── PAST VIEW ────────────────────────────────────────────────────── -->
+    <div id="pastView" class="hide">
+
+      <!-- MONTHLY ROLLUP TILES -->
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-base font-semibold tracking-tight">Last 6 months</h2>
+          <button class="text-[11px] text-zinc-500 hover:text-zinc-300">Go to Months view →</button>
+        </div>
+
+        <div class="grid grid-cols-6 gap-3">
+
+          <div class="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+            <div class="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Jan 2026</div>
+            <div class="num-big text-2xl font-bold tabular mt-2">2 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">30</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹38L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="text-emerald-400 tabular">5.6x</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-950/30 to-zinc-900 border border-emerald-900/40">
+            <div class="flex items-center justify-between">
+              <div class="text-[10px] font-semibold text-emerald-300 uppercase tracking-widest">Feb 2026</div>
+              <span class="text-[9px] text-emerald-300">★ Best</span>
+            </div>
+            <div class="num-big text-2xl font-bold tabular mt-2">3 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">19</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹24.5L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="gradient-text-em tabular">7.9x</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+            <div class="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Mar 2026</div>
+            <div class="num-big text-2xl font-bold tabular mt-2">4 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">31</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹43.7L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="text-emerald-400 tabular">5.2x</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+            <div class="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Apr 2026</div>
+            <div class="num-big text-2xl font-bold tabular mt-2">3 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">18</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹24.4L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="text-zinc-300 tabular">3.3x</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+            <div class="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">May 2026</div>
+            <div class="num-big text-2xl font-bold tabular mt-2">3 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">20</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹28.2L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="text-zinc-300 tabular">3.7x</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-950/20 border border-amber-900/40">
+            <div class="flex items-center justify-between">
+              <div class="text-[10px] font-semibold text-amber-300 uppercase tracking-widest">Jun 2026</div>
+              <span class="text-[9px] text-amber-300">⏱ open</span>
+            </div>
+            <div class="num-big text-2xl font-bold tabular mt-2">4 <span class="text-xs text-zinc-500 font-normal">events</span></div>
+            <div class="mt-3 pt-3 border-t border-zinc-800 space-y-1">
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">11</span></div>
+              <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">₹13.5L</span></div>
+              <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="text-amber-400 tabular">1.4x*</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FILTERS + SORT -->
+      <section class="mb-5">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Search title, instructor…" class="w-72 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700">
+            <div class="flex border border-zinc-800 rounded-lg overflow-hidden text-xs">
+              <button class="px-3 py-2 bg-zinc-900 text-zinc-100 border-r border-zinc-800">All topics</button>
+              <button class="px-3 py-2 text-zinc-500 hover:text-zinc-300 border-r border-zinc-800">RAG</button>
+              <button class="px-3 py-2 text-zinc-500 hover:text-zinc-300 border-r border-zinc-800">Agents</button>
+              <button class="px-3 py-2 text-zinc-500 hover:text-zinc-300">Systems</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-zinc-500">Sort by</span>
+            <select class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 focus:outline-none">
+              <option>ROAS (highest first)</option>
+              <option>Revenue</option>
+              <option>Sales</option>
+              <option>Date (newest)</option>
+              <option>CPIQL (lowest first)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- EVENT TABLE -->
+      <section>
+        <div class="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/30">
+          <table class="w-full text-sm tabular">
+            <thead class="bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium w-10"><input type="checkbox" class="rounded"></th>
+                <th class="text-left px-4 py-3 font-medium">Event</th>
+                <th class="text-right px-4 py-3 font-medium">Date</th>
+                <th class="text-right px-4 py-3 font-medium">IQLs / Att%</th>
+                <th class="text-right px-4 py-3 font-medium">Spend</th>
+                <th class="text-right px-4 py-3 font-medium">Sales / Rev</th>
+                <th class="text-right px-4 py-3 font-medium">ROAS</th>
+                <th class="text-center px-4 py-3 font-medium w-24">Signal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-900">
+
+              <tr class="row-top hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">Mastering AI System Design</div>
+                  <div class="text-[11px] text-zinc-500">Akhil Aggarwal · Sr SDE @ Microsoft</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Feb 03</td>
+                <td class="px-4 py-3 text-right">
+                  <div>928</div>
+                  <div class="text-[11px] text-zinc-500">26% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">78,749</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">9</div>
+                  <div class="text-[11px] text-zinc-500">₹11.9L</div>
+                </td>
+                <td class="px-4 py-3 text-right gradient-text-em font-bold text-base">15.10x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 font-semibold uppercase tracking-widest">★ Best</span></td>
+              </tr>
+
+              <tr class="row-top hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">Mastering RAG to Build Production Systems</div>
+                  <div class="text-[11px] text-zinc-500">Saurabh Goyal · Sr SDE @ Stripe</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Jan 07</td>
+                <td class="px-4 py-3 text-right">
+                  <div>719</div>
+                  <div class="text-[11px] text-zinc-500">24% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">1,33,599</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">10</div>
+                  <div class="text-[11px] text-zinc-500">₹11.2L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-emerald-400 font-bold text-base">8.42x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 font-semibold uppercase tracking-widest">★ Strong</span></td>
+              </tr>
+
+              <tr class="row-top hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">Deploying Production-Ready LLMs</div>
+                  <div class="text-[11px] text-zinc-500">Jash Solanki · Anthropic</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Feb 19</td>
+                <td class="px-4 py-3 text-right">
+                  <div>688</div>
+                  <div class="text-[11px] text-zinc-500">28% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">1,13,833</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">6</div>
+                  <div class="text-[11px] text-zinc-500">₹8.4L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-emerald-400 font-bold text-base">7.35x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 font-semibold uppercase tracking-widest">★ Strong</span></td>
+              </tr>
+
+              <tr class="row-mid hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-200">Mastering RAG: Advanced Workflows</div>
+                  <div class="text-[11px] text-zinc-500">Sarath Dandu · Google</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Mar 10</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>1,334</div>
+                  <div class="text-[11px] text-zinc-500">22% att</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-300">1,55,240</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>7</div>
+                  <div class="text-[11px] text-zinc-500">₹10.1L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-200 font-semibold">6.53x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] text-zinc-500">—</span></td>
+              </tr>
+
+              <tr class="row-mid hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-200">AI Launchpad — Master AI Engineering</div>
+                  <div class="text-[11px] text-zinc-500">Sumit Mittal · Trendytech</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Mar 21</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>3,098</div>
+                  <div class="text-[11px] text-zinc-500">19% att</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-300">4,79,723</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>18</div>
+                  <div class="text-[11px] text-zinc-500">₹25.4L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-200 font-semibold">5.29x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] text-zinc-500">—</span></td>
+              </tr>
+
+              <tr class="row-mid hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-200">AI Launchpad — Master Practical SDS</div>
+                  <div class="text-[11px] text-zinc-500">Sumit Mittal · Trendytech</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Jan 17</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>2,561</div>
+                  <div class="text-[11px] text-zinc-500">21% att</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-300">5,43,615</td>
+                <td class="px-4 py-3 text-right text-zinc-300">
+                  <div>20</div>
+                  <div class="text-[11px] text-zinc-500">₹26.7L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-200 font-semibold">4.92x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] text-zinc-500">—</span></td>
+              </tr>
+
+              <!-- collapsed -->
+              <tr class="bg-zinc-950/40 cursor-pointer hover:bg-zinc-900/50">
+                <td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-600 hover:text-zinc-400">
+                  ↓ 10 more events (ROAS 1.69x – 4.85x) ↓
+                </td>
+              </tr>
+
+              <tr class="row-bot hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">AI Launchpad — Build Agents</div>
+                  <div class="text-[11px] text-zinc-500">Sumit Mittal · Trendytech</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Jun 06</td>
+                <td class="px-4 py-3 text-right">
+                  <div>2,856</div>
+                  <div class="text-[11px] text-zinc-500">18% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">4,20,214</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">6</div>
+                  <div class="text-[11px] text-zinc-500">₹7.1L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-rose-400 font-bold text-base">1.69x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300 font-semibold uppercase tracking-widest">⏱ Pipeline</span></td>
+              </tr>
+
+              <tr class="row-bot hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">Mastering RAG: Build Advanced</div>
+                  <div class="text-[11px] text-zinc-500">Sarath Dandu · Google</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Jun 18</td>
+                <td class="px-4 py-3 text-right">
+                  <div>939</div>
+                  <div class="text-[11px] text-zinc-500">23% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">1,42,774</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">2</div>
+                  <div class="text-[11px] text-zinc-500">₹1.5L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-rose-400 font-bold text-base">1.05x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300 font-semibold uppercase tracking-widest">⏱ Pipeline</span></td>
+              </tr>
+
+              <tr class="row-bot hover:bg-zinc-900/40 cursor-pointer">
+                <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-zinc-100">Multi-Agent AI Systems</div>
+                  <div class="text-[11px] text-zinc-500">Pranav Shankar · Anthropic</div>
+                </td>
+                <td class="px-4 py-3 text-right text-zinc-400">Jun 11</td>
+                <td class="px-4 py-3 text-right">
+                  <div>1,162</div>
+                  <div class="text-[11px] text-zinc-500">25% att</div>
+                </td>
+                <td class="px-4 py-3 text-right">1,94,234</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="font-medium">2</div>
+                  <div class="text-[11px] text-zinc-500">₹1.8L</div>
+                </td>
+                <td class="px-4 py-3 text-right text-rose-400 font-bold text-base">0.93x</td>
+                <td class="px-4 py-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-amber-900/40 text-amber-300 font-semibold uppercase tracking-widest">⏱ Pipeline</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-[11px] text-zinc-500">
+          <div>Showing 9 of 19 · <button class="text-zinc-300 hover:text-zinc-100">show all</button></div>
+          <div>* Jun ROAS reflects open pipeline · expect 25–40% lift over 2 weeks</div>
+        </div>
+      </section>
+
+      <!-- AT-A-GLANCE -->
+      <section class="mt-12">
+        <h2 class="text-base font-semibold tracking-tight mb-5">What we learned</h2>
+        <div class="grid grid-cols-2 gap-4">
+
+          <div class="p-5 rounded-xl border border-emerald-900/40 bg-gradient-to-br from-emerald-950/30 to-zinc-900/40">
+            <div class="text-[10px] uppercase tracking-widest text-emerald-300 mb-2">Top 3 by ROAS</div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">Mastering AI System Design (Feb 03)</div>
+                <div class="text-sm font-bold gradient-text-em">15.10x</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">Mastering RAG (Jan 07)</div>
+                <div class="text-sm font-bold text-emerald-400">8.42x</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">Deploying Production LLMs (Feb 19)</div>
+                <div class="text-sm font-bold text-emerald-400">7.35x</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-emerald-900/30 text-[11px] text-emerald-300/80">
+              Pattern: focused technical topic + intermediate-level audience + ₹78K–₹130K spend
+            </div>
+          </div>
+
+          <div class="p-5 rounded-xl border border-zinc-800 bg-zinc-900/40">
+            <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Bottom 3 (excl. pipeline)</div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">AI Launchpad — Build Agents (Apr 18)</div>
+                <div class="text-sm font-bold text-zinc-300">2.23x</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">DSA Masterclass (May 19)</div>
+                <div class="text-sm font-bold text-zinc-300">4.28x</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-zinc-100">Inside Code: Code AI (May 26)</div>
+                <div class="text-sm font-bold text-zinc-300">3.52x</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-zinc-800 text-[11px] text-zinc-500">
+              Pattern: large-scale Launchpad events have high reach but lower per-lead ROAS
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── DESIGN NOTES ─────────────────────────────────────────── -->
+    <section class="mt-20 p-6 rounded-xl border border-dashed border-zinc-800 bg-zinc-950 text-xs text-zinc-500 leading-relaxed">
+      <div class="text-zinc-400 font-semibold mb-3">Design rationale (mock only)</div>
+      <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+        <div><b class="text-zinc-300">Upcoming layout:</b> Command Bar (KPIs you scan) → This Week (urgent, hero) → Next 2 Weeks (compact rows with all data inline) → Pipeline (collapsed)</div>
+        <div><b class="text-zinc-300">Past layout:</b> Monthly tiles (last 6 months) → Filters → Sortable table (default sort by ROAS) → Learnings (top 3 + bottom 3 with rationale)</div>
+        <div><b class="text-zinc-300">Removed:</b> bento grid hero-on-top-three layout · static topic chips · sparklines · "Final regs" framing for past · separate small-card grid · "view all" CTA chrome</div>
+        <div><b class="text-zinc-300">Hierarchy by status:</b> Going live (rose, animated) > Goal at risk (amber) > On track (zinc) — colour drives attention not chrome</div>
+        <div><b class="text-zinc-300">Honesty:</b> "Pipeline open" badge on Jun events · "Setup" badge for missing landing page · no-data states use em-dash not zeros</div>
+        <div><b class="text-zinc-300">CPO move:</b> show ROAS by default in past view (the only metric leadership asks about), not just registration counts</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function setTab(t) {
+      const up = document.getElementById('upcomingView');
+      const past = document.getElementById('pastView');
+      const tabUp = document.getElementById('tabUp');
+      const tabPast = document.getElementById('tabPast');
+      const title = document.getElementById('pageTitle');
+      const sub = document.getElementById('pageSub');
+      if (t === 'upcoming') {
+        up.classList.remove('hide');
+        past.classList.add('hide');
+        tabUp.classList.remove('text-zinc-500');
+        tabUp.classList.add('bg-zinc-900','text-zinc-100');
+        tabPast.classList.add('text-zinc-500');
+        tabPast.classList.remove('bg-zinc-900','text-zinc-100');
+        title.textContent = 'Upcoming masterclasses';
+        sub.textContent = 'Live data · synced 2 min ago';
+      } else {
+        up.classList.add('hide');
+        past.classList.remove('hide');
+        tabUp.classList.add('text-zinc-500');
+        tabUp.classList.remove('bg-zinc-900','text-zinc-100');
+        tabPast.classList.remove('text-zinc-500');
+        tabPast.classList.add('bg-zinc-900','text-zinc-100');
+        title.textContent = 'Past masterclasses';
+        sub.textContent = 'Jan 2026 — Jun 2026 · 19 events · ranked by ROAS';
+      }
+    }
+  </script>
+</body>
+</html>
