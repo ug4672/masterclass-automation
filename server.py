@@ -115,18 +115,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_HEAD(self):
         if urllib.parse.urlparse(self.path).path == '/':
+            dest = '/mobile.html' if self._is_mobile() else '/hub.html'
             self.send_response(302)
-            self.send_header('Location', '/hub.html')
+            self.send_header('Location', dest)
             self.end_headers()
             return
         super().do_HEAD()
+
+    def _is_mobile(self):
+        ua = self.headers.get('User-Agent', '')
+        return any(k in ua for k in ('Mobile', 'Android', 'iPhone', 'iPad', 'iPod'))
 
     def do_GET(self):
         p = urllib.parse.urlparse(self.path)
         path = p.path
         if path == '/':
+            dest = '/mobile.html' if self._is_mobile() else '/hub.html'
             self.send_response(302)
-            self.send_header('Location', '/hub.html')
+            self.send_header('Location', dest)
             self.end_headers()
             return
         if path == '/auth/check':
