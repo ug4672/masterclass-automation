@@ -157,6 +157,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             self._list_series(p)
             return
+        if path == '/sales':
+            if not _session_email(self):
+                self._json_response(401, {'error': 'Not authenticated'})
+                return
+            self._list_sales(p)
+            return
         if path == '/event/poll-qna-export':
             if not _session_email(self):
                 self._json_response(401, {'error': 'Not authenticated'})
@@ -286,7 +292,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         country = qs.get('country', [None])[0]
         ids_csv = qs.get('ids', [None])[0]
         try:
-            limit = min(int(qs.get('limit', ['50'])[0]), 200)
+            limit = min(int(qs.get('limit', ['50'])[0]), 1000)
         except ValueError:
             limit = 50
 
@@ -431,10 +437,17 @@ SELECT
   s.attendees, s.attendance_pct,
   s.email_sent, s.email_delivered, s.email_opened, s.email_clicked,
   s.calls_attempted, s.calls_connected, s.avg_talk_seconds,
+  s.call_total_leads, s.call_pre_covered,
+  s.call_pre_attempts, s.call_pre_connects, s.call_pre_talk_mins,
+  s.call_p2_attempts,  s.call_p2_connects,  s.call_p2_talk_mins,  s.call_p2_covered,
+  s.call_p7_attempts,  s.call_p7_connects,  s.call_p7_talk_mins,  s.call_p7_covered,
+  s.call_p14_attempts, s.call_p14_connects, s.call_p14_talk_mins, s.call_p14_covered,
+  s.call_p14p_attempts,s.call_p14p_connects,s.call_p14p_talk_mins,s.call_p14p_covered,
   s.role_sde, s.role_ml, s.role_management, s.role_systems, s.role_null, s.role_other,
   s.we_3_5, s.we_6_10, s.we_10_15, s.we_15_20, s.we_20p, s.we_other,
   s.us_yt_regs, s.us_social_regs, s.us_l10x_email_regs, s.us_l10x_bot_regs,
-  s.us_ni_base_regs, s.us_other_regs
+  s.us_ni_base_regs, s.us_other_regs,
+  s.sales, s.revenue, s.paid_revenue, s.overall_roas, s.paid_roas
 FROM `{BQ_APP_PROJECT}.events.event` e
 LEFT JOIN latest s USING (event_id)
 WHERE {where_clause}
@@ -461,25 +474,43 @@ ORDER BY e.live_at DESC"""
                 'meta_spend': 0.0, 'attendees': 0,
                 'email_sent': 0, 'email_delivered': 0, 'email_opened': 0, 'email_clicked': 0,
                 'calls_attempted': 0, 'calls_connected': 0, 'talk_seconds_total': 0.0,
+                'call_total_leads': 0, 'call_pre_covered': 0,
+                'call_pre_attempts': 0, 'call_pre_connects': 0, 'call_pre_talk_mins': 0.0,
+                'call_p2_attempts':  0, 'call_p2_connects':  0, 'call_p2_talk_mins':  0.0, 'call_p2_covered':  0,
+                'call_p7_attempts':  0, 'call_p7_connects':  0, 'call_p7_talk_mins':  0.0, 'call_p7_covered':  0,
+                'call_p14_attempts': 0, 'call_p14_connects': 0, 'call_p14_talk_mins': 0.0, 'call_p14_covered': 0,
+                'call_p14p_attempts':0, 'call_p14p_connects':0, 'call_p14p_talk_mins':0.0, 'call_p14p_covered':0,
                 'role_sde': 0, 'role_ml': 0, 'role_management': 0, 'role_systems': 0, 'role_null': 0, 'role_other': 0,
                 'we_3_5': 0, 'we_6_10': 0, 'we_10_15': 0, 'we_15_20': 0, 'we_20p': 0, 'we_other': 0,
                 'us_yt_regs': 0, 'us_social_regs': 0, 'us_l10x_email_regs': 0,
                 'us_l10x_bot_regs': 0, 'us_ni_base_regs': 0, 'us_other_regs': 0,
+                'sales': 0, 'revenue': 0.0, 'paid_revenue': 0.0,
+                # Sale-date view (booked in this calendar month, regardless of MC date)
+                'sales_booked': 0, 'revenue_booked': 0.0,
                 'event_ids': [],
             })
             m['events'] += 1
             m['event_ids'].append(ev['event_id'])
             sum_keys = ('total_regs', 'meta_regs', 'crm_regs', 'other_regs', 'meta_spend',
                         'attendees', 'email_sent', 'email_delivered', 'email_opened', 'email_clicked',
-                        'calls_attempted', 'calls_connected',
+                        'calls_attempted', 'calls_connected', 'call_total_leads', 'call_pre_covered',
+                        'call_pre_attempts', 'call_pre_connects', 'call_pre_talk_mins',
+                        'call_p2_attempts',  'call_p2_connects',  'call_p2_talk_mins',  'call_p2_covered',
+                        'call_p7_attempts',  'call_p7_connects',  'call_p7_talk_mins',  'call_p7_covered',
+                        'call_p14_attempts', 'call_p14_connects', 'call_p14_talk_mins', 'call_p14_covered',
+                        'call_p14p_attempts','call_p14p_connects','call_p14p_talk_mins','call_p14p_covered',
                         'role_sde', 'role_ml', 'role_management', 'role_systems', 'role_null', 'role_other',
                         'we_3_5', 'we_6_10', 'we_10_15', 'we_15_20', 'we_20p', 'we_other',
                         'us_yt_regs', 'us_social_regs', 'us_l10x_email_regs',
-                        'us_l10x_bot_regs', 'us_ni_base_regs', 'us_other_regs')
+                        'us_l10x_bot_regs', 'us_ni_base_regs', 'us_other_regs',
+                        'sales', 'revenue', 'paid_revenue')
+            float_keys = {'meta_spend', 'revenue', 'paid_revenue',
+                          'call_pre_talk_mins', 'call_p2_talk_mins', 'call_p7_talk_mins',
+                          'call_p14_talk_mins', 'call_p14p_talk_mins'}
             for k in sum_keys:
                 v = ev.get(k)
                 if v is not None:
-                    m[k] += float(v) if k == 'meta_spend' else int(v)
+                    m[k] += float(v) if k in float_keys else int(v)
             # Talk seconds = avg_talk × connected (weighted reconstruction)
             if ev.get('avg_talk_seconds') is not None and ev.get('calls_connected') is not None:
                 m['talk_seconds_total'] += float(ev['avg_talk_seconds']) * int(ev['calls_connected'])
@@ -492,6 +523,168 @@ ORDER BY e.live_at DESC"""
             m['email_click_pct']  = (100.0 * m['email_clicked']  / m['email_sent']) if m['email_sent']   > 0 else None
             m['call_connect_pct'] = (100.0 * m['calls_connected'] / m['calls_attempted']) if m['calls_attempted'] > 0 else None
             m['avg_talk_seconds'] = (m['talk_seconds_total'] / m['calls_connected']) if m['calls_connected'] > 0 else None
+            m['calls_per_lead']   = (m['calls_attempted'] / m['total_regs']) if m['total_regs'] > 0 else None
+            # Coverage = leads with ≥1 pre-webinar call attempt / total registrations
+            # (pre_covered = COUNTIF(pre_calls > 0) at event level, summed across events)
+            m['call_coverage_pct']            = (100.0 * m['call_pre_covered'] / m['total_regs']) if m['total_regs'] > 0 else None
+            # Per-user efficiency: avg connected calls per registered lead
+            m['avg_calls_connected_per_lead'] = (m['calls_connected'] / m['total_regs']) if m['total_regs'] > 0 else None
+            # Per-phase derived metrics (calls/user, coverage%, connected/user, avg talk per connect)
+            # Phases: pre, 0–2D, 0–7D, 0–14D, 14D+ (the cumulative windows match BigQuery)
+            phases = {}
+            for ph in ('pre', 'p2', 'p7', 'p14', 'p14p'):
+                att     = m.get(f'call_{ph}_attempts') or 0
+                conn    = m.get(f'call_{ph}_connects') or 0
+                talkmin = m.get(f'call_{ph}_talk_mins') or 0.0
+                covered = m.get(f'call_{ph}_covered') if ph != 'pre' else m.get('call_pre_covered')
+                covered = covered or 0
+                phases[ph] = {
+                    'cpu':  (att / m['total_regs'])              if m['total_regs'] > 0 else None,
+                    'cov':  (100.0 * covered / m['total_regs'])  if m['total_regs'] > 0 else None,
+                    'conn': (conn / m['total_regs'])             if m['total_regs'] > 0 else None,
+                    'talk': (talkmin * 60.0 / conn)              if conn > 0 else None,
+                }
+            m['call_phases'] = phases
+            m['overall_roas']     = (m['revenue'] / m['meta_spend']) if m['meta_spend'] > 0 else None
+            m['paid_roas']        = (m['paid_revenue'] / m['meta_spend']) if m['meta_spend'] > 0 else None
+            # Defaults; populated below for India only.
+            m['crm_email_regs']    = None
+            m['crm_whatsapp_regs'] = None
+
+        # India-only: split CRM into Email vs WhatsApp by utm_campaign.
+        # WhatsApp = LOWER(utm_campaign) LIKE '%whatsapp%' ; Email = the rest of CRM.
+        if country.lower() in ('india', 'in'):
+            try:
+                src_client = bigquery.Client(project='ik-marketing-data')
+                series_pred = ''
+                series_params = []
+                if series:
+                    series_pred = ' AND e.series = @series'
+                    series_params = [bigquery.ScalarQueryParameter('series', 'STRING', series)]
+                crm_query = f"""
+WITH event_air AS (
+  SELECT event_id, webinar_type,
+    DATE(live_at, "Asia/Kolkata") AS air_pt,
+    FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(live_at, "Asia/Kolkata"), MONTH)) AS month_slug
+  FROM `{BQ_APP_PROJECT}.events.event` e
+  WHERE LOWER(e.country) = 'india'
+    AND e.live_at >= TIMESTAMP '2026-01-01 00:00:00'
+    AND COALESCE(e.status, 'upcoming') != 'archived'
+    {series_pred}
+),
+leads_raw AS (
+  SELECT hubspot_ID, utm_campaign, Channel, formatted_date,
+    DATE(event_start_date_time, "Asia/Kolkata") AS event_pt,
+    webinar_type, dupe_flag, gql_flag, work_ex,
+    ROW_NUMBER() OVER (
+      PARTITION BY hubspot_ID, DATE(event_start_date_time, "Asia/Kolkata")
+      ORDER BY formatted_date ASC
+    ) AS rnk
+  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+  WHERE dupe_logic = 1
+),
+qualified AS (
+  SELECT *
+  FROM leads_raw
+  WHERE rnk = 1 AND dupe_flag = 0 AND gql_flag = 0
+    AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
+    AND (REGEXP_CONTAINS(LOWER(Channel), r'email|whatsapp|whats.?app')
+         OR LOWER(utm_campaign) LIKE '%whatsapp%')
+)
+SELECT e.month_slug,
+       CASE WHEN LOWER(q.utm_campaign) LIKE '%whatsapp%' THEN 'whatsapp' ELSE 'email' END AS bucket,
+       COUNT(*) AS n
+FROM event_air e
+JOIN qualified q
+  ON q.webinar_type = e.webinar_type
+  AND q.event_pt    = e.air_pt
+GROUP BY month_slug, bucket"""
+                rows = list(src_client.query(crm_query, job_config=bigquery.QueryJobConfig(query_parameters=series_params)).result())
+                # Merge counts into by_month
+                for r in rows:
+                    ms = r['month_slug']
+                    if ms not in by_month: continue
+                    if by_month[ms]['crm_email_regs'] is None:
+                        by_month[ms]['crm_email_regs'] = 0
+                    if by_month[ms]['crm_whatsapp_regs'] is None:
+                        by_month[ms]['crm_whatsapp_regs'] = 0
+                    if r['bucket'] == 'whatsapp':
+                        by_month[ms]['crm_whatsapp_regs'] = int(r['n'])
+                    else:
+                        by_month[ms]['crm_email_regs'] = int(r['n'])
+            except Exception as e:
+                print(f'[months/crm_breakdown] {e}')
+
+        # ── Booked-revenue view: sales grouped by Sale_date month (not MC month) ──
+        # Same sales scope as _query_sales_* (tied to a tracked event, alumni-excluded,
+        # dedup rules), but bucketed by when the money came in rather than when the
+        # masterclass was held. Populates revenue_booked / sales_booked per month.
+        try:
+            src_client = bigquery.Client(project='ik-marketing-data')
+            if country.lower() in ('india', 'in'):
+                booked_query = f"""
+WITH events_tracked AS (
+  SELECT UPPER(webinar_type) AS wt, DATE(live_at, 'Asia/Kolkata') AS web_dt
+  FROM `{BQ_APP_PROJECT}.events.event`
+  WHERE LOWER(country) = 'india' AND live_at >= TIMESTAMP '2026-01-01 00:00:00'
+    AND COALESCE(status, 'upcoming') != 'archived'
+),
+sales_raw AS (
+  SELECT Sale_date, net_revenue, hubspot_ID, formatted_date, dupe_flag,
+    UPPER(webinar_type) AS wt,
+    DATE(event_start_date_time, 'Asia/Kolkata') AS web_dt,
+    ROW_NUMBER() OVER (PARTITION BY hubspot_ID, DATE(event_start_date_time, 'Asia/Kolkata') ORDER BY formatted_date ASC) AS rnk
+  FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+  WHERE dupe_logic = 1
+    AND COALESCE(Alumni_Stats, 'New_Lead') = 'New_Lead'
+)
+SELECT FORMAT_DATE('%Y-%m', s.Sale_date) AS sale_month,
+       COUNT(*) AS sales_booked,
+       SUM(s.net_revenue * COALESCE(fx.rate, 84.0)) AS revenue_booked
+FROM sales_raw s
+INNER JOIN events_tracked e ON s.wt = e.wt AND s.web_dt = e.web_dt
+LEFT JOIN `{BQ_APP_PROJECT}.events.fx_rates_monthly` fx
+  ON fx.month = FORMAT_DATE('%Y-%m', s.Sale_date)
+  AND fx.base = 'USD' AND fx.quote = 'INR'
+WHERE s.rnk = 1 AND s.dupe_flag = 0
+  AND s.Sale_date IS NOT NULL AND s.Sale_date >= DATE '2026-01-01'
+  AND COALESCE(s.net_revenue, 0) > 0
+GROUP BY sale_month
+"""
+            else:  # US
+                booked_query = f"""
+WITH events_tracked AS (
+  SELECT UPPER(webinar_type) AS wt, DATE(live_at, 'America/Los_Angeles') AS web_dt
+  FROM `{BQ_APP_PROJECT}.events.event`
+  WHERE LOWER(country) IN ('us','usa') AND live_at >= TIMESTAMP '2026-01-01 00:00:00'
+    AND COALESCE(status, 'upcoming') != 'archived'
+),
+sales_raw AS (
+  SELECT Sale_date, net_revenue, leads_hubspot_id, formatted_date, dupe_flag,
+    UPPER(webinar_type) AS wt,
+    DATE(event_start_date_time, 'America/Los_Angeles') AS web_dt,
+    ROW_NUMBER() OVER (PARTITION BY leads_hubspot_id, DATE(event_start_date_time, 'America/Los_Angeles') ORDER BY formatted_date ASC) AS rnk
+  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+  WHERE dupe_logic = 1
+    AND COALESCE(Alumni_Stats, 'New_Lead') = 'New_Lead'
+)
+SELECT FORMAT_DATE('%Y-%m', s.Sale_date) AS sale_month,
+       COUNT(*) AS sales_booked,
+       SUM(s.net_revenue) AS revenue_booked
+FROM sales_raw s
+INNER JOIN events_tracked e ON s.wt = e.wt AND s.web_dt = e.web_dt
+WHERE s.rnk = 1 AND s.dupe_flag = 0
+  AND s.Sale_date IS NOT NULL AND s.Sale_date >= DATE '2026-01-01'
+  AND COALESCE(s.net_revenue, 0) > 0
+GROUP BY sale_month
+"""
+            for r in src_client.query(booked_query).result():
+                ms = r['sale_month']
+                if ms in by_month:
+                    by_month[ms]['revenue_booked'] = float(r['revenue_booked'] or 0.0)
+                    by_month[ms]['sales_booked']   = int(r['sales_booked'] or 0)
+        except Exception as e:
+            print(f'[months/booked_revenue] {e}')
 
         months_out = sorted(by_month.values(), key=lambda m: m['month_slug'], reverse=True)
         self._json_response(200, {
@@ -499,6 +692,126 @@ ORDER BY e.live_at DESC"""
             'series':  series,
             'months':  months_out,
             'events':  events,  # drill-down data (per-event-within-month)
+        }, extra_headers={'Cache-Control': 'private, max-age=60'})
+
+    def _list_sales(self, parsed_url):
+        """List individual sales attributable to a tracked masterclass event.
+
+        US (USD): reads `Bq_data_Alumni`, dedupes by (leads_hubspot_id, PT date).
+        India (INR): reads `US_Domain_combined_view`, dedupes by (hubspot_ID, IST
+        date), filters out students + work_ex 0-2/3-4 (matching the snapshot's
+        target-audience scope), and converts USD net_revenue to INR using each
+        sale's month avg rate from `events.fx_rates_monthly` (fallback 84).
+
+        Both branches INNER JOIN `events.event` on (webinar_type, local-TZ live_at)
+        — only sales matching a tracked masterclass are returned. Sorted by
+        Sale_date DESC; frontend groups by sale-month."""
+        from google.cloud import bigquery
+        qs       = urllib.parse.parse_qs(parsed_url.query)
+        country  = qs.get('country', ['US'])[0]
+        since    = qs.get('since', ['2026-01-01'])[0]
+        c        = country.lower()
+        if c in ('us', 'usa'):
+            country_norm = 'US'
+            currency     = 'USD'
+            tz           = 'America/Los_Angeles'
+            country_pred = "LOWER(e.country) IN ('us', 'usa')"
+            revenue_expr = "s.net_revenue"
+            extra_ctes   = ""
+            extra_join   = ""
+            extra_filter = ""
+            source_table = "`ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`"
+            hubspot_col  = "leads_hubspot_id"
+        elif c in ('india', 'in'):
+            country_norm = 'India'
+            currency     = 'INR'
+            tz           = 'Asia/Kolkata'
+            country_pred = "LOWER(e.country) = 'india'"
+            # USD→INR at sale-month avg rate; fallback 84 (matches snapshot code)
+            revenue_expr = "s.net_revenue * COALESCE(fx.rate, 84.0)"
+            extra_ctes   = ""
+            extra_join   = (
+                f"LEFT JOIN `{BQ_APP_PROJECT}.events.fx_rates_monthly` fx\n"
+                "  ON fx.month = FORMAT_DATE('%Y-%m', s.Sale_date)\n"
+                "  AND fx.base = 'USD' AND fx.quote = 'INR'"
+            )
+            # No work_ex exclusion for sales — a paying customer of any experience
+            # level should be counted, even if they were outside the target-audience
+            # filter used elsewhere (calls / IQLs / etc).
+            extra_filter = ""
+            source_table = "`ik-marketing-data.India_Leads.US_Domain_combined_view`"
+            hubspot_col  = "hubspot_ID"
+        else:
+            self._json_response(400, {'error': 'country must be US or India'})
+            return
+
+        query = f"""
+WITH sales_raw AS (
+  SELECT
+    Sale_date, net_revenue, Channel, webinar_type,
+    DATE(event_start_date_time, "{tz}") AS web_scheduled_date,
+    {hubspot_col} AS hubspot_id, formatted_date, dupe_flag,
+    ROW_NUMBER() OVER (
+      PARTITION BY {hubspot_col}, DATE(event_start_date_time, "{tz}")
+      ORDER BY formatted_date ASC
+    ) AS rnk
+  FROM {source_table}
+  WHERE dupe_logic = 1
+    AND COALESCE(Alumni_Stats, 'New_Lead') = 'New_Lead'   -- exclude alumni-repeat sales
+    {extra_filter}
+),
+sales AS (
+  SELECT Sale_date, net_revenue, Channel, webinar_type, web_scheduled_date
+  FROM sales_raw
+  WHERE rnk = 1
+    AND dupe_flag = 0
+    AND Sale_date IS NOT NULL
+    AND Sale_date >= DATE(@since)
+    AND COALESCE(net_revenue, 0) > 0
+)
+SELECT
+  s.Sale_date,
+  {revenue_expr} AS revenue,
+  s.Channel,
+  s.webinar_type,
+  s.web_scheduled_date,
+  e.event_id,
+  e.title       AS event_title,
+  e.instructor_name
+FROM sales s
+JOIN `{BQ_APP_PROJECT}.events.event` e
+  ON e.webinar_type = s.webinar_type
+  AND DATE(e.live_at, "{tz}") = s.web_scheduled_date
+  AND {country_pred}
+{extra_join}
+WHERE COALESCE(e.status, 'upcoming') != 'archived'
+ORDER BY s.Sale_date DESC, revenue DESC"""
+        params = [bigquery.ScalarQueryParameter('since', 'DATE', since)]
+        try:
+            client = bigquery.Client(project=BQ_APP_PROJECT)
+            rows   = list(client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=params)).result())
+        except Exception as e:
+            self._json_response(500, {'error': str(e)})
+            return
+
+        sales = []
+        for r in rows:
+            d = _row_to_dict(r)
+            sales.append({
+                'sale_date':          d.get('Sale_date'),
+                'revenue':            float(d['revenue']) if d.get('revenue') is not None else 0.0,
+                'channel':            d.get('Channel') or 'Unknown',
+                'webinar_type':       d.get('webinar_type'),
+                'web_scheduled_date': d.get('web_scheduled_date'),
+                'event_id':           d.get('event_id'),
+                'event_title':        d.get('event_title'),
+                'instructor_name':    d.get('instructor_name'),
+            })
+        self._json_response(200, {
+            'country':  country_norm,
+            'currency': currency,
+            'since':    since,
+            'sales':    sales,
         }, extra_headers={'Cache-Control': 'private, max-age=60'})
 
     def _get_event(self, event_id):
@@ -546,10 +859,29 @@ ORDER BY e.live_at DESC"""
             snapshot = _row_to_dict(snap_rows[0]) if snap_rows else None
             daily    = [_row_to_dict(r) for r in daily_rows]
 
+            # Real per-channel attendance — computed at read-time only for aired
+            # events. Joins Zoom attendees to lead channel/utm. Failure is
+            # non-fatal; UI falls back to overall-rate approximation.
+            channel_attendance = None
+            try:
+                if event.get('live_at') and event.get('webinar_type'):
+                    live_at = event['live_at']
+                    if isinstance(live_at, str):
+                        live_at_dt = datetime.datetime.fromisoformat(live_at.replace('Z', '+00:00'))
+                    else:
+                        live_at_dt = live_at
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    aware   = live_at_dt if live_at_dt.tzinfo else live_at_dt.replace(tzinfo=datetime.timezone.utc)
+                    if aware <= now_utc:
+                        channel_attendance = _query_channel_attendance(event)
+            except Exception as e:
+                print(f'[channel_attendance] {event_id}: {e}')
+
             self._json_response(200, {
                 'event': event,
                 'snapshot': snapshot,
                 'daily': daily,
+                'channel_attendance': channel_attendance,
             }, extra_headers={'Cache-Control': 'private, max-age=60'})
         except Exception as e:
             self._json_response(500, {'error': str(e)})
@@ -1098,20 +1430,26 @@ WITH leads AS (
     FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
     WHERE dupe_logic = 1
   )
-  WHERE rnk = 1 AND web_scheduled_date IN ({date_literal}) AND webinar_type = @wt
+  WHERE rnk = 1 AND web_scheduled_date IN ({date_literal}) AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2', '3-4')
   GROUP BY registration_date, channel, utm_campaign
 ),
 spends AS (
-  SELECT DATE(campaign_date) AS spend_date, campaign_name, SUM(cost) AS total_spend
-  FROM `ik-marketing-data.India_Leads.Combined_India_Spend`
-  -- Same exclusions as US (2026-06-22): drop evergreen/promo L10X campaigns
-  -- that aren't tied to a specific event.
-  WHERE (LOWER(campaign_name) LIKE '%l10x%' OR LOWER(campaign_name) LIKE '%masterclass%')
-    AND (LOWER(campaign_name) LIKE '%meta%' OR LOWER(campaign_name) LIKE '%facebook%' OR LOWER(campaign_name) LIKE '%l10x%')
-    AND LOWER(campaign_name) NOT LIKE '%recorded_masterclass%'
-    AND LOWER(campaign_name) NOT LIKE '%holiday_offer%'
+  -- Dedup exact-duplicate rows in Combined_India_Spend before summing.
+  -- Meta ad-report rows are uniquely keyed by (campaign_date, campaign_name,
+  -- ad_group_id, device); duplicates appear when the source ETL re-runs an
+  -- ingest without truncating. Confirmed on 2026-06-30 which had 2× dupes.
+  SELECT spend_date, campaign_name, SUM(cost) AS total_spend
+  FROM (
+    SELECT DATE(campaign_date) AS spend_date, campaign_name, ad_group_id, device, ANY_VALUE(cost) AS cost
+    FROM `ik-marketing-data.India_Leads.Combined_India_Spend`
+    WHERE (LOWER(campaign_name) LIKE '%l10x%' OR LOWER(campaign_name) LIKE '%masterclass%')
+      AND (LOWER(campaign_name) LIKE '%meta%' OR LOWER(campaign_name) LIKE '%facebook%' OR LOWER(campaign_name) LIKE '%l10x%')
+      AND LOWER(campaign_name) NOT LIKE '%recorded_masterclass%'
+      AND LOWER(campaign_name) NOT LIKE '%holiday_offer%'
+    GROUP BY spend_date, campaign_name, ad_group_id, device
+  )
   GROUP BY spend_date, campaign_name
 ),
 matched_campaigns AS (
@@ -1261,7 +1599,7 @@ FROM (
 )
 WHERE rnk = 1
   AND web_scheduled_date IN ({date_literal})
-  AND webinar_type = @wt
+  AND UPPER(webinar_type) = UPPER(@wt)
   AND dupe_flag = 0 AND gql_flag = 0
   AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
 GROUP BY 1, 2"""
@@ -1296,6 +1634,144 @@ GROUP BY 1, 2"""
         if r['we_bucket'] in ('c1015', 'd1520', 'e20p'): out['we_10p'] += cnt
     return out
 
+def _query_channel_attendance(event):
+    """Per-channel attendance for an aired event, computed at read-time.
+    Joins Zoom attendees to lead channel/utm, returns one entry per UI bucket.
+
+    Returns:
+      India: {'Meta': {'leads': N, 'attendees': M}, 'CRM': {...}, 'Others': {...}}
+      US:    {'YT': {...}, 'Social': {...}, 'L10X Email': {...}, 'L10X Bot': {...},
+              'NI Base': {...}, 'Other': {...}}
+    Returns None on error / unsupported country."""
+    from google.cloud import bigquery
+    country = (event.get('country') or '').lower()
+    wt      = event.get('webinar_type')
+    if not wt:
+        return None
+
+    # Build (PT or IST) date list from live_at + day2_live_at
+    tz_name = 'America/Los_Angeles' if country in ('us', 'usa') else 'Asia/Kolkata'
+    tz_obj  = zoneinfo.ZoneInfo(tz_name)
+    dates   = []
+    for d in (event.get('live_at'), event.get('day2_live_at')):
+        if d is None: continue
+        if isinstance(d, str):
+            d = datetime.datetime.fromisoformat(d.replace('Z', '+00:00'))
+        if isinstance(d, datetime.datetime):
+            aware = d if d.tzinfo else d.replace(tzinfo=datetime.timezone.utc)
+            dates.append(aware.astimezone(tz_obj).date())
+        else:
+            dates.append(d)
+    if not dates:
+        return None
+    date_literal = ', '.join(f"DATE '{d.isoformat()}'" for d in dates)
+    wt_param     = [bigquery.ScalarQueryParameter('wt', 'STRING', wt)]
+    src_client   = bigquery.Client(project='ik-marketing-data')
+
+    if country in ('us', 'usa'):
+        q = f"""
+WITH attendance AS (
+  SELECT CAST(hubspot_id AS INT64) AS hubspot_id
+  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`
+  WHERE DATE(webinar_start_time, "{tz_name}") IN ({date_literal})
+    AND hubspot_id IS NOT NULL
+  GROUP BY hubspot_id
+),
+base AS (
+  SELECT leads_hubspot_id, utm_campaign, formatted_date, dupe_flag, gql_flag,
+    DATE(event_start_date_time, "{tz_name}") AS web_scheduled_date,
+    CASE
+      WHEN LOWER(utm_campaign) LIKE "%l10x_social%"               THEN "Social"
+      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"__l10x__")      THEN "L10X_Email"
+      WHEN REGEXP_CONTAINS(LOWER(utm_campaign), r"youtube_l10x")  THEN "YT"
+      WHEN LOWER(utm_campaign) LIKE "%nibucket%"                  THEN "NI_Base"
+      WHEN LOWER(utm_campaign) LIKE "%l10x-bot%"                  THEN "L10X_Bot"
+      ELSE "Other"
+    END AS channel_bucket,
+    ROW_NUMBER() OVER (
+      PARTITION BY leads_hubspot_id, DATE(event_start_date_time, "{tz_name}")
+      ORDER BY formatted_date ASC
+    ) AS rnk
+  FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
+  WHERE UPPER(webinar_type) = UPPER(@wt) AND dupe_logic = 1
+)
+SELECT channel_bucket, COUNT(*) AS leads,
+       COUNTIF(a.hubspot_id IS NOT NULL) AS attendees
+FROM (
+  SELECT * FROM base
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND dupe_flag = 0 AND gql_flag = 0
+) l
+LEFT JOIN attendance a
+  ON CAST(l.leads_hubspot_id AS INT64) = a.hubspot_id
+GROUP BY channel_bucket"""
+        rows = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+        # Map source channel_bucket → UI bucket label
+        label_map = {
+            'YT':         'YT',
+            'Social':     'Social',
+            'L10X_Email': 'L10X Email',
+            'L10X_Bot':   'L10X Bot',
+            'NI_Base':    'NI Base',
+            'Other':      'Other',
+        }
+        out = {v: {'leads': 0, 'attendees': 0} for v in label_map.values()}
+        for r in rows:
+            label = label_map.get(r['channel_bucket'], 'Other')
+            out[label]['leads']     += int(r['leads'] or 0)
+            out[label]['attendees'] += int(r['attendees'] or 0)
+        return out
+
+    if country in ('india', 'in'):
+        q = f"""
+WITH attendance AS (
+  SELECT CAST(hubspot_id AS INT64) AS hubspot_id
+  FROM `ik-marketing-data.Webinar_analytics.webinar_attendee_data_from_zoom`
+  WHERE DATE(webinar_start_time, "{tz_name}") IN ({date_literal})
+    AND hubspot_id IS NOT NULL
+  GROUP BY hubspot_id
+),
+leads AS (
+  SELECT CAST(hubspot_ID AS INT64) AS hubspot_id, Channel
+  FROM (
+    SELECT hubspot_ID, Channel, formatted_date,
+      DATE(event_start_date_time, "{tz_name}") AS web_scheduled_date,
+      dupe_flag, gql_flag, work_ex, webinar_type, dupe_logic,
+      ROW_NUMBER() OVER (
+        PARTITION BY hubspot_ID, DATE(event_start_date_time, "{tz_name}")
+        ORDER BY formatted_date ASC
+      ) AS rnk
+    FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
+    WHERE dupe_logic = 1
+  )
+  WHERE rnk = 1
+    AND web_scheduled_date IN ({date_literal})
+    AND UPPER(webinar_type) = UPPER(@wt)
+    AND dupe_flag = 0 AND gql_flag = 0
+    AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1
+)
+SELECT Channel, COUNT(*) AS leads,
+       COUNTIF(a.hubspot_id IS NOT NULL) AS attendees
+FROM leads l LEFT JOIN attendance a ON l.hubspot_id = a.hubspot_id
+GROUP BY Channel"""
+        rows = list(src_client.query(q, job_config=bigquery.QueryJobConfig(query_parameters=wt_param)).result())
+        # India: bucket by regex into Meta / CRM / Others (matches snapshot logic)
+        out = {'Meta': {'leads': 0, 'attendees': 0},
+               'CRM':  {'leads': 0, 'attendees': 0},
+               'Others': {'leads': 0, 'attendees': 0}}
+        for r in rows:
+            ch = (r['Channel'] or '')
+            if   _RE_META.search(ch): bucket = 'Meta'
+            elif _RE_CRM.search(ch):  bucket = 'CRM'
+            else:                     bucket = 'Others'
+            out[bucket]['leads']     += int(r['leads'] or 0)
+            out[bucket]['attendees'] += int(r['attendees'] or 0)
+        return out
+
+    return None
+
 def _query_attendance_india(src_client, date_literal, wt_param):
     """Returns {attendees, attendance_pct}. attendees = unique IQLs in Zoom roster."""
     from google.cloud import bigquery
@@ -1322,7 +1798,7 @@ leads AS (
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
   QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1
@@ -1345,8 +1821,8 @@ def _query_calls_india(src_client, date_literal, wt_param):
     with the 5 lifecycle buckets (pre, 0-2D, 0-7D, 0-14D, 14D+).
 
     Each bucket carries: attempts, connects, talk_mins, covered_leads (# of distinct
-    leads who got ≥1 call in that bucket). Bucket boundaries follow the brief —
-    post-webinar 0-2D/0-7D/0-14D are CUMULATIVE (overlapping), 14D+ is exclusive.
+    leads who got ≥1 call in that bucket). ALL post-webinar buckets are CUMULATIVE
+    from the webinar date: 0-2D ⊂ 0-7D ⊂ 0-14D ⊂ 14D+ (14D+ = ALL post-webinar calls).
     """
     from google.cloud import bigquery
     q = f"""
@@ -1366,7 +1842,7 @@ WITH base AS (
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
 ),
@@ -1414,10 +1890,10 @@ per_lead AS (
     COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_calls,
     COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_conn,
     SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14_talk_mins,
-    -- Post 14D+ (exclusive)
-    COUNT(DISTINCT CASE WHEN activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_calls,
-    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_conn,
-    SUM(CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
+    -- 14D+ (CUMULATIVE: all post-webinar calls, including 0-2D, 0-7D, 0-14D)
+    COUNT(DISTINCT CASE WHEN activity_date >= DATE(webinar_start_datetime_ch) THEN activity_datetime END) AS p14p_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date >= DATE(webinar_start_datetime_ch) THEN activity_datetime END) AS p14p_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date >= DATE(webinar_start_datetime_ch) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
   FROM final_merge
   GROUP BY leads_hubspot_id
 )
@@ -1498,12 +1974,13 @@ WITH sales AS (
       ) AS rnk
     FROM `ik-marketing-data.India_Leads.US_Domain_combined_view`
     WHERE dupe_logic = 1
+      AND COALESCE(Alumni_Stats, 'New_Lead') = 'New_Lead'   -- exclude alumni-repeat sales
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0
-    AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
+    -- No work_ex exclusion for sales — count paying customers regardless of experience level.
 ),
 sales_inr AS (
   SELECT s.Sale_date, s.Channel,
@@ -1547,7 +2024,7 @@ WITH registered_leads AS (
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0 AND gql_flag = 0
     AND LOWER(work_ex) NOT LIKE '%student%' AND work_ex NOT IN ('0-2','3-4')
   QUALIFY ROW_NUMBER() OVER (PARTITION BY hubspot_ID ORDER BY formatted_date ASC) = 1
@@ -1651,7 +2128,7 @@ WITH base AS (
       ORDER BY formatted_date ASC
     ) AS rnk
   FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
-  WHERE webinar_type = @wt AND dupe_logic = 1
+  WHERE UPPER(webinar_type) = UPPER(@wt) AND dupe_logic = 1
 ),
 leads AS (
   SELECT DATE(formatted_date) AS registration_date, channel_bucket, COUNT(*) AS total_leads
@@ -1662,17 +2139,24 @@ leads AS (
   GROUP BY registration_date, channel_bucket
 ),
 spends AS (
-  SELECT DATE(campaign_date, "America/Los_Angeles") AS spend_date,
-         SUM(cost_usd_) AS total_spend
-  FROM `ik-marketing-data.Google_Sheets.Combined_Spend_data`
-  -- Widened 2026-06-22: keep event-specific paid campaigns whose names contain
-  -- 'masterclass' but not l10x/meta/facebook (e.g., Pilot_Taboola_US_46_Masterclass_AI_Reinvent).
-  -- Then EXCLUDE non-event-specific evergreen/promo campaigns:
-  --   'recorded_masterclass' (Performance_Max_*, Quora_*_Recorded_Masterclass_*) — evergreen lead-gen
-  --   'holiday_offer'        (L10X_Meta_US_Holiday_Offer, _New, _Canada_*)        — promo, not tied to an event
-  WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")
-    AND LOWER(campaign_name) NOT LIKE "%recorded_masterclass%"
-    AND LOWER(campaign_name) NOT LIKE "%holiday_offer%"
+  -- Dedup exact-duplicate rows before summing (same fix as India — the source
+  -- ETL can double-insert; row unique-key is (date, campaign, ad_group, device)).
+  SELECT spend_date, SUM(cost_usd_) AS total_spend
+  FROM (
+    SELECT DATE(campaign_date, "America/Los_Angeles") AS spend_date,
+           campaign_name, ad_group_id, device,
+           ANY_VALUE(cost_usd_) AS cost_usd_
+    FROM `ik-marketing-data.Google_Sheets.Combined_Spend_data`
+    -- Widened 2026-06-22: keep event-specific paid campaigns whose names contain
+    -- 'masterclass' but not l10x/meta/facebook (e.g., Pilot_Taboola_US_46_Masterclass_AI_Reinvent).
+    -- Then EXCLUDE non-event-specific evergreen/promo campaigns:
+    --   'recorded_masterclass' (Performance_Max_*, Quora_*_Recorded_Masterclass_*) — evergreen lead-gen
+    --   'holiday_offer'        (L10X_Meta_US_Holiday_Offer, _New, _Canada_*)        — promo, not tied to an event
+    WHERE (LOWER(campaign_name) LIKE "%l10x%" OR LOWER(campaign_name) LIKE "%masterclass%")
+      AND LOWER(campaign_name) NOT LIKE "%recorded_masterclass%"
+      AND LOWER(campaign_name) NOT LIKE "%holiday_offer%"
+    GROUP BY spend_date, campaign_name, ad_group_id, device
+  )
   GROUP BY spend_date
 )
 SELECT l.registration_date, l.channel_bucket, l.total_leads, s.total_spend
@@ -1804,7 +2288,7 @@ FROM (
       ORDER BY formatted_date ASC
     ) AS rnk
   FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
-  WHERE dupe_logic = 1 AND webinar_type = @wt
+  WHERE dupe_logic = 1 AND UPPER(webinar_type) = UPPER(@wt)
 )
 WHERE rnk = 1
   AND web_scheduled_date IN ({date_literal})
@@ -1850,7 +2334,7 @@ leads AS (
         ORDER BY formatted_date ASC
       ) AS rnk
     FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
-    WHERE dupe_logic = 1 AND webinar_type = @wt
+    WHERE dupe_logic = 1 AND UPPER(webinar_type) = UPPER(@wt)
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
@@ -1901,7 +2385,7 @@ WITH base AS (
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0 AND gql_flag = 0
 ),
 base_call AS (
@@ -1944,9 +2428,10 @@ per_lead AS (
     COUNT(DISTINCT CASE WHEN activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_calls,
     COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14_conn,
     SUM(CASE WHEN call_duration > 120 AND activity_date BETWEEN DATE(webinar_start_datetime_ch) AND DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14_talk_mins,
-    COUNT(DISTINCT CASE WHEN activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_calls,
-    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN activity_datetime END) AS p14p_conn,
-    SUM(CASE WHEN call_duration > 120 AND activity_date > DATE_ADD(DATE(webinar_start_datetime_ch), INTERVAL 14 DAY) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
+    -- 14D+ (CUMULATIVE: all post-webinar calls, including 0-2D, 0-7D, 0-14D)
+    COUNT(DISTINCT CASE WHEN activity_date >= DATE(webinar_start_datetime_ch) THEN activity_datetime END) AS p14p_calls,
+    COUNT(DISTINCT CASE WHEN call_duration > 120 AND activity_date >= DATE(webinar_start_datetime_ch) THEN activity_datetime END) AS p14p_conn,
+    SUM(CASE WHEN call_duration > 120 AND activity_date >= DATE(webinar_start_datetime_ch) THEN call_duration / 60.0 ELSE 0 END) AS p14p_talk_mins
   FROM final_merge
   GROUP BY leads_hubspot_id
 )
@@ -2020,10 +2505,11 @@ WITH sales AS (
       ) AS rnk
     FROM `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`
     WHERE dupe_logic = 1
+      AND COALESCE(Alumni_Stats, 'New_Lead') = 'New_Lead'   -- exclude alumni-repeat sales
   )
   WHERE rnk = 1
     AND web_scheduled_date IN ({date_literal})
-    AND webinar_type = @wt
+    AND UPPER(webinar_type) = UPPER(@wt)
     AND dupe_flag = 0
 )
 SELECT

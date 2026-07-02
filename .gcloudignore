@@ -1,12 +1,14 @@
 .gcloudignore
 .git
 .gitignore
+tsundoku/
 projects/
 gcloud auth applica/
 Zoom/
 masterclass-launch/
 split-simple/
 Masterclass Automation/
+__pycache__/
 snapshot_config.json
 Terminal Saved Output.txt
 shopify test.txt

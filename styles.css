@@ -139,9 +139,10 @@ html.dark .cmp-section-head { background: #1f1f23 !important; }
 
 .link-row:hover { background: #f7f7f6; }
 
-.funnel-row { display: grid; grid-template-columns: 110px 1fr 64px 56px; align-items: center; gap: 12px; }
+.funnel-row { display: grid; grid-template-columns: 110px 1fr 140px; align-items: center; gap: 14px; }
 .funnel-bar { height: 22px; border-radius: 6px; background: var(--border); position: relative; overflow: hidden; }
-.funnel-bar > span { display: block; height: 100%; border-radius: 6px; }
+.funnel-bar > span { display: block; height: 100%; }
+.funnel-bar > span.att { position: absolute; left: 0; top: 0; bottom: 0; }
 
 .timeline-line {
   background-image: linear-gradient(to bottom, var(--border) 50%, transparent 0);

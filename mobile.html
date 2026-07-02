@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Masterclass Hub</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAAAAAAAEAIAAaQAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAEAAAABAAgGAAAAXHKoZgAAP+FJREFUeJztnQd8VFX2x3lvJgkkVAEFd1WwwrwyNfQkUwKIgETIlCSAXazrFvxbgYBt3cUCmZqEAGtZXdHdxdVde1l17ZWaTE2DBJReU+Z/7nsviBgUMm8yk+R8P5/7mZmU9+67c8/vnnNrr14IgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgj3AAACAAQAAB4ABAAEAIAAeAAAAAAAAAAAAeAAAAAAAAAAAAAB4AAAAAAAAAAAAB4AAAAAAAAAAAAHgAAAAAAAAAAAAeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+  <script>
+    tailwind = { config: { darkMode: 'class' } };
+    (function () {
+      if ((localStorage.getItem('ik_theme') || 'dark') === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    html, body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; height: 100%; overflow: hidden; background: #09090b; color: #fafafa; }
+    html:not(.dark) body { background: #fafafa; color: #18181b; }
+    * { -webkit-tap-highlight-color: transparent; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+    /* Tab content areas */
+    .tab-screen { display: none; position: absolute; inset: 0; overflow-y: auto; bottom: 60px; -webkit-overflow-scrolling: touch; }
+    .tab-screen.active { display: block; }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .tab-screen { bottom: calc(60px + env(safe-area-inset-bottom)); }
+    }
+
+    /* Bottom nav */
+    #bottomNav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60px;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      background: rgba(9,9,11,0.95);
+      border-top: 1px solid rgba(39,39,42,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      z-index: 50;
+    }
+    .light #bottomNav { background: rgba(255,255,255,0.95); border-top-color: rgba(228,228,231,0.8); }
+    html:not(.dark) #bottomNav { background: rgba(255,255,255,0.95); border-top-color: rgba(228,228,231,0.8); }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; border: none; background: transparent;
+      color: #71717a; font-size: 10px; font-weight: 500; padding: 0; transition: color 0.15s;
+    }
+    .nav-btn.active { color: #6366f1; }
+    html:not(.dark) .nav-btn { color: #a1a1aa; }
+    html:not(.dark) .nav-btn.active { color: #4f46e5; }
+    .nav-icon { width: 22px; height: 22px; }
+
+    /* Login */
+    #loginScreen {
+      position: fixed; inset: 0; background: #09090b;
+      display: flex; align-items: center; justify-content: center; z-index: 100;
+    }
+    html:not(.dark) #loginScreen { background: #fafafa; }
+    .login-card {
+      background: #18181b; border: 1px solid #27272a; border-radius: 20px;
+      padding: 36px 28px; width: 90%; max-width: 340px; text-align: center;
+    }
+    html:not(.dark) .login-card { background: #fff; border-color: #e4e4e7; }
+
+    /* Cards */
+    .card { background: #18181b; border: 1px solid #27272a; border-radius: 14px; }
+    html:not(.dark) .card { background: #ffffff; border-color: #e4e4e7; }
+
+    /* Status badges */
+    .badge-live { background: linear-gradient(90deg,#f43f5e,#ec4899); color:#fff; animation: liveGlow 1.5s ease-in-out infinite; }
+    @keyframes liveGlow { 0%,100% { box-shadow:0 0 0 0 rgba(244,63,94,.7); } 50% { box-shadow:0 0 0 6px rgba(244,63,94,0); } }
+    .badge-risk { background:rgba(217,119,6,.15); color:#fbbf24; border:1px solid rgba(217,119,6,.3); }
+    .badge-track { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.25); }
+    .badge-watch { background:rgba(113,113,122,.12); color:#a1a1aa; border:1px solid rgba(113,113,122,.2); }
+    .badge-queued { background:rgba(99,102,241,.12); color:#a5b4fc; border:1px solid rgba(99,102,241,.2); }
+
+    /* Pacing bar */
+    .pacing-bar { height: 4px; border-radius: 2px; background: #27272a; overflow: hidden; }
+    html:not(.dark) .pacing-bar { background: #e4e4e7; }
+
+    /* Skeleton */
+    .skeleton { background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    html:not(.dark) .skeleton { background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%); background-size: 200% 100%; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Chip */
+    .chip-up { background:rgba(16,185,129,.12); color:#34d399; }
+    .chip-dn { background:rgba(244,63,94,.12); color:#f87171; }
+    .chip-flat { background:rgba(113,113,122,.12); color:#a1a1aa; }
+    html:not(.dark) .chip-up { background:#ecfdf5; color:#059669; }
+    html:not(.dark) .chip-dn { background:#fef2f2; color:#dc2626; }
+    html:not(.dark) .chip-flat { background:#f4f4f5; color:#71717a; }
+
+    /* Month pill */
+    .month-pill { white-space: nowrap; padding: 6px 14px; border-radius: 999px; border: 1.5px solid #3f3f46; font-size: 13px; font-weight: 500; color: #71717a; cursor: pointer; transition: all .15s; background: transparent; font-family: inherit; }
+    .month-pill.sel { border-color: #6366f1; background: rgba(99,102,241,.12); color: #a5b4fc; }
+    html:not(.dark) .month-pill { border-color: #e4e4e7; color: #71717a; }
+    html:not(.dark) .month-pill.sel { border-color: #4f46e5; background: rgba(79,70,229,.08); color: #4f46e5; }
+
+    /* Pull indicator */
+    .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; color: #71717a; }
+    html:not(.dark) .kpi-label { color: #a1a1aa; }
+    .kpi-value { font-size: 22px; font-weight: 700; letter-spacing: -.03em; color: #fafafa; }
+    html:not(.dark) .kpi-value { color: #18181b; }
+
+    /* Mini bar chart */
+    .bar-chart-bar { transition: opacity .15s; }
+    .bar-chart-bar:hover { opacity: .8; }
+  </style>
+</head>
+
+<body class="antialiased" id="appBody">
+
+<!-- ─── LOGIN SCREEN ────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-lg mx-auto mb-5">M</div>
+    <div class="text-lg font-semibold mb-1" style="color:#fafafa;" id="ls-title">Masterclass Hub</div>
+    <div class="text-sm mb-6" style="color:#71717a;">Sign in with your IK account</div>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" class="text-xs mt-3" style="color:#f87171;display:none;"></p>
+  </div>
+</div>
+
+<!-- ─── APP ────────────────────────────────────────────────── -->
+<div id="appWrap" style="display:none;position:fixed;inset:0;">
+
+  <!-- ── TAB: EVENTS ───────────────────────────────────────── -->
+  <div id="tab-events" class="tab-screen active">
+    <div class="px-4 pt-12 pb-4">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold tracking-tight">Events</h1>
+        <div class="flex items-center gap-2">
+          <div class="flex border rounded-lg overflow-hidden text-xs" style="border-color:#3f3f46;">
+            <button onclick="setCountry('IN')" id="evCtryIN" class="px-3 py-1.5">India</button>
+            <button onclick="setCountry('US')" id="evCtryUS" class="px-3 py-1.5">US</button>
+          </div>
+          <button onclick="loadEvents()" id="evRefresh" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#27272a;">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="evLoading" class="space-y-3">
+        <div class="skeleton h-40 w-full"></div>
+        <div class="skeleton h-28 w-full"></div>
+        <div class="skeleton h-28 w-full"></div>
+      </div>
+      <div id="evContent" style="display:none;">
+        <div id="evUpNext"></div>
+        <div id="evAfter" class="mt-5"></div>
+        <div class="mt-8 mb-4 flex items-center justify-between">
+          <h2 class="text-sm font-semibold" style="color:#a1a1aa;text-transform:uppercase;letter-spacing:.06em;">Recent</h2>
+        </div>
+        <div id="evPast" class="space-y-2 pb-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: MONTHS ───────────────────────────────────────── -->
+  <div id="tab-months" class="tab-screen">
+    <div class="px-4 pt-12 pb-4">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold tracking-tight">Months</h1>
+        <div class="flex items-center gap-2">
+          <div class="flex border rounded-lg overflow-hidden text-xs" style="border-color:#3f3f46;">
+            <button onclick="setCountry('IN')" id="mCtryIN" class="px-3 py-1.5">India</button>
+            <button onclick="setCountry('US')" id="mCtryUS" class="px-3 py-1.5">US</button>
+          </div>
+        </div>
+      </div>
+      <!-- Month pills -->
+      <div id="monthPills" class="flex gap-2 overflow-x-auto pb-2 mb-5" style="-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+      </div>
+      <div id="mLoading" class="space-y-3">
+        <div class="skeleton h-32 w-full"></div>
+        <div class="skeleton h-48 w-full mb-3"></div>
+        <div class="skeleton h-36 w-full"></div>
+      </div>
+      <div id="mContent" style="display:none;">
+        <!-- KPI cards grid -->
+        <div class="grid grid-cols-2 gap-3 mb-5" id="mKpiGrid"></div>
+        <!-- Mini bar chart: IQL trend -->
+        <div class="card p-4 mb-3">
+          <div class="kpi-label mb-3">IQL trend (all months)</div>
+          <div id="mBarChart" style="height:80px;"></div>
+        </div>
+        <!-- Call efforts -->
+        <div class="card p-4 mb-3">
+          <div class="kpi-label mb-3">Call efforts</div>
+          <div id="mCallStats" class="space-y-2"></div>
+        </div>
+        <!-- Lead quality snapshot -->
+        <div class="card p-4 mb-3">
+          <div class="kpi-label mb-3">Lead quality (roles)</div>
+          <div id="mRoleChart"></div>
+        </div>
+        <!-- Per-event drill-down -->
+        <div class="card p-0 mb-5 overflow-hidden">
+          <div class="px-4 py-3 border-b" style="border-color:#27272a;">
+            <div class="kpi-label">Events this month</div>
+          </div>
+          <div id="mEventList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: SALES ─────────────────────────────────────────── -->
+  <div id="tab-sales" class="tab-screen">
+    <div class="px-4 pt-12 pb-4">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold tracking-tight">Sales</h1>
+        <div class="flex border rounded-lg overflow-hidden text-xs" style="border-color:#3f3f46;">
+          <button onclick="setCountry('IN')" id="sCtryIN" class="px-3 py-1.5">India</button>
+          <button onclick="setCountry('US')" id="sCtryUS" class="px-3 py-1.5">US</button>
+        </div>
+      </div>
+      <div id="sLoading" class="space-y-3">
+        <div class="skeleton h-28 w-full"></div>
+        <div class="skeleton h-64 w-full"></div>
+      </div>
+      <div id="sContent" style="display:none;">
+        <div class="grid grid-cols-2 gap-3 mb-5" id="sKpiGrid"></div>
+        <div class="card p-0 overflow-hidden mb-5">
+          <div class="px-4 py-3 border-b" style="border-color:#27272a;">
+            <div class="kpi-label">Recent sales</div>
+          </div>
+          <div id="sSalesList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: PROFILE ───────────────────────────────────────── -->
+  <div id="tab-profile" class="tab-screen">
+    <div class="px-4 pt-12 pb-8">
+      <h1 class="text-xl font-bold tracking-tight mb-6">Account</h1>
+
+      <!-- Avatar + email -->
+      <div class="card p-5 mb-5 flex items-center gap-4">
+        <div id="profAvatar" class="w-14 h-14 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">UG</div>
+        <div>
+          <div class="text-sm font-semibold" id="profEmail">—</div>
+          <div class="text-xs mt-0.5" style="color:#71717a;">IK Team</div>
+        </div>
+      </div>
+
+      <!-- Country -->
+      <div class="card p-4 mb-3">
+        <div class="kpi-label mb-3">Region</div>
+        <div class="flex gap-2">
+          <button onclick="setCountry('IN')" id="profCtryIN" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all" style="border-color:#3f3f46;color:#71717a;">India</button>
+          <button onclick="setCountry('US')" id="profCtryUS" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all" style="border-color:#3f3f46;color:#71717a;">United States</button>
+        </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="card p-4 mb-3 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold">Dark Mode</div>
+          <div class="text-xs mt-0.5" style="color:#71717a;" id="themeLabel">Enabled</div>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="w-12 h-7 rounded-full relative transition-colors" style="background:#6366f1;">
+          <div id="themeThumb" class="w-5 h-5 bg-white rounded-full absolute top-1 right-1 transition-all shadow-sm"></div>
+        </button>
+      </div>
+
+      <!-- Links -->
+      <div class="card overflow-hidden mb-5">
+        <a href="/hub.html" class="flex items-center justify-between px-4 py-3.5 border-b no-underline" style="border-color:#27272a;color:#fafafa;">
+          <span class="text-sm">Desktop Hub</span>
+          <svg class="w-4 h-4" style="color:#71717a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="/months.html" class="flex items-center justify-between px-4 py-3.5 border-b no-underline" style="border-color:#27272a;color:#fafafa;">
+          <span class="text-sm">Months (Desktop)</span>
+          <svg class="w-4 h-4" style="color:#71717a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="/sales.html" class="flex items-center justify-between px-4 py-3.5 no-underline" style="color:#fafafa;">
+          <span class="text-sm">Sales (Desktop)</span>
+          <svg class="w-4 h-4" style="color:#71717a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+
+      <button onclick="signOut()" class="w-full py-3 rounded-xl text-sm font-semibold border transition-all" style="border-color:#3f3f46;color:#f87171;">Sign out</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── BOTTOM NAV ─────────────────────────────────────────── -->
+<div id="bottomNav" style="display:none;">
+  <button class="nav-btn active" id="nav-events" onclick="switchTab('events')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span>Events</span>
+  </button>
+  <button class="nav-btn" id="nav-months" onclick="switchTab('months')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    <span>Months</span>
+  </button>
+  <button class="nav-btn" id="nav-sales" onclick="switchTab('sales')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>Sales</span>
+  </button>
+  <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </button>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+const TOPIC_COLORS = { ai_agents:'#a855f7', system_design:'#3b82f6', behavioral:'#f59e0b', data:'#10b981', ml:'#ec4899', distributed:'#6366f1' };
+const TOPIC_LABELS = { ai_agents:'AI & Agents', system_design:'System Design', behavioral:'Behavioral', data:'Data', ml:'ML Eng', distributed:'Distributed' };
+
+let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+let currentTab     = 'events';
+let lastUpcoming   = [];
+let lastPast       = [];
+let allMonths      = [];
+let allMonthEvents = [];
+let selectedMonth  = null;
+let salesData      = null;
+let userEmail      = '';
+
+// ─── Theme ───────────────────────────────────────────────────
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const lbl = document.getElementById('themeLabel');
+  if (lbl) lbl.textContent = dark ? 'Enabled' : 'Disabled';
+  const btn   = document.getElementById('themeToggleBtn');
+  const thumb = document.getElementById('themeThumb');
+  if (btn)   btn.style.background = dark ? '#6366f1' : '#d4d4d8';
+  if (thumb) { thumb.style.right = dark ? '4px' : 'auto'; thumb.style.left = dark ? 'auto' : '4px'; }
+  document.body.style.background = dark ? '#09090b' : '#fafafa';
+  document.body.style.color      = dark ? '#fafafa' : '#18181b';
+  // Update login card
+  const lc = document.querySelector('.login-card');
+  if (lc) { lc.style.background = dark ? '#18181b' : '#ffffff'; lc.style.borderColor = dark ? '#27272a' : '#e4e4e7'; }
+  const lt = document.getElementById('ls-title');
+  if (lt) lt.style.color = dark ? '#fafafa' : '#18181b';
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+}
+
+// ─── Country ─────────────────────────────────────────────────
+function setCountry(c) {
+  if (currentCountry === c) return;
+  currentCountry = c;
+  localStorage.setItem('ik_country', c);
+  updateCountryUI();
+  if (currentTab === 'events')  loadEvents();
+  else if (currentTab === 'months') loadMonths();
+  else if (currentTab === 'sales')  loadSales();
+}
+function isUS()      { return currentCountry === 'US'; }
+function countryParam() { return isUS() ? 'US' : 'India'; }
+function sym()       { return isUS() ? '$' : '₹'; }
+function updateCountryUI() {
+  const selCls = 'background:#6366f1;color:#fff;';
+  const defCls = '';
+  ['ev','m','s','prof'].forEach(pfx => {
+    const inEl = document.getElementById(`${pfx}CtryIN`);
+    const usEl = document.getElementById(`${pfx}CtryUS`);
+    if (!inEl || !usEl) return;
+    inEl.style.cssText = currentCountry === 'IN' ? selCls : defCls;
+    usEl.style.cssText = currentCountry === 'US' ? selCls : defCls;
+    // Profile buttons have border
+    if (pfx === 'prof') {
+      inEl.style.borderColor = currentCountry === 'IN' ? '#6366f1' : '#3f3f46';
+      usEl.style.borderColor = currentCountry === 'US' ? '#6366f1' : '#3f3f46';
+      inEl.style.color = currentCountry === 'IN' ? '#a5b4fc' : '#71717a';
+      usEl.style.color = currentCountry === 'US' ? '#a5b4fc' : '#71717a';
+      inEl.style.background = currentCountry === 'IN' ? 'rgba(99,102,241,.12)' : 'transparent';
+      usEl.style.background = currentCountry === 'US' ? 'rgba(99,102,241,.12)' : 'transparent';
+    }
+  });
+}
+
+// ─── Tab switching ───────────────────────────────────────────
+function switchTab(tab) {
+  if (tab === currentTab) return;
+  // Hide old
+  document.getElementById(`tab-${currentTab}`)?.classList.remove('active');
+  document.getElementById(`nav-${currentTab}`)?.classList.remove('active');
+  currentTab = tab;
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`nav-${tab}`).classList.add('active');
+
+  // Lazy-load
+  if (tab === 'months' && allMonths.length === 0) loadMonths();
+  if (tab === 'sales' && salesData === null) loadSales();
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtN(n) {
+  if (n == null || isNaN(n)) return '—';
+  if (isUS()) {
+    if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'K';
+    return Math.round(n).toLocaleString();
+  }
+  if (n >= 1e7) return (n/1e7).toFixed(2).replace(/\.00$/,'').replace(/0$/,'') + 'Cr';
+  if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
+  if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return Math.round(n).toLocaleString();
+}
+function fmtMoney(n)  { return n == null ? '—' : sym() + fmtN(n); }
+function fmtPct(n)    { return n == null ? '—' : n.toFixed(1) + '%'; }
+function fmtROAS(n)   { return n == null || isNaN(n) ? '—' : n.toFixed(2) + 'x'; }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+function fmtCountdown(iso) {
+  if (!iso) return '—';
+  const diff = new Date(iso) - new Date();
+  if (diff < 0) {
+    const h = Math.round(-diff / 3.6e6);
+    return h < 24 ? `${h}h ago` : `${Math.round(h/24)}d ago`;
+  }
+  const h = diff / 3.6e6;
+  if (h < 24) return `in ${Math.floor(h)}h ${Math.round((h%1)*60)}m`;
+  return Math.floor(h/24) === 1 ? 'tomorrow' : `in ${Math.floor(h/24)}d`;
+}
+function initials(name) {
+  if (!name) return 'IK';
+  return name.split(/\s+/).filter(Boolean).map(s=>s[0]).slice(0,2).join('').toUpperCase();
+}
+function topicColor(t) { return TOPIC_COLORS[t] || '#6366f1'; }
+function topicLabel(t) { return TOPIC_LABELS[t] || 'General'; }
+
+function goalPct(ev) {
+  const t = ev.snapshot?.total_regs, g = ev.goal_regs;
+  return (t != null && g > 0) ? Math.min(150, 100*t/g) : null;
+}
+function statusFor(ev) {
+  const s = ev.snapshot || {};
+  const hrs = s.hours_to_live;
+  const g = goalPct(ev);
+  if (!ev.live_at || ev.goal_regs == null) return 'setup';
+  if (hrs == null || s.total_regs == null) return 'queued';
+  if (hrs < 24 && hrs > -2) return 'live';
+  if (g != null && g < 70 && hrs < 168) return 'at_risk';
+  if (g != null && g >= 100) return 'on_track';
+  return 'watch';
+}
+function badgeHTML(st) {
+  const MAP = {
+    live:     ['Going live','badge-live'],
+    at_risk:  ['At risk','badge-risk'],
+    on_track: ['On track','badge-track'],
+    watch:    ['Watch','badge-watch'],
+    queued:   ['Queued','badge-queued'],
+    setup:    ['Setup','badge-watch'],
+  };
+  const [label, cls] = MAP[st] || ['','badge-watch'];
+  return `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${esc(label)}</span>`;
+}
+
+function chipDelta(curr, prev) {
+  if (curr == null || prev == null || prev === 0) return '';
+  const d = ((curr - prev) / Math.abs(prev) * 100).toFixed(0);
+  const cls = d > 0 ? 'chip-up' : d < 0 ? 'chip-dn' : 'chip-flat';
+  return `<span class="text-xs font-bold px-1.5 py-0.5 rounded ${cls}">${d > 0 ? '+' : ''}${d}%</span>`;
+}
+
+function monthLabel(slug) {
+  if (!slug) return '—';
+  const [y, m] = slug.split('-');
+  return new Date(+y, +m-1, 1).toLocaleDateString('en-US', {month:'short', year:'2-digit'});
+}
+
+// ─── Auth ─────────────────────────────────────────────────────
+function showApp(email) {
+  userEmail = email;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('bottomNav').style.display = 'flex';
+  document.getElementById('profEmail').textContent = email;
+  if (email) {
+    const av = (email[0]||'?').toUpperCase() + (email.split('.')[1]?.[0]||'').toUpperCase();
+    document.getElementById('profAvatar').textContent = av;
+  }
+  applyTheme();
+  updateCountryUI();
+  loadEvents();
+}
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+}
+async function checkAuth() {
+  try {
+    const r = await fetch('/auth/check');
+    if (r.ok) { const d = await r.json(); showApp(d.email); }
+    else showLogin();
+  } catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  document.getElementById('loginError').style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({credential:response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { document.getElementById('loginError').textContent = d.error || 'Sign-in failed.'; document.getElementById('loginError').style.display = 'block'; }
+  } catch { document.getElementById('loginError').textContent = 'Sign-in failed.'; document.getElementById('loginError').style.display = 'block'; }
+}
+async function signOut() {
+  await fetch('/auth/logout', {method:'POST'});
+  showLogin();
+}
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme:'filled_black', size:'large', width:260 });
+};
+
+// ─── EVENTS TAB ──────────────────────────────────────────────
+async function loadEvents() {
+  document.getElementById('evLoading').style.display = '';
+  document.getElementById('evContent').style.display = 'none';
+  try {
+    const c = encodeURIComponent(countryParam());
+    const [rU, rP] = await Promise.all([
+      fetch(`/events?status=upcoming&country=${c}&limit=100`),
+      fetch(`/events?status=aired&country=${c}&limit=20`),
+    ]);
+    lastUpcoming = (await rU.json()).events || [];
+    lastPast     = (await rP.json()).events || [];
+    renderEvents();
+  } catch(e) {
+    document.getElementById('evLoading').innerHTML = `<div class="text-center text-sm py-8" style="color:#f87171;">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderEvents() {
+  document.getElementById('evLoading').style.display = 'none';
+  document.getElementById('evContent').style.display = '';
+
+  const sorted = lastUpcoming.slice().sort((a,b) => new Date(a.live_at||0) - new Date(b.live_at||0));
+  const upNext   = sorted.slice(0,2);
+  const afterThat = sorted.slice(2);
+
+  // Up Next
+  const tw = document.getElementById('evUpNext');
+  if (upNext.length) {
+    tw.innerHTML = `
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold uppercase tracking-widest" style="color:#a1a1aa;">Up Next</h2>
+        <span class="text-xs" style="color:#52525b;">${upNext.length} of ${sorted.length}</span>
+      </div>
+      <div class="space-y-3">${upNext.map(mobileHeroCard).join('')}</div>`;
+  } else {
+    tw.innerHTML = `<div class="card p-6 text-center text-sm mb-4" style="color:#71717a;">No upcoming events</div>`;
+  }
+
+  // After that
+  const nt = document.getElementById('evAfter');
+  if (afterThat.length) {
+    nt.innerHTML = `
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold uppercase tracking-widest" style="color:#a1a1aa;">After that</h2>
+        <span class="text-xs" style="color:#52525b;">${afterThat.length} more</span>
+      </div>
+      <div class="space-y-2">${afterThat.map(mobileRowCard).join('')}</div>`;
+  } else {
+    nt.innerHTML = '';
+  }
+
+  // Past
+  const pt = document.getElementById('evPast');
+  pt.innerHTML = lastPast.slice(0,10).map(mobilePastCard).join('');
+}
+
+function mobileHeroCard(ev) {
+  const s = ev.snapshot || {};
+  const st = statusFor(ev);
+  const c = topicColor(ev.topic);
+  const g = goalPct(ev);
+  const pacingW = g != null ? Math.min(100,g).toFixed(0) : 0;
+  const pacingC = g == null ? '#52525b' : g >= 100 ? '#10b981' : g >= 70 ? '#a1a1aa' : '#f59e0b';
+  return `
+  <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="card block no-underline p-4 relative overflow-hidden" style="border-top: 3px solid ${c};">
+    <div class="flex items-start justify-between gap-2 mb-3">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1.5 mb-1.5 flex-wrap">
+          ${badgeHTML(st)}
+          <span class="text-xs" style="color:#71717a;">${esc(fmtCountdown(ev.live_at))}</span>
+        </div>
+        <div class="text-sm font-bold leading-snug" style="color:#fafafa;">${esc(ev.title||'—')}</div>
+        <div class="text-xs mt-1" style="color:#71717a;">${esc(ev.instructor_name||'—')}</div>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <div class="text-lg font-bold tabular">${s.total_regs ?? '—'}</div>
+        <div class="text-xs" style="color:#71717a;">${ev.goal_regs ? `/ ${ev.goal_regs}` : 'regs'}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 pt-3 border-t mb-3" style="border-color:#27272a;">
+      <div>
+        <div class="text-xs mb-0.5" style="color:#71717a;">CPIQL</div>
+        <div class="text-sm font-bold tabular">${s.cpiql ? sym() + Math.round(s.cpiql).toLocaleString() : '—'}</div>
+      </div>
+      <div>
+        <div class="text-xs mb-0.5" style="color:#71717a;">Spend</div>
+        <div class="text-sm font-bold tabular">${s.meta_spend ? sym() + Math.round(s.meta_spend).toLocaleString() : '—'}</div>
+      </div>
+      <div>
+        <div class="text-xs mb-0.5" style="color:#71717a;">Attend</div>
+        <div class="text-sm font-bold tabular">${s.attendance_pct ? fmtPct(s.attendance_pct) : '—'}</div>
+      </div>
+    </div>
+    ${g != null ? `
+    <div>
+      <div class="flex justify-between text-xs mb-1">
+        <span style="color:#71717a;">Goal pacing</span>
+        <span style="color:${pacingC};">${g.toFixed(0)}%</span>
+      </div>
+      <div class="pacing-bar"><div style="width:${pacingW}%;height:100%;border-radius:2px;background:${pacingC};transition:width .3s;"></div></div>
+    </div>` : ''}
+  </a>`;
+}
+
+function mobileRowCard(ev) {
+  const s = ev.snapshot || {};
+  const st = statusFor(ev);
+  const c = topicColor(ev.topic);
+  return `
+  <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="card flex items-center gap-3 p-3 no-underline" style="border-left: 3px solid ${c};">
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-semibold truncate">${esc(ev.title||'—')}</div>
+      <div class="flex items-center gap-2 mt-0.5">
+        ${badgeHTML(st)}
+        <span class="text-xs" style="color:#71717a;">${esc(fmtCountdown(ev.live_at))}</span>
+      </div>
+    </div>
+    <div class="text-right flex-shrink-0">
+      <div class="text-sm font-bold tabular">${s.total_regs ?? '—'}</div>
+      <div class="text-xs" style="color:#71717a;">regs</div>
+    </div>
+  </a>`;
+}
+
+function mobilePastCard(ev) {
+  const s = ev.snapshot || {};
+  const c = topicColor(ev.topic);
+  const roas = s.overall_roas != null ? s.overall_roas.toFixed(2) + 'x' : '—';
+  const roasColor = s.overall_roas == null ? '#71717a' : s.overall_roas >= 3 ? '#10b981' : s.overall_roas >= 1.5 ? '#a1a1aa' : '#f87171';
+  return `
+  <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="card flex items-center gap-3 p-3 no-underline" style="border-left: 3px solid ${c};">
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-semibold truncate">${esc(ev.title||'—')}</div>
+      <div class="text-xs mt-0.5" style="color:#71717a;">${esc(fmtDate(ev.live_at))} · ${esc(ev.instructor_name||'')}</div>
+    </div>
+    <div class="text-right flex-shrink-0 space-y-0.5">
+      <div class="text-sm font-bold tabular" style="color:${roasColor};">${roas}</div>
+      <div class="text-xs" style="color:#71717a;">${s.revenue ? sym() + fmtN(s.revenue) : '—'}</div>
+    </div>
+  </a>`;
+}
+
+// ─── MONTHS TAB ───────────────────────────────────────────────
+async function loadMonths() {
+  document.getElementById('mLoading').style.display = '';
+  document.getElementById('mContent').style.display = 'none';
+  try {
+    const r = await fetch(`/months?country=${encodeURIComponent(countryParam())}`);
+    const d = await r.json();
+    allMonthEvents = d.events || [];
+    allMonths = (d.months || []).sort((a,b) => a.month_slug < b.month_slug ? -1 : 1);
+    // Default to latest month (excluding future)
+    const now = new Date();
+    const curSlug = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const pastMonths = allMonths.filter(m => m.month_slug <= curSlug);
+    selectedMonth = pastMonths.length ? pastMonths[pastMonths.length-1].month_slug : (allMonths[allMonths.length-1]?.month_slug || null);
+    renderMonthPills();
+    renderMonthData();
+  } catch(e) {
+    document.getElementById('mLoading').innerHTML = `<div class="text-center text-sm py-8" style="color:#f87171;">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderMonthPills() {
+  const container = document.getElementById('monthPills');
+  const now = new Date();
+  const curSlug = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const months = allMonths.filter(m => m.month_slug <= curSlug);
+  container.innerHTML = months.map(m => `
+    <button class="month-pill${m.month_slug === selectedMonth ? ' sel' : ''}" onclick="selectMonth('${m.month_slug}')">${monthLabel(m.month_slug)}</button>
+  `).join('');
+  // Scroll active pill into view
+  setTimeout(() => {
+    const sel = container.querySelector('.month-pill.sel');
+    if (sel) sel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }, 50);
+}
+
+function selectMonth(slug) {
+  selectedMonth = slug;
+  renderMonthPills();
+  renderMonthData();
+}
+
+function renderMonthData() {
+  document.getElementById('mLoading').style.display = 'none';
+  document.getElementById('mContent').style.display = '';
+
+  const m = allMonths.find(x => x.month_slug === selectedMonth);
+  if (!m) return;
+
+  const months = allMonths.filter(x => x.month_slug <= selectedMonth);
+  const prev = months.length >= 2 ? months[months.length-2] : null;
+
+  // ── KPI Cards ──
+  const kpiData = [
+    { label: 'IQLs', value: fmtN(m.total_regs), prev: prev?.total_regs, curr: m.total_regs },
+    { label: 'Booked ' + sym(), value: fmtMoney(m.revenue_booked), prev: prev?.revenue_booked, curr: m.revenue_booked },
+    { label: 'Collected ' + sym(), value: fmtMoney(m.revenue), prev: prev?.revenue, curr: m.revenue },
+    { label: 'ROAS', value: fmtROAS(m.overall_roas), prev: null, curr: null },
+    { label: 'Meta Spend', value: fmtMoney(m.meta_spend), prev: prev?.meta_spend, curr: m.meta_spend },
+    { label: 'CPL', value: m.cpl_blended != null ? sym() + fmtN(m.cpl_blended) : '—', prev: null, curr: null },
+  ];
+  document.getElementById('mKpiGrid').innerHTML = kpiData.map(k => `
+    <div class="card p-3">
+      <div class="kpi-label mb-1">${esc(k.label)}</div>
+      <div class="kpi-value text-xl">${esc(k.value)}</div>
+      ${k.prev != null ? `<div class="mt-1">${chipDelta(k.curr, k.prev)}</div>` : ''}
+    </div>
+  `).join('');
+
+  // ── Bar chart: IQL trend ──
+  const now = new Date();
+  const curSlug = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const chartMonths = allMonths.filter(m2 => m2.month_slug <= curSlug).slice(-8);
+  const maxRegs = Math.max(...chartMonths.map(x => x.total_regs || 0), 1);
+  const barW = 100 / chartMonths.length;
+  const bars = chartMonths.map((x, i) => {
+    const h = ((x.total_regs || 0) / maxRegs * 100).toFixed(0);
+    const isSel = x.month_slug === selectedMonth;
+    return `
+      <g onclick="selectMonth('${x.month_slug}')" style="cursor:pointer;">
+        <rect x="${(i * barW + 1).toFixed(1)}%" y="${(100 - h).toFixed(0)}%" width="${(barW - 2).toFixed(1)}%"
+          height="${h}%" rx="3"
+          fill="${isSel ? '#6366f1' : '#3f3f46'}"
+          class="bar-chart-bar"/>
+        <text x="${((i + 0.5) * barW).toFixed(1)}%" y="100%" dy="-2" text-anchor="middle"
+          style="font-size:8px;fill:${isSel ? '#a5b4fc' : '#71717a'};">
+          ${monthLabel(x.month_slug).split(' ')[0]}
+        </text>
+      </g>`;
+  }).join('');
+  document.getElementById('mBarChart').innerHTML = `<svg width="100%" height="80" viewBox="0 0 100 80" preserveAspectRatio="none" style="overflow:visible;">${bars}</svg>`;
+
+  // ── Call stats ──
+  const phases = [
+    { label: '0–2D', att: m.call_p2_attempts, con: m.call_p2_connects },
+    { label: '0–7D', att: m.call_p7_attempts, con: m.call_p7_connects },
+    { label: '0–14D', att: m.call_p14_attempts, con: m.call_p14_connects },
+    { label: '14D+', att: m.call_p14p_attempts, con: m.call_p14p_connects },
+  ];
+  document.getElementById('mCallStats').innerHTML = phases.map(p => {
+    const rate = (p.att > 0) ? (p.con / p.att * 100).toFixed(0) : null;
+    const rateColor = rate == null ? '#71717a' : rate >= 50 ? '#10b981' : rate >= 30 ? '#f59e0b' : '#f87171';
+    const w = rate ? `${rate}%` : '0%';
+    return `
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span style="color:#a1a1aa;">${p.label}</span>
+          <span>${p.att ? p.att.toLocaleString() + ' att' : '—'}${rate != null ? ` · <span style="color:${rateColor};">${rate}% conn</span>` : ''}</span>
+        </div>
+        <div class="pacing-bar"><div style="width:${w};height:100%;border-radius:2px;background:${rateColor};"></div></div>
+      </div>`;
+  }).join('');
+
+  // ── Lead quality roles ──
+  const roles = [
+    { label: 'SDE', val: m.role_sde },
+    { label: 'ML', val: m.role_ml },
+    { label: 'Mgmt', val: m.role_management },
+    { label: 'Systems', val: m.role_systems },
+  ];
+  const totalRoles = roles.reduce((a,r) => a + (r.val || 0), 0);
+  const roleColors = ['#6366f1','#10b981','#f59e0b','#3b82f6'];
+  document.getElementById('mRoleChart').innerHTML = roles.map((r, i) => {
+    const pct = totalRoles > 0 && r.val ? (r.val / totalRoles * 100).toFixed(0) : 0;
+    return `
+      <div class="flex items-center gap-2 mb-1.5">
+        <div style="width:8px;height:8px;border-radius:2px;background:${roleColors[i]};flex-shrink:0;"></div>
+        <div class="text-xs flex-1" style="color:#a1a1aa;">${r.label}</div>
+        <div class="text-xs" style="color:#a1a1aa;">${r.val ?? 0}</div>
+        <div style="width:80px;height:6px;border-radius:3px;background:#27272a;overflow:hidden;flex-shrink:0;">
+          <div style="width:${pct}%;height:100%;border-radius:3px;background:${roleColors[i]};"></div>
+        </div>
+        <div class="text-xs font-semibold" style="color:#fafafa;width:28px;text-align:right;">${pct}%</div>
+      </div>`;
+  }).join('');
+
+  // ── Event list ──
+  const events = allMonthEvents.filter(e => e.month_slug === selectedMonth).sort((a,b) => new Date(b.live_at||0) - new Date(a.live_at||0));
+  document.getElementById('mEventList').innerHTML = events.length === 0
+    ? `<div class="px-4 py-6 text-center text-sm" style="color:#71717a;">No events this month</div>`
+    : events.map(ev => {
+      const c = topicColor(ev.topic);
+      return `
+        <a href="/event.html?id=${encodeURIComponent(ev.event_id)}" class="flex items-center gap-3 px-4 py-3 border-b no-underline" style="border-color:#27272a;">
+          <div style="width:3px;height:40px;border-radius:2px;background:${c};flex-shrink:0;"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold truncate">${esc(ev.title||'—')}</div>
+            <div class="text-xs mt-0.5" style="color:#71717a;">${fmtDate(ev.live_at)} · ${esc(ev.instructor_name||'')}</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-sm font-bold tabular">${fmtN(ev.total_regs)}</div>
+            <div class="text-xs" style="color:#71717a;">regs</div>
+          </div>
+        </a>`;
+    }).join('');
+}
+
+// ─── SALES TAB ────────────────────────────────────────────────
+async function loadSales() {
+  document.getElementById('sLoading').style.display = '';
+  document.getElementById('sContent').style.display = 'none';
+  try {
+    const r = await fetch(`/sales?country=${encodeURIComponent(countryParam())}`);
+    salesData = await r.json();
+    renderSales();
+  } catch(e) {
+    document.getElementById('sLoading').innerHTML = `<div class="text-center text-sm py-8" style="color:#f87171;">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderSales() {
+  document.getElementById('sLoading').style.display = 'none';
+  document.getElementById('sContent').style.display = '';
+
+  const sales = (salesData?.sales || []);
+  const totalSales   = sales.length;
+  const totalRevenue = sales.reduce((a, s) => a + (s.revenue || 0), 0);
+
+  document.getElementById('sKpiGrid').innerHTML = [
+    { label: 'Total Sales', value: String(totalSales) },
+    { label: 'Revenue ' + sym(), value: fmtMoney(totalRevenue) },
+  ].map(k => `
+    <div class="card p-3">
+      <div class="kpi-label mb-1">${esc(k.label)}</div>
+      <div class="kpi-value text-xl">${esc(k.value)}</div>
+    </div>
+  `).join('');
+
+  // Group by month for display
+  const byMonth = {};
+  sales.forEach(s => {
+    const mo = (s.sale_date || '').slice(0,7) || 'Unknown';
+    if (!byMonth[mo]) byMonth[mo] = [];
+    byMonth[mo].push(s);
+  });
+
+  const monthGroups = Object.keys(byMonth).sort((a,b) => b.localeCompare(a)).slice(0,6);
+
+  document.getElementById('sSalesList').innerHTML = sales.length === 0
+    ? `<div class="px-4 py-6 text-center text-sm" style="color:#71717a;">No sales data</div>`
+    : monthGroups.map(mo => {
+        const mSales = byMonth[mo];
+        const mRev   = mSales.reduce((a,s) => a + (s.revenue||0), 0);
+        const rows   = mSales.slice(0,8).map(sale => `
+          <div class="flex items-center gap-3 px-4 py-2.5 border-b" style="border-color:#27272a;">
+            <div class="flex-1 min-w-0">
+              <div class="text-sm truncate">${esc(sale.event_title || '—')}</div>
+              <div class="text-xs mt-0.5" style="color:#71717a;">${esc(sale.channel||'—')} · ${esc(fmtDate(sale.sale_date))}</div>
+            </div>
+            <div class="text-sm font-bold tabular" style="color:#34d399;">${fmtMoney(sale.revenue)}</div>
+          </div>`).join('');
+        return `
+          <div class="px-4 py-2.5 flex justify-between items-center" style="background:rgba(39,39,42,.3);">
+            <div class="text-xs font-semibold uppercase tracking-widest" style="color:#a1a1aa;">${monthLabel(mo)}</div>
+            <div class="text-xs font-bold" style="color:#fafafa;">${mSales.length} sales · ${fmtMoney(mRev)}</div>
+          </div>
+          ${rows}`;
+      }).join('');
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+applyTheme();
+updateCountryUI();
+checkAuth();
+</script>
+</body>
+</html>

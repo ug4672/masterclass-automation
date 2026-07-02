@@ -91,6 +91,7 @@
             <a href="/hub.html"     class="px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium no-underline">Hub</a>
             <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Months</a>
             <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Compare</a>
+            <a href="/sales.html"   class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Sales</a>
           </nav>
         </div>
         <div class="flex items-center gap-3">
@@ -117,29 +118,29 @@
 
     <main class="max-w-[1400px] mx-auto px-8 py-10 space-y-10">
 
-      <!-- HEADING + TAB SWITCHER -->
+      <!-- HEADING -->
       <div class="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 class="text-3xl font-bold tracking-tight" id="pageTitle">Upcoming masterclasses</h1>
-          <p class="text-sm text-zinc-500 mt-1" id="pageSub">Live data · synced with daily snapshot</p>
-        </div>
-        <div class="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs">
-          <button onclick="switchTab('upcoming')" id="tabUp"   class="px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-r border-zinc-200 dark:border-zinc-800 font-medium">Upcoming</button>
-          <button onclick="switchTab('aired')"    id="tabPast" class="px-4 py-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium">Past</button>
+          <h1 class="text-3xl font-bold tracking-tight">Masterclasses</h1>
+          <p class="text-sm text-zinc-500 mt-1">Live data · synced with daily snapshot</p>
         </div>
       </div>
 
-      <!-- ── UPCOMING VIEW ────────────────────────────────────────────── -->
+      <!-- ── UPCOMING ─────────────────────────────────────────────────── -->
       <div id="upcomingView">
-        <section id="commandBar"   class="grid grid-cols-4 gap-4 mb-10"></section>
-        <section id="thisWeekArea" class="mb-12"></section>
-        <section id="next2Area"    class="mb-12"></section>
-        <section id="futureArea"></section>
+        <section id="upNextArea"  class="mb-12"></section>
+        <section id="afterArea"></section>
       </div>
 
-      <!-- ── PAST VIEW ────────────────────────────────────────────────── -->
-      <div id="pastView" class="hide">
-        <section id="monthlyArea" class="mb-10"></section>
+      <!-- Divider between Upcoming and Past -->
+      <div id="sectionDivider" class="my-12 h-px bg-zinc-200 dark:bg-zinc-800"></div>
+
+      <!-- ── PAST ─────────────────────────────────────────────────────── -->
+      <div id="pastView">
+        <div class="mt-2 mb-6 flex items-baseline justify-between">
+          <h2 class="text-xl font-semibold tracking-tight">Past masterclasses</h2>
+          <span class="text-[11px] text-zinc-500" id="pastCount"></span>
+        </div>
 
         <section class="mb-5">
           <div class="flex items-center justify-between gap-4 flex-wrap">
@@ -149,10 +150,10 @@
             <div class="flex items-center gap-2 text-xs">
               <span class="text-zinc-500">Sort by</span>
               <select id="pastSort" onchange="renderPast()" class="px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none">
+                <option value="date">Date (newest)</option>
                 <option value="roas">ROAS (highest first)</option>
                 <option value="revenue">Revenue</option>
                 <option value="sales">Sales</option>
-                <option value="date">Date (newest)</option>
                 <option value="cpiql">CPIQL (lowest)</option>
                 <option value="regs">Registrations</option>
               </select>
@@ -161,7 +162,6 @@
         </section>
 
         <section id="pastTableArea"></section>
-        <section id="learningsArea" class="mt-12"></section>
       </div>
 
       <div id="loadingArea" class="hide p-12 text-center text-zinc-500 text-sm">Loading…</div>
@@ -183,10 +183,9 @@
       data: 'Data', ml: 'ML Eng', distributed: 'Distributed',
     };
 
-    let currentStatus  = 'upcoming';
     let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
-    let lastEvents = [];
-    let selectedIds = new Set();
+    let lastUpcoming = [];
+    let lastPast     = [];
     let showAllPast = false;
 
     // ── Theme ────────────────────────────────────────────────
@@ -329,11 +328,11 @@
     }
 
     // Classify event into one of: live, at_risk, on_track, watch, queued, setup
+    // (Called only for upcoming events now that hub renders both sections.)
     function statusFor(ev) {
       const s = ev.snapshot || {};
       const hrs = s.hours_to_live;
       const g = goalPct(ev);
-      if (currentStatus === 'aired') return 'done';
       if (!ev.live_at || ev.goal_regs == null) return 'setup';
       if (hrs == null || s.total_regs == null) return 'queued';
       if (hrs < 24 && hrs > -2) return 'live';
@@ -363,10 +362,16 @@
     async function load() {
       showLoading();
       try {
-        const r = await fetch(`/events?status=${currentStatus}&country=${encodeURIComponent(countryParam())}&limit=200`);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const d = await r.json();
-        lastEvents = d.events || [];
+        const country = encodeURIComponent(countryParam());
+        const [rU, rP] = await Promise.all([
+          fetch(`/events?status=upcoming&country=${country}&limit=1000`),
+          fetch(`/events?status=aired&country=${country}&limit=1000`),
+        ]);
+        if (!rU.ok) throw new Error('HTTP ' + rU.status);
+        if (!rP.ok) throw new Error('HTTP ' + rP.status);
+        const [dU, dP] = await Promise.all([rU.json(), rP.json()]);
+        lastUpcoming = dU.events || [];
+        lastPast     = dP.events || [];
         hideLoading();
         render();
       } catch (e) {
@@ -378,6 +383,7 @@
     function showLoading() {
       document.getElementById('upcomingView').classList.add('hide');
       document.getElementById('pastView').classList.add('hide');
+      document.getElementById('sectionDivider').classList.add('hide');
       document.getElementById('errorArea').classList.add('hide');
       document.getElementById('loadingArea').classList.remove('hide');
     }
@@ -390,140 +396,57 @@
     }
 
     function render() {
-      if (currentStatus === 'upcoming') {
-        document.getElementById('upcomingView').classList.remove('hide');
-        document.getElementById('pastView').classList.add('hide');
-        renderUpcoming();
-      } else {
-        document.getElementById('upcomingView').classList.add('hide');
-        document.getElementById('pastView').classList.remove('hide');
-        renderPast();
-      }
+      document.getElementById('upcomingView').classList.remove('hide');
+      document.getElementById('pastView').classList.remove('hide');
+      document.getElementById('sectionDivider').classList.remove('hide');
+      renderUpcoming();
+      renderPast();
+      document.getElementById('pastCount').textContent = lastPast.length + ' total';
     }
 
     // ── UPCOMING ────────────────────────────────────────────
     function renderUpcoming() {
-      const events = lastEvents.slice().sort((a,b) => new Date(a.live_at||0) - new Date(b.live_at||0));
+      const events = lastUpcoming.slice().sort((a,b) => new Date(a.live_at||0) - new Date(b.live_at||0));
 
-      // Buckets: this-week (≤7d), next-2w (8-14d), future (>14d)
-      const now = Date.now();
-      const oneWk = 7 * 86400000, twoWk = 14 * 86400000;
-      const thisWeek = [], next2 = [], future = [];
-      events.forEach(ev => {
-        const t = ev.live_at ? new Date(ev.live_at).getTime() : null;
-        if (t == null) { future.push(ev); return; }
-        const diff = t - now;
-        if (diff < oneWk) thisWeek.push(ev);
-        else if (diff < twoWk) next2.push(ev);
-        else future.push(ev);
-      });
+      // Buckets: nearest 2 events go in "Up Next" (regardless of date),
+      // everything else goes into "After that". Removes the brittle 7/14-day
+      // gates that left "This week" empty when nothing was imminent.
+      const upNext   = events.slice(0, 2);
+      const afterThat = events.slice(2);
 
-      // Command bar
-      const goalsAtRisk = events.filter(ev => statusFor(ev) === 'at_risk').length;
-      const liveThisWk = thisWeek.length;
-      const totalSpendActive = events.reduce((sum, ev) => {
-        const hrs = ev.snapshot?.hours_to_live;
-        if (hrs != null && hrs > 0 && hrs < 168 * 2) return sum + (ev.snapshot?.meta_spend || 0);
-        return sum;
-      }, 0);
-      const setupNeeded = events.filter(ev => statusFor(ev) === 'setup').length;
-
-      document.getElementById('commandBar').innerHTML = `
-        ${kpiCard({
-          label: 'Live this week',
-          value: liveThisWk,
-          sub: thisWeek.slice(0,3).map(ev => fmtDateLong(ev.live_at).split(',')[0]).join(' · ') || 'none scheduled',
-          urgent: liveThisWk > 0,
-        })}
-        ${kpiCard({
-          label: 'Goals at risk',
-          value: goalsAtRisk,
-          sub: 'Pacing < 70% to target',
-          warn: goalsAtRisk > 0,
-        })}
-        ${kpiCard({
-          label: 'Active spend (2w)',
-          value: fmtMoneyRaw(totalSpendActive),
-          sub: `Across ${events.filter(e => (e.snapshot?.meta_spend||0) > 0).length} campaigns`,
-        })}
-        ${kpiCard({
-          label: 'Pipeline',
-          value: events.length + ' events',
-          sub: setupNeeded ? `${setupNeeded} missing setup` : 'All configured',
-          warn: setupNeeded > 0,
-        })}
-      `;
-
-      // This week (heroes)
-      const tw = document.getElementById('thisWeekArea');
-      if (thisWeek.length === 0) {
+      // Up Next (hero cards)
+      const tw = document.getElementById('upNextArea');
+      if (upNext.length === 0) {
         tw.innerHTML = `
-          <h2 class="text-base font-semibold tracking-tight mb-3">This week</h2>
-          <div class="p-8 text-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-500 text-sm">No events airing in the next 7 days</div>`;
+          <h2 class="text-xl font-semibold tracking-tight mb-3">Up next</h2>
+          <div class="p-8 text-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-500 text-sm">No upcoming masterclasses scheduled</div>`;
       } else {
+        const isUrgent = upNext.some(ev => statusFor(ev) === 'live' || statusFor(ev) === 'at_risk');
         tw.innerHTML = `
           <div class="flex items-center justify-between mb-5">
             <div class="flex items-center gap-2">
-              <h2 class="text-base font-semibold tracking-tight">This week</h2>
-              ${thisWeek.some(ev => statusFor(ev) === 'live' || statusFor(ev) === 'at_risk') ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900/60 uppercase tracking-widest">Urgent</span>' : ''}
+              <h2 class="text-xl font-semibold tracking-tight">Up next</h2>
+              ${isUrgent ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900/60 uppercase tracking-widest">Urgent</span>' : ''}
             </div>
-            <span class="text-[11px] text-zinc-400 dark:text-zinc-600">${thisWeek.length} event${thisWeek.length===1?'':'s'}</span>
+            <span class="text-[11px] text-zinc-400 dark:text-zinc-600">${upNext.length} of ${events.length}</span>
           </div>
-          <div class="grid ${thisWeek.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-5">
-            ${thisWeek.slice(0,2).map(heroCard).join('')}
-          </div>
-          ${thisWeek.length > 2 ? `<div class="mt-5 grid grid-cols-3 gap-3">${thisWeek.slice(2).map(midCard).join('')}</div>` : ''}
-        `;
+          <div class="grid ${upNext.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-5">
+            ${upNext.map(heroCard).join('')}
+          </div>`;
       }
 
-      // Next 2 weeks (rows)
-      const n2 = document.getElementById('next2Area');
-      if (next2.length === 0) {
+      // After that — remaining events as compact rows
+      const n2 = document.getElementById('afterArea');
+      if (afterThat.length === 0) {
         n2.innerHTML = '';
       } else {
         n2.innerHTML = `
           <div class="flex items-center justify-between mb-5">
-            <h2 class="text-base font-semibold tracking-tight">Next 2 weeks</h2>
-            <span class="text-[11px] text-zinc-400 dark:text-zinc-600">Sorted by air date</span>
+            <h2 class="text-xl font-semibold tracking-tight">After that</h2>
+            <span class="text-[11px] text-zinc-400 dark:text-zinc-600">${afterThat.length} more</span>
           </div>
-          <div class="space-y-2.5">${next2.map(rowCard).join('')}</div>
-        `;
+          <div class="space-y-2.5">${afterThat.map(rowCard).join('')}</div>`;
       }
-
-      // Future pipeline
-      const fa = document.getElementById('futureArea');
-      if (future.length === 0) {
-        fa.innerHTML = '';
-      } else {
-        const dates = future.slice(0, 5).map(ev => fmtDate(ev.live_at) || 'TBD').join(', ');
-        fa.innerHTML = `
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold tracking-tight">Pipeline · later than 2 weeks</h2>
-            <span class="text-[11px] text-zinc-400 dark:text-zinc-600">${future.length} event${future.length===1?'':'s'}</span>
-          </div>
-          <div class="text-xs text-zinc-500 p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
-            <span class="text-zinc-700 dark:text-zinc-300">${dates}</span>${future.length > 5 ? ` <span class="text-zinc-400 dark:text-zinc-600">+ ${future.length - 5} more</span>` : ''}
-          </div>`;
-      }
-    }
-
-    function kpiCard({label, value, sub, urgent, warn}) {
-      const cls = urgent
-        ? 'bg-gradient-to-br from-rose-950/40 to-zinc-900 border-rose-300 dark:border-rose-900/40 card-attn'
-        : warn
-        ? 'bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800'
-        : 'bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800';
-      const valCls = urgent ? 'text-rose-200' : warn ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-zinc-100';
-      const dot = urgent ? '<span class="signal-dot bg-rose-400"></span>' : '';
-      return `
-        <div class="p-5 rounded-xl border ${cls}">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-[10px] font-medium ${urgent ? 'text-rose-700 dark:text-rose-300' : 'text-zinc-500'} uppercase tracking-widest">${esc(label)}</div>
-            ${dot}
-          </div>
-          <div class="num-big text-3xl font-bold tabular ${valCls}">${typeof value === 'number' ? value : esc(value)}</div>
-          <div class="mt-2 text-[11px] text-zinc-${urgent ? '400' : '500'}">${esc(sub)}</div>
-        </div>`;
     }
 
     function heroCard(ev) {
@@ -647,14 +570,14 @@
 
     // ── PAST ───────────────────────────────────────────────
     function renderPast() {
-      let events = lastEvents.slice();
+      let events = lastPast.slice();
       const q = (document.getElementById('pastSearch')?.value || '').toLowerCase().trim();
       if (q) events = events.filter(ev =>
         (ev.title || '').toLowerCase().includes(q) ||
         (ev.instructor_name || '').toLowerCase().includes(q)
       );
 
-      const sort = document.getElementById('pastSort')?.value || 'roas';
+      const sort = document.getElementById('pastSort')?.value || 'date';
       const score = ev => {
         const s = ev.snapshot || {};
         switch (sort) {
@@ -669,67 +592,7 @@
       };
       events.sort((a,b) => score(b) - score(a));
 
-      renderMonthly();
       renderPastTable(events);
-      renderLearnings(events);
-    }
-
-    function renderMonthly() {
-      // Group by year-month of live_at
-      const months = {};
-      lastEvents.forEach(ev => {
-        if (!ev.live_at) return;
-        const d = new Date(ev.live_at);
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        if (!months[key]) months[key] = { key, label: d.toLocaleDateString('en-US', {month:'short', year:'numeric'}), events: [] };
-        months[key].events.push(ev);
-      });
-      const sortedKeys = Object.keys(months).sort();
-      const lastSix = sortedKeys.slice(-6);
-      if (lastSix.length === 0) { document.getElementById('monthlyArea').innerHTML = ''; return; }
-
-      const monthlyData = lastSix.map(k => {
-        const m = months[k];
-        const sales = m.events.reduce((s,e) => s + (e.snapshot?.sales || 0), 0);
-        const rev   = m.events.reduce((s,e) => s + (revINR(e.snapshot) || 0), 0);
-        const spend = m.events.reduce((s,e) => s + (e.snapshot?.meta_spend || 0), 0);
-        const roas  = spend > 0 ? rev/spend : null;
-        const isOpen = m.events.some(e => {
-          if (!e.live_at) return false;
-          const days = (Date.now() - new Date(e.live_at).getTime()) / 86400000;
-          return days < 14;
-        });
-        return { ...m, sales, rev, spend, roas, isOpen };
-      });
-
-      const bestRoas = Math.max(...monthlyData.filter(m => !m.isOpen).map(m => m.roas || 0));
-
-      document.getElementById('monthlyArea').innerHTML = `
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-base font-semibold tracking-tight">Last ${lastSix.length} month${lastSix.length===1?'':'s'}</h2>
-          <a href="/months.html" class="text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 no-underline">Go to Months view →</a>
-        </div>
-        <div class="grid grid-cols-${Math.min(6, lastSix.length)} gap-3">
-          ${monthlyData.map(m => {
-            const isBest = !m.isOpen && m.roas === bestRoas && m.roas > 0;
-            const cls = isBest ? 'bg-gradient-to-br from-emerald-950/30 to-zinc-900 border-emerald-300 dark:border-emerald-900/40'
-                    : m.isOpen ? 'bg-amber-950/20 border-amber-300 dark:border-amber-900/40'
-                    : 'bg-white/80 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800';
-            return `
-              <div class="p-4 rounded-xl border ${cls}">
-                <div class="flex items-center justify-between">
-                  <div class="text-[10px] font-semibold ${isBest ? 'text-emerald-700 dark:text-emerald-300' : m.isOpen ? 'text-amber-700 dark:text-amber-300' : 'text-zinc-500'} uppercase tracking-widest">${esc(m.label)}</div>
-                  ${isBest ? '<span class="text-[9px] text-emerald-700 dark:text-emerald-300">★ Best</span>' : m.isOpen ? '<span class="text-[9px] text-amber-700 dark:text-amber-300">⏱ open</span>' : ''}
-                </div>
-                <div class="num-big text-2xl font-bold tabular mt-2">${m.events.length} <span class="text-xs text-zinc-500 font-normal">events</span></div>
-                <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Sales</span><span class="tabular">${fmtNRaw(m.sales) || 0}</span></div>
-                  <div class="flex justify-between text-[11px]"><span class="text-zinc-500">Revenue</span><span class="tabular">${m.rev > 0 ? fmtMoney(m.rev) : '—'}</span></div>
-                  <div class="flex justify-between text-[11px] font-semibold"><span class="text-zinc-500">ROAS</span><span class="${isBest ? 'gradient-text-em' : m.roas == null ? 'text-zinc-500' : m.roas >= 5 ? 'text-emerald-600 dark:text-emerald-400' : m.roas >= 2 ? 'text-zinc-700 dark:text-zinc-300' : 'text-amber-600 dark:text-amber-400'} tabular">${m.roas != null ? fmtROAS(m.roas) + (m.isOpen ? '*' : '') : '—'}</span></div>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>`;
     }
 
     function renderPastTable(events) {
@@ -751,7 +614,7 @@
         if (ev === 'COLLAPSE') {
           const hidden = events.length - 6;
           return `<tr class="bg-zinc-950/40 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900/50" onclick="showAllPast = true; renderPast();">
-            <td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:text-zinc-400">↓ ${hidden} more event${hidden===1?'':'s'} ↓</td>
+            <td colspan="6" class="px-4 py-2.5 text-center text-[11px] text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:text-zinc-400">↓ ${hidden} more event${hidden===1?'':'s'} ↓</td>
           </tr>`;
         }
         return tableRow(ev, top3, bot3);
@@ -762,14 +625,12 @@
           <table class="w-full text-sm tabular">
             <thead class="bg-zinc-100 dark:bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
               <tr>
-                <th class="text-left px-4 py-3 font-medium w-10"><input type="checkbox" class="rounded" id="selAll" onchange="toggleSelAll(this.checked)"></th>
+                <th class="text-left px-4 py-3 font-medium w-28">Date</th>
                 <th class="text-left px-4 py-3 font-medium">Event</th>
-                <th class="text-right px-4 py-3 font-medium">Date</th>
                 <th class="text-right px-4 py-3 font-medium">IQLs / Att%</th>
                 <th class="text-right px-4 py-3 font-medium">Spend</th>
-                <th class="text-right px-4 py-3 font-medium">Sales / Rev</th>
+                <th class="text-right px-4 py-3 font-medium">Revenue / Sales</th>
                 <th class="text-right px-4 py-3 font-medium">ROAS</th>
-                <th class="text-center px-4 py-3 font-medium w-24">Signal</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-900">${rows}</tbody>
@@ -779,8 +640,6 @@
           <div>Showing ${showAll ? events.length : Math.min(6, events.length)} of ${events.length}${!showAll ? ` · <button class="text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 underline" onclick="showAllPast = true; renderPast();">show all</button>` : ''}</div>
           <div>* ROAS reflects open pipeline · expect 25–40% lift over 2 weeks</div>
         </div>`;
-
-      renderCompareBar();
     }
 
     function isPipelineOpen(ev) {
@@ -791,7 +650,6 @@
 
     function tableRow(ev, top3, bot3) {
       const s = ev.snapshot || {};
-      const isSel = selectedIds.has(ev.event_id);
       const open = isPipelineOpen(ev);
       const roas = s.overall_roas;
       const rowCls = top3.has(ev.event_id) ? 'row-top' : bot3.has(ev.event_id) ? 'row-bot' : 'row-mid';
@@ -800,113 +658,29 @@
                     : roas >= 4 ? 'text-emerald-600 dark:text-emerald-400 font-bold'
                     : roas >= 2 ? 'text-zinc-800 dark:text-zinc-200 font-semibold'
                     : 'text-rose-600 dark:text-rose-400 font-bold';
-      const signalBadge = top3.has(ev.event_id) && !open
-        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-semibold uppercase tracking-widest">★ Best</span>'
-        : open
-        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-semibold uppercase tracking-widest">⏱ Pipeline</span>'
-        : bot3.has(ev.event_id)
-        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-semibold uppercase tracking-widest">Bottom</span>'
-        : '<span class="text-[10px] text-zinc-500">—</span>';
 
       return `
-        <tr class="${rowCls} hover:bg-zinc-100 dark:hover:bg-zinc-900/40 cursor-pointer" onclick="goToEvent(event, '${esc(ev.event_id)}')">
-          <td class="px-4 py-3" onclick="event.stopPropagation();"><input type="checkbox" class="rounded" data-id="${esc(ev.event_id)}" ${isSel?'checked':''} onchange="toggleSel('${esc(ev.event_id)}', this.checked)"></td>
+        <tr class="${rowCls} hover:bg-zinc-100 dark:hover:bg-zinc-900/40 cursor-pointer" onclick="goToEvent('${esc(ev.event_id)}')">
+          <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap">${esc(fmtDate(ev.live_at))}</td>
           <td class="px-4 py-3">
             <div class="font-medium text-zinc-900 dark:text-zinc-100">${esc(ev.title || ev.event_id)}</div>
             <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}${ev.instructor_role ? ' · ' + esc(ev.instructor_role) : ''}</div>
           </td>
-          <td class="px-4 py-3 text-right text-zinc-600 dark:text-zinc-400">${esc(fmtDate(ev.live_at))}</td>
           <td class="px-4 py-3 text-right">
             <div class="text-zinc-900 dark:text-zinc-100">${fmtNRaw(s.total_regs)}</div>
             <div class="text-[11px] text-zinc-500">${s.attendance_pct != null ? s.attendance_pct.toFixed(0) + '% att' : '—'}</div>
           </td>
           <td class="px-4 py-3 text-right text-zinc-900 dark:text-zinc-100">${fmtMoneyRaw(s.meta_spend)}</td>
           <td class="px-4 py-3 text-right">
-            <div class="font-medium text-zinc-900 dark:text-zinc-100">${s.sales != null ? s.sales : '—'}</div>
-            <div class="text-[11px] text-zinc-500">${revINR(s) ? fmtMoney(revINR(s)) : '—'}</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100">${revINR(s) ? fmtMoney(revINR(s)) : '—'}</div>
+            <div class="text-[11px] text-zinc-500">${s.sales != null ? s.sales + ' sales' : '—'}</div>
           </td>
           <td class="px-4 py-3 text-right ${roasCls}">${fmtROAS(roas)}${open ? '*' : ''}</td>
-          <td class="px-4 py-3 text-center">${signalBadge}</td>
         </tr>`;
     }
 
-    function goToEvent(e, id) {
-      // Don't navigate if clicking on checkbox or other interactive element
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+    function goToEvent(id) {
       window.location.href = '/event.html?id=' + encodeURIComponent(id);
-    }
-
-    function renderLearnings(events) {
-      const closed = events.filter(ev => !isPipelineOpen(ev) && ev.snapshot?.overall_roas != null);
-      if (closed.length < 6) { document.getElementById('learningsArea').innerHTML = ''; return; }
-      const top3 = [...closed].sort((a,b) => (b.snapshot.overall_roas||0) - (a.snapshot.overall_roas||0)).slice(0,3);
-      const bot3 = [...closed].sort((a,b) => (a.snapshot.overall_roas||0) - (b.snapshot.overall_roas||0)).slice(0,3);
-
-      document.getElementById('learningsArea').innerHTML = `
-        <h2 class="text-base font-semibold tracking-tight mb-5">What we learned</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="p-5 rounded-xl border border-emerald-300 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-950/30 to-zinc-900/40">
-            <div class="text-[10px] uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mb-3">Top 3 by ROAS</div>
-            <div class="space-y-3">
-              ${top3.map(ev => `
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-sm text-zinc-900 dark:text-zinc-100 truncate">${esc(ev.title || ev.event_id)} <span class="text-zinc-500 text-[11px]">(${esc(fmtDate(ev.live_at))})</span></div>
-                  <div class="text-sm font-bold ${ev.snapshot.overall_roas >= 8 ? 'gradient-text-em' : 'text-emerald-600 dark:text-emerald-400'} whitespace-nowrap">${fmtROAS(ev.snapshot.overall_roas)}</div>
-                </div>`).join('')}
-            </div>
-          </div>
-          <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/40">
-            <div class="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Bottom 3 (excl. pipeline)</div>
-            <div class="space-y-3">
-              ${bot3.map(ev => `
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-sm text-zinc-900 dark:text-zinc-100 truncate">${esc(ev.title || ev.event_id)} <span class="text-zinc-500 text-[11px]">(${esc(fmtDate(ev.live_at))})</span></div>
-                  <div class="text-sm font-bold ${ev.snapshot.overall_roas < 2 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-700 dark:text-zinc-300'} whitespace-nowrap">${fmtROAS(ev.snapshot.overall_roas)}</div>
-                </div>`).join('')}
-            </div>
-          </div>
-        </div>`;
-    }
-
-    // ── Multi-select for Compare ───────────────────────────
-    function toggleSel(id, checked) {
-      if (checked) selectedIds.add(id); else selectedIds.delete(id);
-      renderCompareBar();
-    }
-    function toggleSelAll(checked) {
-      if (checked) lastEvents.forEach(e => selectedIds.add(e.event_id));
-      else selectedIds.clear();
-      renderPast();
-    }
-    function renderCompareBar() {
-      const n = selectedIds.size;
-      let bar = document.getElementById('compareBar');
-      if (n < 2) { if (bar) bar.remove(); return; }
-      const html = `
-        <div id="compareBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white dark:bg-zinc-900 text-white rounded-full shadow-lg px-5 py-2.5 flex items-center gap-3 text-sm border border-zinc-300 dark:border-zinc-700">
-          <span class="font-medium">${n} selected</span>
-          <button onclick="clearSel()" class="text-zinc-600 dark:text-zinc-400 hover:text-white text-xs">clear</button>
-          <a href="/compare.html?ids=${Array.from(selectedIds).map(encodeURIComponent).join(',')}" class="bg-gradient-to-r from-indigo-500 to-cyan-400 text-zinc-950 rounded-full px-3 py-1 text-xs font-semibold no-underline">Compare →</a>
-        </div>`;
-      if (bar) bar.outerHTML = html; else document.body.insertAdjacentHTML('beforeend', html);
-    }
-    function clearSel() {
-      selectedIds.clear();
-      renderPast();
-      renderCompareBar();
-    }
-
-    function switchTab(status) {
-      if (currentStatus === status) return;
-      currentStatus = status;
-      selectedIds.clear();
-      showAllPast = false;
-      renderCompareBar();
-      document.getElementById('tabUp').className   = 'px-4 py-2 border-r border-zinc-200 dark:border-zinc-800 font-medium ' + (status === 'upcoming' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300');
-      document.getElementById('tabPast').className = 'px-4 py-2 font-medium ' + (status === 'aired' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300');
-      document.getElementById('pageTitle').textContent = status === 'upcoming' ? 'Upcoming masterclasses' : 'Past masterclasses';
-      document.getElementById('pageSub').textContent   = status === 'upcoming' ? 'Live data · synced with daily snapshot' : 'Ranked by ROAS · click row to drill in';
-      load();
     }
 
     applyCountryButtons();

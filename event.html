@@ -32,19 +32,22 @@
 
   <!-- ─── Top Bar ──────────────────────────────────────────────────────────── -->
   <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-lg border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
-      <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
-        <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
-        <div class="hidden sm:block">
-          <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
-          <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
-        </div>
-      </a>
-      <nav class="flex items-center gap-1 text-sm">
-        <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
-        <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
-        <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
-      </nav>
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <div class="flex items-center gap-6">
+        <a href="/hub.html" class="flex items-center gap-2.5 shrink-0 no-underline">
+          <div class="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center"><span class="text-white font-bold text-sm tracking-tight">IK</span></div>
+          <div class="hidden sm:block">
+            <div class="font-semibold text-zinc-900 text-sm leading-tight">Masterclass Hub</div>
+            <div class="text-[10px] text-zinc-500 leading-tight">Interview Kickstart</div>
+          </div>
+        </a>
+        <nav class="flex items-center gap-1 text-sm">
+          <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Hub</a>
+          <a href="/months.html"  class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Months</a>
+          <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Compare</a>
+          <a href="/sales.html"   class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 font-medium whitespace-nowrap">Sales</a>
+        </nav>
+      </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="toggleTheme()" id="themeToggle" title="Toggle dark mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
@@ -141,6 +144,21 @@ function fmtCountdown(iso) {
 }
 function fmtNum(n) { if (n == null) return '—'; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k'; return Math.round(n).toLocaleString(); }
 function fmtMoney(n, sym) { return n == null ? '—' : (sym || '₹') + Math.round(n).toLocaleString(); }
+function fmtMoneyAbbr(n, country) {
+  if (n == null || isNaN(n)) return '—';
+  const sym = moneySym(country);
+  if (isUSCountry(country)) {
+    if (n >= 1e9) return sym + (n/1e9).toFixed(2).replace(/\.?0+$/,'') + 'B';
+    if (n >= 1e6) return sym + (n/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M';
+    if (n >= 1000) return sym + (n/1000).toFixed(1).replace(/\.0$/,'') + 'K';
+    return sym + Math.round(n).toLocaleString();
+  }
+  if (n >= 1e7) return sym + (n/1e7).toFixed(2).replace(/\.?0+$/,'') + ' Cr';
+  if (n >= 1e5) return sym + (n/1e5).toFixed(2).replace(/\.?0+$/,'') + ' L';
+  if (n >= 1000) return sym + (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return sym + Math.round(n).toLocaleString();
+}
+function fmtROAS(n) { return n == null || isNaN(n) ? '—' : n.toFixed(2) + 'x'; }
 function isUSCountry(c) { const s = (c || '').toLowerCase(); return s === 'us' || s === 'usa'; }
 function leadLabel(c, opts) {
   // India tracks IQLs; US tracks GQLs. CPIQL / CPGQL likewise.
@@ -258,6 +276,9 @@ function render(data) {
   const ev   = data.event || {};
   const snap = data.snapshot || {};
   const daily = data.daily || [];
+  const channelAttendance = data.channel_attendance || null;
+  // Stash on snap so renderFunnel can reach it without changing its signature
+  if (snap) snap._channel_attendance = channelAttendance;
   // Topic color theme
   document.getElementById('bodyEl').style.setProperty('--topic', `var(${topicVar(ev.topic)})`);
   document.title = (ev.title || 'Event') + ' — Masterclass Hub';
@@ -324,24 +345,34 @@ function render(data) {
     </article>
 
     <!-- KPI strip -->
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 fade-up">
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4 fade-up">
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
-        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Final ' + leadLabel(ev.country, {long:true}) : leadLabel(ev.country, {long:true}) + ' registered'}</div>
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Final ' + leadLabel(ev.country, {long:true}) : leadLabel(ev.country, {long:true})}</div>
         <div class="mt-2 flex items-baseline gap-1.5">
           <div class="text-2xl font-semibold text-zinc-900">${fmtNum(totalRegs)}</div>
-          ${ev.goal_regs ? `<div class="text-xs text-zinc-500 font-medium">/ ${fmtNum(ev.goal_regs)} goal</div>` : ''}
+          ${ev.goal_regs ? `<div class="text-xs text-zinc-500 font-medium">/ ${fmtNum(ev.goal_regs)}</div>` : ''}
         </div>
         ${goalP != null ? `<div class="mt-3 h-1 progress-track rounded-full overflow-hidden"><div class="topic-fill h-full rounded-full" style="width: ${goalP.toFixed(0)}%;"></div></div>` : ''}
       </div>
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
         <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${cplLabel(ev.country)}</div>
         <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtMoney(snap.cpiql, moneySym(ev.country))}</div>
-        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ${fmtMoney(snap.meta_spend, moneySym(ev.country))} · ${fmtNum(snap.meta_regs)} paid ${leadLabel(ev.country, {long:true})}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">Spend ${fmtMoney(snap.meta_spend, moneySym(ev.country))}</div>
       </div>
       <div class="bg-white border border-zinc-200 rounded-xl p-4">
         <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">${isAired ? 'Attendance' : 'Time to live'}</div>
         <div class="mt-2 text-2xl font-semibold text-zinc-900">${isAired ? fmtPct(snap.attendance_pct) : esc(fmtCountdown(ev.live_at))}</div>
-        ${isAired ? `<div class="text-[10px] text-zinc-500 mt-1.5">${fmtNum(snap.attendees)} of ${fmtNum(totalRegs)} attended</div>` : ''}
+        ${isAired ? `<div class="text-[10px] text-zinc-500 mt-1.5">${fmtNum(snap.attendees)} of ${fmtNum(totalRegs)} attended</div>` : '<div class="text-[10px] text-zinc-400 mt-1.5">Populates after airing</div>'}
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Revenue</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtMoneyAbbr(snap.revenue, ev.country)}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">${snap.sales != null ? Math.round(snap.sales).toLocaleString() + ' sales · AOV ' + ((snap.sales > 0 && snap.revenue != null) ? fmtMoney(snap.revenue / snap.sales, moneySym(ev.country)) : '—') : (isAired ? '—' : 'Populates after airing')}</div>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-xl p-4">
+        <div class="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">ROAS</div>
+        <div class="mt-2 text-2xl font-semibold text-zinc-900">${fmtROAS(snap.overall_roas)}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">${snap.paid_roas != null ? 'Paid ROAS ' + fmtROAS(snap.paid_roas) : (isAired ? '—' : 'Populates after airing')}</div>
       </div>
     </section>
 
@@ -366,17 +397,10 @@ function render(data) {
           ${renderQuality(snap)}
         </article>
 
-        <!-- Attendance -->
-        <article class="card rounded-2xl p-6 fade-up">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white tracking-tight">Attendance &amp; Engagement</h2>
-              <p class="text-xs text-zinc-500 mt-0.5">${isAired ? 'Post-event metrics' : 'Populates after the event goes live'}</p>
-            </div>
-            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">Not yet aired</span>` : ''}
-          </div>
-          ${renderAttendance(snap, isAired)}
-        </article>
+        <!-- Attendance & Engagement section hidden 2026-06-26:
+             total attendance is now in the KPI strip; email funnel is WIP. -->
+
+
 
         <!-- Call Efforts -->
         <article class="card rounded-2xl p-6 fade-up">
@@ -388,6 +412,18 @@ function render(data) {
             ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">Not yet aired</span>` : ''}
           </div>
           ${renderCallEfforts(snap, isAired)}
+        </article>
+
+        <!-- Sales & Revenue -->
+        <article class="card rounded-2xl p-6 fade-up">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white tracking-tight">Sales &amp; Revenue</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">Event-attributed sales · ${isUSCountry(ev.country) ? 'USD' : 'INR (USD→INR at sale-month avg)'}</p>
+            </div>
+            ${!isAired ? `<span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">Not yet aired</span>` : ''}
+          </div>
+          ${renderSalesRevenue(snap, ev, isAired)}
         </article>
 
         <!-- Per-day timeline -->
@@ -464,29 +500,74 @@ function renderFunnel(s, ev) {
       ];
   const total = lanes.reduce((a, [, n]) => a + n, 0);
   if (total === 0) return '<div class="text-xs text-zinc-400 italic py-4">No registration data yet.</div>';
-  const w = n => total > 0 ? (100 * n / total) : 0;
-  const cplPaid  = (s.meta_spend > 0 && s.meta_regs > 0)
-    ? sym + Math.round(s.meta_spend / s.meta_regs) : '—';
-  const rows = lanes.map(([label, n, color], i) => {
-    // CPL annotation only on the "paid" lane; rest read "organic".
-    const isPaidLane = isUSCountry(ev && ev.country)
-      ? (label === 'YT' || label === 'Social')
-      : (label === 'Meta');
-    const annot = isPaidLane ? cplPaid : 'organic';
+
+  // Per-channel attendance: prefer real numbers from /events/:id; fall back to
+  // overall-rate approximation if absent (event not aired or query failed).
+  const realCA = s._channel_attendance || null;
+  const overallRate = (s.attendees && total > 0) ? Math.min(1, s.attendees / total) : null;
+  const showAttended = realCA != null || overallRate != null;
+  const isApprox     = !realCA && overallRate != null;
+
+  const attendedFor = label => {
+    if (realCA && realCA[label] && realCA[label].attendees != null) return realCA[label].attendees;
+    if (overallRate != null) {
+      const n = lanes.find(([l]) => l === label)?.[1] ?? 0;
+      return Math.round(n * overallRate);
+    }
+    return null;
+  };
+
+  // Bar widths are % of TOTAL registered (so users can visually compare bars
+  // both across channels AND within a channel — attended bar narrower than
+  // registered bar = drop-off).
+  const widthOf = n => total > 0 ? (100 * n / total) : 0;
+
+  const rows = lanes.map(([label, n, color]) => {
+    const attendedN = showAttended ? attendedFor(label) : null;
+    const regW     = widthOf(n);
+    const attW     = (showAttended && attendedN != null) ? widthOf(attendedN) : 0;
+    const convPct  = (n > 0 && attendedN != null) ? (100 * attendedN / n) : null;
+    const convCls  = convPct == null ? 'text-zinc-400'
+                   : convPct >= 70 ? 'text-emerald-600'
+                   : convPct >= 50 ? 'text-zinc-700'
+                   : 'text-amber-600';
     return `
-      <div class="funnel-row">
-        <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded-sm" style="background:${color};"></span><span class="font-medium text-zinc-900">${esc(label)}</span></div>
-        <div class="funnel-bar"><span style="width: ${w(n)}%; background:${color};"></span></div>
-        <div class="text-sm font-semibold text-zinc-900 text-right">${fmtNum(n)}</div>
-        <div class="text-[10px] text-zinc-500 text-right">${annot}</div>
+      <div>
+        <div class="flex items-baseline justify-between mb-2 gap-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-sm shrink-0" style="background:${color};"></span>
+            <span class="text-sm font-semibold text-zinc-900 truncate">${esc(label)}</span>
+          </div>
+          <div class="flex items-baseline gap-3 text-xs whitespace-nowrap shrink-0">
+            <span class="text-zinc-500 tabular-nums">${fmtNum(n)} leads</span>
+            ${showAttended && attendedN != null ? `<span class="text-zinc-900 font-semibold tabular-nums">→ ${fmtNum(attendedN)} attended</span>` : ''}
+            ${convPct != null ? `<span class="${convCls} font-bold tabular-nums">${convPct.toFixed(0)}%</span>` : ''}
+          </div>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-[9px] uppercase font-bold text-zinc-400 tracking-wider w-8 shrink-0">Reg</span>
+            <div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full" style="width:${regW}%; background:${color}; opacity:0.45;"></div>
+            </div>
+          </div>
+          ${showAttended ? `
+          <div class="flex items-center gap-2">
+            <span class="text-[9px] uppercase font-bold text-zinc-400 tracking-wider w-8 shrink-0">Att</span>
+            <div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full" style="width:${attW}%; background:${color};"></div>
+            </div>
+          </div>` : ''}
+        </div>
       </div>`;
   }).join('');
-  return `
-    <div class="space-y-2.5">${rows}</div>
-    <div class="mt-5 pt-4 border-t border-zinc-100 text-xs text-zinc-500">
-      <span class="font-semibold text-zinc-900">${fmtNum(total)}</span> total ${lead} · paid spend ${fmtMoney(s.meta_spend, sym)}
-    </div>
-  `;
+
+  const legend = showAttended ? `
+    <div class="flex items-center gap-4 text-[10px] text-zinc-500 mt-5 pt-3 border-t border-zinc-100">
+      ${isApprox ? `<span class="text-zinc-400">Per-channel attendance approximated using overall ${fmtPct(100 * overallRate)} attendance rate</span>` : '<span class="text-emerald-600">Per-channel attendance from Zoom roster</span>'}
+    </div>` : '';
+
+  return `<div class="space-y-5">${rows}</div>${legend}`;
 }
 
 function renderQuality(s) {
@@ -788,30 +869,132 @@ function renderCallEfforts(s, isAired) {
   return summary + trend + timeline + insightStrip;
 }
 
+function renderSalesRevenue(s, ev, isAired) {
+  if (!isAired) {
+    return `<div class="text-center py-8 text-xs text-zinc-400">Sales &amp; revenue populate after the event airs.</div>`;
+  }
+  if (!s || (s.sales == null && s.revenue == null && s.overall_roas == null)) {
+    return `<div class="text-center py-8 text-xs text-zinc-400">Sales data unavailable for this event.</div>`;
+  }
+
+  const sales       = s.sales;
+  const revenue     = s.revenue;
+  const paidRevenue = s.paid_revenue;
+  const overallRoas = s.overall_roas;
+  const paidRoas    = s.paid_roas;
+  const spend       = s.meta_spend;
+  const costPerSale = (spend > 0 && sales > 0) ? spend / sales : null;
+  const revPerLead  = (revenue != null && s.total_regs > 0) ? revenue / s.total_regs : null;
+
+  const roasCls = r => r == null ? 'text-zinc-400'
+                     : r >= 5 ? 'text-emerald-600 dark:text-emerald-400'
+                     : r >= 2 ? 'text-zinc-900 dark:text-white'
+                     : 'text-amber-600 dark:text-amber-400';
+
+  // Top KPI strip
+  const kpi = `
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Sales</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${sales == null ? '—' : Math.round(sales).toLocaleString()}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">attributed to this event</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Revenue</div>
+        <div class="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums mt-1">${fmtMoneyAbbr(revenue, ev.country)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">${fmtMoney(revenue, moneySym(ev.country))}</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Overall ROAS</div>
+        <div class="text-2xl font-bold tabular-nums mt-1 ${roasCls(overallRoas)}">${fmtROAS(overallRoas)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">revenue / paid spend</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Paid ROAS</div>
+        <div class="text-2xl font-bold tabular-nums mt-1 ${roasCls(paidRoas)}">${fmtROAS(paidRoas)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">${isUSCountry(ev.country) ? 'YT/L10X channel only' : 'Meta/FB channel only'}</div>
+      </div>
+    </div>`;
+
+  // Secondary metrics row
+  const secondary = `
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Paid Revenue</div>
+        <div class="text-lg font-semibold text-zinc-900 dark:text-white tabular-nums mt-1">${fmtMoneyAbbr(paidRevenue, ev.country)}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">${revenue > 0 && paidRevenue != null ? (100 * paidRevenue / revenue).toFixed(0) + '% of total' : '—'}</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Cost / Sale</div>
+        <div class="text-lg font-semibold text-zinc-900 dark:text-white tabular-nums mt-1">${costPerSale == null ? '—' : fmtMoney(costPerSale, moneySym(ev.country))}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">paid spend ÷ sales</div>
+      </div>
+      <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 py-3">
+        <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Revenue / ${leadLabel(ev.country)}</div>
+        <div class="text-lg font-semibold text-zinc-900 dark:text-white tabular-nums mt-1">${revPerLead == null ? '—' : fmtMoney(revPerLead, moneySym(ev.country))}</div>
+        <div class="text-[11px] text-zinc-400 mt-0.5">revenue ÷ ${leadLabel(ev.country, {long:true})}</div>
+      </div>
+    </div>`;
+
+  return kpi + secondary;
+}
+
 function renderDaily(daily, ev) {
   if (daily.length === 0) return '<div class="text-xs text-zinc-400 italic">No daily snapshots yet.</div>';
   const sym = moneySym(ev && ev.country);
+  const isUS = isUSCountry(ev && ev.country);
   const maxRegs = Math.max(...daily.map(d => d.total_regs || 0), 1);
-  const rows = daily.map(d => `
-    <div class="grid grid-cols-12 items-center gap-2 sm:gap-3 text-xs py-1.5 border-b border-zinc-50 last:border-0">
-      <div class="col-span-3 sm:col-span-2 text-zinc-500 whitespace-nowrap">${esc(fmtDate(d.registration_date))}</div>
-      <div class="col-span-4 sm:col-span-5 h-2 progress-track rounded-full overflow-hidden">
-        <div class="topic-fill h-full rounded-full" style="width: ${(100 * (d.total_regs || 0) / maxRegs).toFixed(0)}%;"></div>
-      </div>
-      <div class="col-span-3 sm:col-span-2 text-right font-semibold text-zinc-900 tabular-nums">${fmtNum(d.total_regs)}</div>
-      <div class="hidden sm:block sm:col-span-2 text-right text-zinc-500 tabular-nums">${fmtMoney(d.total_spend, sym)}</div>
-      <div class="col-span-2 sm:col-span-1 text-right text-zinc-500 tabular-nums">${d.cpiql != null ? sym + Math.round(d.cpiql) : '—'}</div>
-    </div>
-  `).join('');
+
+  // For US, history.event_daily stores 3 buckets (meta/crm/other) — the 6-bucket
+  // breakdown only lives in event_snapshot. So daily pacing uses the same 3-lane
+  // shape for both countries; labels just rename for US (Paid/L10X/Other).
+  const lanes = isUS
+    ? [
+        ['Paid',  d => d.meta_regs  || 0, '#ef4444'],  // YT/Social paid
+        ['L10X',  d => d.crm_regs   || 0, '#10b981'],  // L10X Email+Bot
+        ['Other', d => d.other_regs || 0, '#a1a1aa'],  // NI Base + Other
+      ]
+    : [
+        ['Meta',   d => d.meta_regs  || 0, '#1877f2'],
+        ['CRM',    d => d.crm_regs   || 0, '#10b981'],
+        ['Others', d => d.other_regs || 0, '#a1a1aa'],
+      ];
+
+  const rows = daily.map(d => {
+    const total = d.total_regs || 0;
+    const widthOfTotal = total > 0 ? (100 * total / maxRegs) : 0;
+    const segs = lanes.map(([label, fn, color]) => {
+      const n = fn(d);
+      const pctOfDay = total > 0 ? (100 * n / total) : 0;
+      return n > 0 ? `<span title="${esc(label)}: ${fmtNum(n)}" style="width:${pctOfDay}%;background:${color};"></span>` : '';
+    }).join('');
+    return `
+      <div class="grid grid-cols-12 items-center gap-2 sm:gap-3 text-xs py-1.5 border-b border-zinc-50 last:border-0">
+        <div class="col-span-3 sm:col-span-2 text-zinc-500 whitespace-nowrap">${esc(fmtDate(d.registration_date))}</div>
+        <div class="col-span-4 sm:col-span-5">
+          <div class="h-2 rounded-full overflow-hidden flex" style="width:${widthOfTotal.toFixed(0)}%;background:rgba(0,0,0,0.04);">${segs}</div>
+        </div>
+        <div class="col-span-3 sm:col-span-2 text-right font-semibold text-zinc-900 tabular-nums">${fmtNum(total)}</div>
+        <div class="hidden sm:block sm:col-span-2 text-right text-zinc-500 tabular-nums">${fmtMoney(d.total_spend, sym)}</div>
+        <div class="col-span-2 sm:col-span-1 text-right text-zinc-500 tabular-nums">${d.cpiql != null ? sym + Math.round(d.cpiql) : '—'}</div>
+      </div>`;
+  }).join('');
+
+  const legend = `
+    <div class="flex items-center gap-4 text-[10px] text-zinc-500 mt-3">
+      ${lanes.map(([label,, color]) => `<span class="flex items-center gap-1.5"><span class="inline-block w-3 h-2 rounded-sm" style="background:${color};"></span>${esc(label)}</span>`).join('')}
+    </div>`;
+
   return `
     <div class="grid grid-cols-12 gap-2 sm:gap-3 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold pb-2 border-b border-zinc-100">
       <div class="col-span-3 sm:col-span-2">Date</div>
-      <div class="col-span-4 sm:col-span-5">Pacing</div>
+      <div class="col-span-4 sm:col-span-5">Pacing (by channel)</div>
       <div class="col-span-3 sm:col-span-2 text-right">${leadLabel(ev && ev.country, {long:true})}</div>
       <div class="hidden sm:block sm:col-span-2 text-right">Spend</div>
       <div class="col-span-2 sm:col-span-1 text-right">${cplLabel(ev && ev.country)}</div>
     </div>
     ${rows}
+    ${legend}
   `;
 }
 

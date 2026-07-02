@@ -1,611 +1,1918 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Months — Masterclass Hub</title>
   <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,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">
-  <script>
-    (function () {
-      if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark');
-    })();
+  <script>tailwind = { config: { darkMode: 'class' } };
+    (function() { if ((localStorage.getItem('ik_theme') || 'light') === 'dark') document.documentElement.classList.add('dark'); })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' };</script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="preconnect" href="https://rsms.me/">
-  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
   <style>
-    html, body { font-family: 'Inter', system-ui, sans-serif; }
-    body { font-feature-settings: 'cv02','cv03','cv04','cv11','ss01'; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; }
     .tabular { font-variant-numeric: tabular-nums; }
-    .num-hero { letter-spacing: -0.04em; line-height: 0.95; }
-    .num-big  { letter-spacing: -0.03em; line-height: 1.0; }
-    .grid-bg {
-      background-image:
-        linear-gradient(rgba(24,24,27,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(24,24,27,0.04) 1px, transparent 1px);
-      background-size: 28px 28px;
+    .chart-card {
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 14px;
+      padding: 16px;
+      transition: border-color 0.2s;
     }
-    .dark .grid-bg {
-      background-image:
-        linear-gradient(rgba(244,244,245,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244,244,245,0.025) 1px, transparent 1px);
+    .dark .chart-card { background: rgb(24 24 27 / 0.4); border-color: rgb(39 39 42); }
+    .chart-card:hover { border-color: #a1a1aa; }
+    .month-bar { transition: opacity 0.2s, transform 0.15s; cursor: pointer; }
+    .month-bar:hover { transform: translateY(-1px); }
+    .month-bar.dim { opacity: 0.3; }
+    .month-bar.selected { filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6)); }
+    .month-label { font-size: 10px; fill: #71717a; }
+    .dark .month-label { fill: #a1a1aa; }
+    .month-label.selected { fill: #4f46e5; font-weight: 700; }
+    .dark .month-label.selected { fill: #a78bfa; }
+    .gridline { stroke: #e4e4e7; stroke-dasharray: 2 2; }
+    .dark .gridline { stroke: #27272a; }
+    .axis-text { font-size: 9px; fill: #a1a1aa; }
+    .chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.02em; }
+    .chip-up { background: #ecfdf5; color: #059669; }
+    .chip-down { background: #fef2f2; color: #dc2626; }
+    .chip-flat { background: #fafafa; color: #71717a; }
+    .dark .chip-up { background: rgb(6 78 59 / 0.4); color: #34d399; }
+    .dark .chip-down { background: rgb(127 29 29 / 0.4); color: #f87171; }
+    .dark .chip-flat { background: rgb(39 39 42); color: #a1a1aa; }
+    .h-row { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #18181b; }
+    .dark .h-row { color: #e4e4e7; }
+    .h-chart { font-size: 11px; font-weight: 600; color: #3f3f46; }
+    .dark .h-chart { color: #d4d4d8; }
+    .chart-sub { font-size: 10px; color: #a1a1aa; }
+    .drill-row:hover { background: #fafafa; }
+    .dark .drill-row:hover { background: rgb(39 39 42 / 0.6); }
+    .pill-metric {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 16px; border-radius: 999px;
+      border: 1.5px solid #e4e4e7;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; background: transparent; color: #71717a;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      font-family: inherit;
     }
-    .glow-emerald { box-shadow: 0 0 0 1px rgba(16,185,129,0.15), 0 8px 32px -8px rgba(16,185,129,0.15); }
-    .dark .glow-emerald { box-shadow: 0 0 60px -10px rgba(52,211,153,0.25); }
-    .stage-arrow { position: relative; }
-    .stage-arrow::after {
-      content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
-      width: 0; height: 0;
-      border-top: 8px solid transparent; border-bottom: 8px solid transparent;
-      border-left: 10px solid rgba(161,161,170,0.6);
-      z-index: 2;
-    }
-    .dark .stage-arrow::after { border-left-color: rgba(63,63,70,0.6); }
-    .stage-arrow:last-child::after { display: none; }
-    .pill-active { background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%); border-color: #4f46e5; color: #ffffff; }
-    .dark .pill-active { background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%); border-color: #6366f1; color: #c7d2fe; }
-    .gradient-text-em { background: linear-gradient(135deg, #047857, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .dark .gradient-text-em { background: linear-gradient(135deg,#a7f3d0,#34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .row-highlight-top { background: linear-gradient(90deg, rgba(34,197,94,0.04), transparent 60%); border-left: 2px solid #10b981; }
-    .row-highlight-bot { background: linear-gradient(90deg, rgba(244,63,94,0.04), transparent 60%); border-left: 2px solid #f43f5e; }
-    .signal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .funnel-stage:hover { transform: translateY(-2px); transition: transform 0.15s; }
-    .hide { display: none !important; }
+    .pill-metric:hover { border-color: #a1a1aa; color: #3f3f46; }
+    .dark .pill-metric { border-color: #3f3f46; color: #71717a; }
+    .dark .pill-metric:hover { color: #d4d4d8; border-color: #71717a; }
+    .pill-axis-tag { font-size: 10px; opacity: 0.7; font-weight: 700; }
 
-    .login-overlay { position: fixed; inset: 0; background: #fafafa; display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .login-card { background: #ffffff; border: 1px solid #e4e4e7; border-radius: 16px; padding: 40px; max-width: 380px; width: 90%; text-align: center; }
-    .login-logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg,#6366f1,#22d3ee); display: flex; align-items: center; justify-content: center; color: #0a0a0b; font-weight: 700; font-size: 18px; margin: 0 auto 20px; }
-    .login-title { font-size: 18px; font-weight: 600; color: #18181b; margin-bottom: 6px; }
-    .login-sub { font-size: 13px; color: #71717a; margin-bottom: 24px; }
-    .login-error { font-size: 12px; color: #f87171; margin-top: 12px; display: none; }
-    .dark .login-overlay { background: #0a0a0b; }
-    .dark .login-card { background: #18181b; border-color: #27272a; }
-    .dark .login-title { color: #fafafa; }
-    .dark .login-sub { color: #a1a1aa; }
-    html:not(.dark) [class*="dark:bg-zinc-900"] { box-shadow: 0 1px 2px rgba(24,24,27,0.05), 0 1px 1px rgba(24,24,27,0.03); }
-    html:not(.dark) header[class*="dark:bg-zinc-950"] { box-shadow: none; }
+    /* Toast */
+    .perf-toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: #18181b; color: #fafafa;
+      padding: 10px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 1000;
+    }
+    .perf-toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .dark .perf-toast { background: #fafafa; color: #18181b; }
+
+    /* ── Perf chart (bars + line) ────────────────────────────── */
+    .perf-card-narrow { /* width unconstrained — use full container */ }
+    .perf-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .perf-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .perf-stats {
+      display: flex; gap: 32px; flex-wrap: wrap;
+      padding: 12px 0 16px;
+      border-bottom: 1px solid #f4f4f5;
+      margin-bottom: 18px;
+    }
+    .dark .perf-stats { border-bottom-color: #1f1f23; }
+    .stat-block { display: flex; flex-direction: column; gap: 3px; }
+    .stat-label-row { display: flex; align-items: center; gap: 6px; }
+    .stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .stat-name { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #71717a; }
+    .dark .stat-name { color: #a1a1aa; }
+    .stat-axis-tag { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+    .stat-value-row { display: flex; align-items: baseline; gap: 8px; }
+    .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.015em; }
+
+    .chart-canvas {
+      display: grid;
+      grid-template-columns: 46px 1fr 46px;
+      gap: 10px;
+      align-items: start;
+    }
+    .chart-canvas-single { grid-template-columns: 46px 1fr; }
+    .yaxis { position: relative; height: 240px; width: 100%; }
+    .ytick {
+      position: absolute;
+      font-size: 10.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .yaxis-left .ytick { right: 2px; text-align: right; }
+    .yaxis-right .ytick { left: 2px; text-align: left; }
+    .chart-svg-wrap { display: flex; flex-direction: column; }
+    .chart-area { position: relative; height: 240px; width: 100%; }
+    .chart-area svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .chart-xaxis {
+      display: flex;
+      padding: 8px 0 0;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #a1a1aa;
+    }
+    .chart-xaxis span[data-slug] {
+      flex: 1;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.15s, font-weight 0.15s;
+    }
+    .dark .chart-xaxis { color: #52525b; }
+    .chart-xaxis span[data-slug]:hover { color: #18181b; }
+    .dark .chart-xaxis span[data-slug]:hover { color: #e4e4e7; }
+    .chart-xaxis span[data-slug].selected { font-weight: 700; color: #4f46e5; }
+    .dark .chart-xaxis span[data-slug].selected { color: #a78bfa; }
+    .perf-gridline { stroke: #f4f4f5; stroke-width: 1; }
+    .dark .perf-gridline { stroke: #1f1f23; }
+
+    /* ── Lead Quality heatmap ────────────────────────────────── */
+    .lq-heatmap { display: flex; flex-direction: column; gap: 4px; }
+    .lq-row {
+      display: grid;
+      grid-template-columns: 96px repeat(var(--lq-n, 6), minmax(0, 1fr));
+      gap: 4px;
+      align-items: center;
+    }
+    .lq-header { margin-bottom: 4px; }
+    .lq-month {
+      text-align: center;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #a1a1aa;
+      padding: 2px 0;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .lq-month:hover { color: #3f3f46; }
+    .dark .lq-month { color: #71717a; }
+    .dark .lq-month:hover { color: #d4d4d8; }
+    .lq-month.selected { color: #4f46e5; font-weight: 700; }
+    .dark .lq-month.selected { color: #a78bfa; }
+    .lq-cat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #3f3f46;
+    }
+    .dark .lq-cat { color: #d4d4d8; }
+    .lq-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+    .lq-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .lq-cell:hover { transform: translateY(-1px); }
+    .lq-cell-empty {
+      background: rgba(0,0,0,0.025);
+      color: #c4c4c4;
+      font-weight: 500;
+    }
+    .dark .lq-cell-empty { background: rgba(255,255,255,0.03); color: #52525b; }
+    .lq-cell.dim { opacity: 0.32; }
+    .lq-cell.selected { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.55); transform: translateY(-1px); }
+    .dark .lq-cell.selected { box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.65); }
+    .lq-section {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #71717a;
+      padding: 8px 0 4px;
+    }
+    .lq-section + .lq-section,
+    .lq-row + .lq-section { margin-top: 10px; padding-top: 12px; border-top: 1px solid #f4f4f5; }
+    .dark .lq-row + .lq-section,
+    .dark .lq-section + .lq-section { border-top-color: #1f1f23; }
+
+    /* Icon button (expand / close) */
+    .lq-icon-btn {
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      border: 1px solid #e4e4e7;
+      background: #fff;
+      color: #71717a;
+      font-size: 14px; line-height: 1;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      flex-shrink: 0;
+      font-family: inherit;
+    }
+    .lq-icon-btn:hover { border-color: #a1a1aa; color: #18181b; background: #fafafa; }
+    .dark .lq-icon-btn { border-color: #3f3f46; background: #18181b; color: #a1a1aa; }
+    .dark .lq-icon-btn:hover { color: #fafafa; background: #27272a; }
+
+    /* Chart modal */
+    .chart-modal {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 100;
+      padding: 32px 24px;
+      overflow-y: auto;
+    }
+    .chart-modal.show { display: flex; align-items: flex-start; justify-content: center; }
+    .chart-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(9, 9, 11, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 0;
+    }
+    .chart-modal-content {
+      position: relative;
+      width: 100%;
+      max-width: 1120px;
+      z-index: 1;
+      margin: auto;
+    }
+    /* Frosted-glass chart card inside the modal */
+    .chart-modal .chart-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+    }
+    .dark .chart-modal .chart-card {
+      background: rgba(24, 24, 27, 0.85);
+      border-color: rgba(63, 63, 70, 0.6);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Multi-line % chart legend (below the chart) */
+    .lq-legend {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #f4f4f5;
+    }
+    .dark .lq-legend { border-top-color: #1f1f23; }
+    .lq-legend-item {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px;
+    }
+    .lq-legend-name { font-weight: 600; color: #3f3f46; }
+    .dark .lq-legend-name { color: #d4d4d8; }
+    .lq-legend-val {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #18181b;
+      margin-left: 1px;
+    }
+    .dark .lq-legend-val { color: #fafafa; }
+
+    /* Hover tooltip + guide line */
+    .perf-guideline {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: #d4d4d8;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s, left 0.05s linear;
+      z-index: 1;
+    }
+    .dark .perf-guideline { background: #52525b; }
+    .chart-area:hover .perf-guideline { opacity: 0.7; }
+
+    .perf-tooltip {
+      position: absolute;
+      top: 0;
+      background: #18181b;
+      color: #fafafa;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      line-height: 1.3;
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+      transform: translate(-50%, calc(-100% - 8px));
+      opacity: 0;
+      transition: opacity 0.12s, left 0.05s linear;
+      min-width: 170px;
+    }
+    .dark .perf-tooltip { background: #fafafa; color: #18181b; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+    .chart-area:hover .perf-tooltip { opacity: 1; }
+
+    /* Call efforts chart wrapper (hosts tooltip + guide) */
+    .calls-chart-wrap { position: relative; }
+    .calls-chart-wrap:hover .perf-guideline { opacity: 0.7; }
+    .calls-chart-wrap:hover .perf-tooltip { opacity: 1; }
+    .tt-title { font-weight: 700; font-size: 11px; margin-bottom: 5px; }
+    .tt-row { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
+    .tt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tt-name { opacity: 0.6; font-size: 10.5px; }
+    .tt-val { font-weight: 700; margin-left: auto; font-variant-numeric: tabular-nums; font-size: 12px; }
   </style>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased min-h-screen">
+<body class="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100" id="bodyEl">
 
-  <div id="loginOverlay" class="login-overlay">
-    <div class="login-card">
-      <div class="login-logo">M</div>
-      <div class="login-title">Masterclass Hub</div>
-      <div class="login-sub">Sign in with your IK Google account</div>
-      <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
-      <p id="loginError" class="login-error"></p>
+<!-- Login overlay -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">IK</div>
+    <h2 class="login-title">Masterclass Hub</h2>
+    <p class="login-sub">Sign in with your IK Google account to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <p id="loginError" class="login-error"></p>
+  </div>
+</div>
+
+<div id="appWrap" style="display:none;">
+
+  <!-- ── Header ────────────────────────────────────────────── -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/90 border-b border-zinc-200 dark:border-zinc-900">
+    <div class="max-w-[1400px] mx-auto px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
+          <div class="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-xs">M</div>
+          <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
+        </a>
+        <nav class="flex items-center gap-1 text-sm">
+          <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Hub</a>
+          <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium no-underline">Months</a>
+          <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Compare</a>
+          <a href="/sales.html"   class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Sales</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs" id="countrySwitcher">
+          <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800">🇮🇳 India</button>
+          <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">🇺🇸 US</button>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>
+        </button>
+        <button class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 ring-2 ring-white text-white text-xs font-semibold" id="avatarBtn" onclick="signOut()">UG</button>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div id="appWrap" style="display:none;">
+  <main class="max-w-[1400px] mx-auto px-8 py-10">
 
-    <header class="border-b border-zinc-200 dark:border-zinc-900 bg-white/80 dark:bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-30">
-      <div class="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-6">
-          <a href="/hub.html" class="flex items-center gap-2.5 no-underline">
-            <div class="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-zinc-950 font-bold text-xs">M</div>
-            <span class="text-sm font-semibold tracking-tight">Masterclass Hub</span>
-          </a>
-          <nav class="flex items-center gap-1 text-sm">
-            <a href="/hub.html"     class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Hub</a>
-            <a href="/months.html"  class="px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium no-underline">Months</a>
-            <a href="/compare.html" class="px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium no-underline">Compare</a>
-          </nav>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs">
-            <button onclick="setCountry('IN')" id="ctryIN" class="px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800">India</button>
-            <button onclick="setCountry('US')" id="ctryUS" class="px-3 py-1.5">US</button>
-          </div>
-          <button onclick="toggleTheme()" id="themeToggle" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"></button>
-          <div class="relative">
-            <button onclick="toggleMenu()" id="avatarBtn" class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-fuchsia-500 flex items-center justify-center text-white text-xs font-semibold ring-1 ring-zinc-700">UG</button>
-            <div id="userMenu" class="hidden absolute right-0 top-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 w-56 z-50">
-              <div class="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800" id="userEmail">—</div>
-              <button onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded">Sign out</button>
-            </div>
-          </div>
-        </div>
+    <!-- Page title -->
+    <div class="mb-8 flex items-baseline justify-between gap-4 flex-wrap">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Months overview</h1>
+        <p class="text-sm text-zinc-500 mt-1" id="pageSub">Month-on-month performance · click any month to drill in</p>
       </div>
-    </header>
+      <div class="text-[11px] text-zinc-500" id="dataMeta"></div>
+    </div>
 
-    <main class="max-w-[1400px] mx-auto px-8 py-10 space-y-14">
+    <!-- Loading / error -->
+    <div id="loadingState" class="text-center text-zinc-400 text-sm p-12">Loading monthly data…</div>
+    <div id="errorState"   class="hidden text-center text-rose-600 text-sm p-12"></div>
 
-      <div class="flex items-start justify-between flex-wrap gap-4">
+    <!-- Main content -->
+    <div id="mainContent" class="hidden space-y-10">
+
+      <!-- ── BLOCK 1: PERFORMANCE ────────────────────────── -->
+      <section>
+        <div class="flex items-baseline justify-between mb-4">
+          <h2 class="h-row">Performance</h2>
+          <span class="chart-sub" id="perfHint">Click a month bar to drill down</span>
+        </div>
+        <div id="perfGrid"></div>
+      </section>
+
+      <!-- ── BLOCK 2: LEAD QUALITY ──────────────────────── -->
+      <section>
+        <div class="flex items-baseline justify-between mb-4">
+          <h2 class="h-row">Lead Quality</h2>
+          <span class="chart-sub">Role &amp; work-experience composition</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="qualityGrid"></div>
+      </section>
+
+      <!-- ── BLOCK 3: CALL EFFORTS ──────────────────────── -->
+      <section>
+        <div class="flex items-baseline justify-between mb-4">
+          <h2 class="h-row">Call Efforts</h2>
+          <span class="chart-sub">Outreach intensity &amp; connectivity</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="callsGrid"></div>
+      </section>
+
+      <!-- ── DRILL-IN PANEL ─────────────────────────────── -->
+      <section id="drillSection" class="hidden scroll-mt-20">
+        <div class="flex items-baseline justify-between mb-4">
+          <div class="flex items-baseline gap-3">
+            <h2 class="h-row">Drill-in</h2>
+            <span class="text-2xl font-bold tracking-tight" id="drillTitle"></span>
+          </div>
+          <button onclick="clearSelection()" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">Clear ×</button>
+        </div>
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900/40">
+          <table class="w-full text-sm">
+            <thead class="bg-zinc-50 dark:bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium w-28">Date</th>
+                <th class="text-left px-4 py-3 font-medium">Masterclass</th>
+                <th class="text-right px-4 py-3 font-medium">IQLs</th>
+                <th class="text-right px-4 py-3 font-medium">Spend</th>
+                <th class="text-right px-4 py-3 font-medium">CPIQL</th>
+                <th class="text-right px-4 py-3 font-medium">Revenue / Sales</th>
+                <th class="text-right px-4 py-3 font-medium">ROAS</th>
+              </tr>
+            </thead>
+            <tbody id="drillRows" class="divide-y divide-zinc-100 dark:divide-zinc-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Chart modal (used for enlarged Lead Quality charts) -->
+  <div id="chartModal" class="chart-modal">
+    <div class="chart-modal-backdrop" onclick="closeLqModal()"></div>
+    <div class="chart-modal-content" id="chartModalContent"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
+
+// ─── State ──────────────────────────────────────────────────────────
+let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
+let monthsData = [];   // sorted oldest -> newest, padded with empty months
+let eventsData = [];   // raw per-event data for drill-in
+let selectedMonth = null;
+let activeMetrics = ['IQLs', 'ROAS']; // ordered array: [0]=left axis, [1]=right axis, max 2
+
+// ─── Theme + auth ───────────────────────────────────────────────────
+const SUN_ICON  = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
+const MOON_ICON = '<svg id="themeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme() {
+  const dark = document.documentElement.classList.contains('dark');
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON;
+}
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ik_theme', dark ? 'dark' : 'light');
+  applyTheme();
+  render();
+}
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
+  applyCountryButtons();
+  load();
+}
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+async function checkAuth() {
+  try { const r = await fetch('/auth/check'); if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin(); }
+  catch { showLogin(); }
+}
+async function handleGoogleSignIn(response) {
+  const err = document.getElementById('loginError'); err.style.display = 'none';
+  try {
+    const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
+    const d = await r.json();
+    if (r.ok) showApp(d.email);
+    else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
+  } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
+}
+async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
+window.onGoogleLibraryLoad = function () {
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+};
+
+// ─── Country toggle ─────────────────────────────────────────────────
+function applyCountryButtons() {
+  const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
+  const on  = 'px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-r border-zinc-200 dark:border-zinc-800';
+  const off = 'px-3 py-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300';
+  const onLast  = 'px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100';
+  const offLast = 'px-3 py-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300';
+  inEl.className = currentCountry === 'IN' ? on : (off + ' border-r border-zinc-200 dark:border-zinc-800');
+  usEl.className = currentCountry === 'US' ? onLast : offLast;
+}
+function setCountry(c) {
+  if (currentCountry === c) return;
+  currentCountry = c;
+  localStorage.setItem('ik_country', c);
+  selectedMonth = null;
+  applyCountryButtons();
+  load();
+}
+function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
+function isUS() { return currentCountry === 'US'; }
+function moneySym() { return isUS() ? '$' : '₹'; }
+function leadLabel() { return isUS() ? 'GQLs' : 'IQLs'; }
+function cpiqlLabel() { return isUS() ? 'CPGQL' : 'CPIQL'; }
+
+// ─── Formatters ─────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtN(n) {
+  if (n == null || isNaN(n)) return '—';
+  if (isUS()) {
+    if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'K';
+    return Math.round(n).toLocaleString();
+  }
+  if (n >= 1e7) return (n/1e7).toFixed(2).replace(/\.?0+$/,'') + 'Cr';
+  if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
+  if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return Math.round(n).toLocaleString();
+}
+function fmtMoney(n) { return n == null ? '—' : moneySym() + fmtN(n); }
+function fmtMoneyRaw(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
+function fmtROAS(n) { return n == null || isNaN(n) ? '—' : n.toFixed(2) + '×'; }
+function fmtPct(n, d=0) { return n == null ? '—' : n.toFixed(d) + '%'; }
+function fmtMonthLabel(slug) {
+  const [y, m] = slug.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleString('en-US', { month: 'short' });
+}
+function fmtMonthFull(slug) {
+  const [y, m] = slug.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '—'; }
+
+// ─── Data ───────────────────────────────────────────────────────────
+async function load() {
+  document.getElementById('loadingState').classList.remove('hidden');
+  document.getElementById('errorState').classList.add('hidden');
+  document.getElementById('mainContent').classList.add('hidden');
+  try {
+    const r = await fetch(`/months?country=${encodeURIComponent(countryParam())}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    eventsData = d.events || [];
+    // Hide months that haven't started yet (e.g. July when today is in June)
+    const _now = new Date();
+    const _curSlug = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+    const _completedOrCurrent = (d.months || []).filter(m => m.month_slug <= _curSlug);
+    monthsData = padMonths(_completedOrCurrent);
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('dataMeta').textContent = `${monthsData.length} months · ${eventsData.length} events`;
+    render();
+  } catch (e) {
+    document.getElementById('loadingState').classList.add('hidden');
+    const el = document.getElementById('errorState');
+    el.textContent = 'Failed to load: ' + e.message;
+    el.classList.remove('hidden');
+  }
+}
+
+// Pad missing months between min and max with zero rows so the chart x-axis
+// stays continuous (don't want "Jan, Apr, May, Jun" — want "Jan, Feb, Mar, Apr, May, Jun").
+function padMonths(months) {
+  if (months.length === 0) return [];
+  const sorted = [...months].sort((a, b) => a.month_slug.localeCompare(b.month_slug));
+  const out = [];
+  const [startY, startM] = sorted[0].month_slug.split('-').map(Number);
+  const [endY, endM]     = sorted[sorted.length-1].month_slug.split('-').map(Number);
+  const byKey = Object.fromEntries(sorted.map(m => [m.month_slug, m]));
+  let y = startY, m = startM;
+  while (y < endY || (y === endY && m <= endM)) {
+    const slug = `${y}-${String(m).padStart(2,'0')}`;
+    if (byKey[slug]) {
+      out.push(byKey[slug]);
+    } else {
+      out.push({ month_slug: slug, events: 0, total_regs: 0, meta_regs: 0, meta_spend: 0,
+                 cpl_blended: null, revenue: 0, sales: 0, overall_roas: null,
+                 calls_attempted: 0, calls_connected: 0, call_connect_pct: null,
+                 calls_per_lead: null, avg_talk_seconds: null,
+                 attendees: 0, attendance_pct: null,
+                 role_sde: 0, role_ml: 0, role_management: 0, role_systems: 0, role_other: 0, role_null: 0,
+                 we_3_5: 0, we_6_10: 0, we_10_15: 0, we_15_20: 0, we_20p: 0, we_other: 0,
+                 event_ids: [] });
+    }
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+
+// ─── Render ─────────────────────────────────────────────────────────
+function render() {
+  renderPerformance();
+  renderQuality();
+  renderCalls();
+  renderDrillIn();
+}
+
+// ── PERF COMPARISON CHART CONFIG ─────────────────────────────────────
+const PERF_METRIC_DEFS = [
+  { id: 'Spend',        color: '#0ea5e9', lowerIsBetter: true,
+    getValue: m => (m.event_ids?.length > 0 && m.meta_spend > 0) ? m.meta_spend : null,
+    fmt: fmtMoney },
+  { id: 'IQLs',         color: '#6366f1', lowerIsBetter: false,
+    getValue: m => (m.event_ids?.length > 0) ? (m.meta_regs||0)+(m.crm_regs||0)+(m.other_regs||0) : null,
+    fmt: fmtN },
+  { id: 'CPIQL',        color: '#f59e0b', lowerIsBetter: true,
+    getValue: m => m.cpl_blended,
+    fmt: fmtMoney },
+  { id: 'Attendance %', color: '#22c55e', lowerIsBetter: false,
+    getValue: m => m.attendance_pct,
+    fmt: v => v == null ? '—' : v.toFixed(1) + '%' },
+  { id: 'Revenue',      color: '#10b981', lowerIsBetter: false,
+    getValue: m => (m.event_ids?.length > 0 && m.revenue > 0) ? m.revenue : null,
+    fmt: fmtMoney },
+  { id: 'Booked ₹',     color: '#059669', lowerIsBetter: false,
+    // Revenue collected in this calendar month (grouped by Sale_date), regardless
+    // of which masterclass drove it. Complements "Revenue" (grouped by MC month).
+    getValue: m => (m.revenue_booked && m.revenue_booked > 0) ? m.revenue_booked : null,
+    fmt: fmtMoney },
+  { id: 'ROAS',         color: '#a78bfa', lowerIsBetter: false,
+    getValue: m => m.overall_roas,
+    fmt: fmtROAS },
+];
+function getMetricLabel(id) {
+  if (id === 'IQLs') return leadLabel();
+  if (id === 'CPIQL') return cpiqlLabel();
+  return id;
+}
+function toggleMetric(id) {
+  const idx = activeMetrics.indexOf(id);
+  if (idx >= 0) {
+    if (activeMetrics.length <= 1) return; // can't go below 1
+    activeMetrics.splice(idx, 1);
+  } else {
+    if (activeMetrics.length >= 2) {
+      showPerfToast('Unselect a metric first — you can compare up to two at a time');
+      return;
+    }
+    activeMetrics.push(id);
+  }
+  renderPerformance();
+}
+function showPerfToast(msg) {
+  let t = document.getElementById('perfToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'perfToast';
+    t.className = 'perf-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// Compact tick formatter
+function fmtTick(v, def) {
+  if (def.id === 'ROAS')         return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + '×';
+  if (def.id === 'Attendance %') return v.toFixed(0) + '%';
+  if (def.id === 'Spend' || def.id === 'CPIQL' || def.id === 'Revenue') return fmtMoney(v);
+  return fmtN(v);
+}
+
+// Nice axis from 0 → niceMax, ~5 intervals at clean values
+function niceAxisFromZero(dataMax) {
+  if (!isFinite(dataMax) || dataMax <= 0) return { max: 1, interval: 0.25 };
+  const rawInterval = dataMax / 5;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawInterval)));
+  const norm = rawInterval / mag;
+  let nice;
+  if (norm <= 1)        nice = 1;
+  else if (norm <= 2)   nice = 2;
+  else if (norm <= 2.5) nice = 2.5;
+  else if (norm <= 5)   nice = 5;
+  else                  nice = 10;
+  const interval = nice * mag;
+  let max = Math.ceil(dataMax / interval) * interval;
+  if (max <= dataMax) max += interval;
+  return { max, interval };
+}
+
+// Monotone cubic Hermite — smooth curves that never overshoot
+function smoothPath(pts) {
+  const n = pts.length;
+  if (n < 2) return '';
+  const dx=[], dy=[], slope=[], m=[];
+  for (let i=0;i<n-1;i++){
+    dx[i]=pts[i+1].x-pts[i].x;
+    dy[i]=pts[i+1].y-pts[i].y;
+    slope[i]=dy[i]/dx[i];
+  }
+  m[0]=slope[0];
+  for (let i=1;i<n-1;i++) m[i]=(slope[i-1]+slope[i])/2;
+  m[n-1]=slope[n-2];
+  for (let i=0;i<n-1;i++){
+    if (Math.abs(slope[i])<1e-9){ m[i]=m[i+1]=0; continue; }
+    const a=m[i]/slope[i], b=m[i+1]/slope[i], t=a*a+b*b;
+    if (t>9){ m[i]=3*slope[i]*a/Math.sqrt(t); m[i+1]=3*slope[i]*b/Math.sqrt(t); }
+  }
+  let d=`M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`;
+  for (let i=0;i<n-1;i++){
+    const tx=dx[i]/3;
+    d+=` C${(pts[i].x+tx).toFixed(2)},${(pts[i].y+m[i]*tx).toFixed(2)} `+
+       `${(pts[i+1].x-tx).toFixed(2)},${(pts[i+1].y-m[i+1]*tx).toFixed(2)} `+
+       `${pts[i+1].x.toFixed(2)},${pts[i+1].y.toFixed(2)}`;
+  }
+  return d;
+}
+
+// ── PERFORMANCE BLOCK (bars + line, dual axis from 0) ─────────────────
+function renderPerformance() {
+  const grid = document.getElementById('perfGrid');
+  const n = monthsData.length;
+  if (n === 0) { grid.innerHTML = ''; return; }
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const activeDefs = activeMetrics
+    .map(id => PERF_METRIC_DEFS.find(d => d.id === id))
+    .filter(Boolean);
+  if (activeDefs.length === 0) {
+    activeMetrics = ['IQLs','ROAS'];
+    return renderPerformance();
+  }
+
+  // First selected = line (default), second = bars
+  const lineDef = activeDefs[0];
+  const barsDef = activeDefs[1] || null;
+
+  // SVG canvas
+  const W = 720, H = 240;
+  const slugs = monthsData.map(m => m.month_slug);
+  const slot = W / n;
+  const barW = Math.min(slot * 0.55, 42);
+
+  // Data (line is always present, bars only if 2 metrics selected)
+  const lineRaw = monthsData.map(m => lineDef.getValue(m));
+  const barsRaw = barsDef ? monthsData.map(m => barsDef.getValue(m)) : [];
+
+  // Axes anchored at 0
+  const lineMaxVal = Math.max(...lineRaw.filter(v => v != null && v > 0), 0.001);
+  const lineAxis = niceAxisFromZero(lineMaxVal);
+  const barsMaxVal = barsDef ? Math.max(...barsRaw.filter(v => v != null && v > 0), 0.001) : 0;
+  const barsAxis = barsDef ? niceAxisFromZero(barsMaxVal) : null;
+
+  function yLine(v) { return H - (v / lineAxis.max) * H; }
+  function yBars(v) { return H - (v / barsAxis.max) * H; }
+  function xOf(i)   { return slot * i + slot / 2; }
+
+  // Tick arrays (top → bottom)
+  function ticksOf(axis) {
+    const count = Math.round(axis.max / axis.interval) + 1;
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const v = axis.max - axis.interval * i;
+      const p = (i / (count - 1)) * 100;
+      out.push({ p, v });
+    }
+    return out;
+  }
+  const leftTicks  = ticksOf(lineAxis);
+  const rightTicks = barsAxis ? ticksOf(barsAxis) : [];
+
+  // Gridlines (from left/line axis)
+  const gridSVG = leftTicks.map(t => {
+    const y = (t.p / 100) * H;
+    return `<line class="perf-gridline" x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/>`;
+  }).join('');
+
+  const gradId = `barG_${Math.random().toString(36).slice(2,8)}`;
+  const filterId = `glow_${Math.random().toString(36).slice(2,8)}`;
+
+  // Bars (only when a second metric is selected). Always need transparent slot rects for click capture.
+  let barsSVG = '';
+  if (barsDef) {
+    barsSVG = barsRaw.map((v, i) => {
+      const slug = slugs[i];
+      const sel = selectedMonth === slug;
+      const dim = selectedMonth && !sel;
+      const slotX = slot * i;
+      if (v == null) {
+        return `<g class="month-bar${dim?' dim':''}" data-slug="${slug}">
+          <rect x="${slotX.toFixed(2)}" y="0" width="${slot.toFixed(2)}" height="${H}" fill="transparent"/>
+        </g>`;
+      }
+      const y = yBars(v);
+      const h = H - y;
+      const x = slot * i + (slot - barW) / 2;
+      return `<g class="month-bar${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}">
+        <rect x="${slotX.toFixed(2)}" y="0" width="${slot.toFixed(2)}" height="${H}" fill="transparent"/>
+        <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barW.toFixed(2)}" height="${h.toFixed(2)}" rx="4" fill="url(#${gradId})"/>
+        <title>${fmtMonthFull(slug)} · ${esc(getMetricLabel(barsDef.id))}: ${barsDef.fmt(v)}</title>
+      </g>`;
+    }).join('');
+  } else {
+    // No bars — still need transparent slot rects so the chart background captures month clicks
+    barsSVG = monthsData.map((m, i) => {
+      const slug = m.month_slug;
+      const sel = selectedMonth === slug;
+      const dim = selectedMonth && !sel;
+      const slotX = slot * i;
+      return `<g class="month-bar${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}">
+        <rect x="${slotX.toFixed(2)}" y="0" width="${slot.toFixed(2)}" height="${H}" fill="transparent"/>
+      </g>`;
+    }).join('');
+  }
+
+  // Line (always present — uses the first/left axis metric)
+  let lineSVG = '', markersSVG = '';
+  const linePts = [];
+  lineRaw.forEach((v, i) => {
+    if (v != null) linePts.push({ x: xOf(i), y: yLine(v), v, slug: slugs[i] });
+  });
+  if (linePts.length >= 2) {
+    const pathD = smoothPath(linePts);
+    const filterAttr = isDark ? ` filter="url(#${filterId})"` : '';
+    lineSVG = `<path d="${pathD}" stroke="${lineDef.color}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"${filterAttr}/>`;
+  }
+  markersSVG = linePts.map(p => {
+    const sel = selectedMonth === p.slug;
+    const dim = selectedMonth && !sel;
+    const r = sel ? 5 : 4;
+    const markerFill = isDark ? '#0c0c0e' : '#fff';
+    return `<g class="month-bar${sel?' selected':''}${dim?' dim':''}" data-slug="${p.slug}">
+      <circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="10" fill="transparent"/>
+      <circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${r}" fill="${markerFill}" stroke="${lineDef.color}" stroke-width="2.25"/>
+      <title>${fmtMonthFull(p.slug)} · ${esc(getMetricLabel(lineDef.id))}: ${lineDef.fmt(p.v)}</title>
+    </g>`;
+  }).join('');
+
+  // SVG defs (gradient only if bars, glow only in dark mode)
+  let defsSVG = '';
+  const gradDef = barsDef
+    ? (isDark
+        ? `<stop offset="0%" stop-color="${barsDef.color}" stop-opacity="0.65"/><stop offset="100%" stop-color="${barsDef.color}" stop-opacity="0.18"/>`
+        : `<stop offset="0%" stop-color="${barsDef.color}" stop-opacity="0.50"/><stop offset="100%" stop-color="${barsDef.color}" stop-opacity="0.15"/>`)
+    : '';
+  const glowFilter = isDark
+    ? `<filter id="${filterId}" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="2.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>` : '';
+  if (barsDef || isDark) {
+    defsSVG = `<defs>
+      ${barsDef ? `<linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">${gradDef}</linearGradient>` : ''}
+      ${glowFilter}
+    </defs>`;
+  }
+
+  // X-axis (HTML)
+  const labelStep = n > 18 ? 3 : n > 12 ? 2 : 1;
+  const xAxisHTML = monthsData.map((m, i) => {
+    const sel = selectedMonth === m.month_slug;
+    const visible = (i % labelStep === 0) || (i === n - 1);
+    if (!visible) return `<span data-slug="${m.month_slug}" style="visibility:hidden">${fmtMonthLabel(m.month_slug)}</span>`;
+    return `<span data-slug="${m.month_slug}"${sel ? ' class="selected"' : ''}>${fmtMonthLabel(m.month_slug)}</span>`;
+  }).join('');
+
+  // Pills
+  const pillsHTML = PERF_METRIC_DEFS.map(def => {
+    const idx = activeMetrics.indexOf(def.id);
+    const on = idx >= 0;
+    const lbl = esc(getMetricLabel(def.id));
+    const tag = on ? `<span class="pill-axis-tag">${idx === 0 ? 'L' : 'R'}</span>` : '';
+    const style = on ? `border-color:${def.color};background:${def.color}1a;color:${def.color}` : '';
+    return `<button onclick="toggleMetric('${def.id}')" class="pill-metric${on?' active':''}" style="${style}">${lbl}${tag}</button>`;
+  }).join('');
+
+  // Stat blocks
+  function statBlock(def, isLeft) {
+    const raw = isLeft ? lineRaw : barsRaw;
+    const nonNull = raw.filter(v => v != null);
+    const latest = nonNull.length ? nonNull[nonNull.length - 1] : null;
+    const chip = deltaChip(raw, def.lowerIsBetter);
+    const sideLabel = isLeft ? 'Line · Left' : 'Bars · Right';
+    return `<div class="stat-block">
+      <div class="stat-label-row">
+        <span class="stat-dot" style="background:${def.color}"></span>
+        <span class="stat-name">${esc(getMetricLabel(def.id))}</span>
+        <span class="stat-axis-tag" style="background:${def.color}1a;color:${def.color}">${sideLabel}</span>
+      </div>
+      <div class="stat-value-row">
+        <span class="stat-value tabular">${def.fmt(latest)}</span>
+        ${chip}
+      </div>
+    </div>`;
+  }
+  const statsHTML = statBlock(lineDef, true) + (barsDef ? statBlock(barsDef, false) : '');
+
+  // Y-axis labels — left = line metric, right = bars metric (if any)
+  const leftYHTML = leftTicks.map(t =>
+    `<div class="ytick" style="top:${t.p}%;color:${lineDef.color};opacity:0.85">${esc(fmtTick(t.v, lineDef))}</div>`
+  ).join('');
+  const rightYHTML = barsDef ? rightTicks.map(t =>
+    `<div class="ytick" style="top:${t.p}%;color:${barsDef.color};opacity:0.85">${esc(fmtTick(t.v, barsDef))}</div>`
+  ).join('') : '';
+
+  const canvasClass = barsDef ? 'chart-canvas' : 'chart-canvas chart-canvas-single';
+  const rightAxisHTML = barsDef
+    ? `<div class="yaxis yaxis-right">${rightYHTML}</div>`
+    : '';
+
+  grid.innerHTML = `
+    <div class="chart-card perf-card-narrow">
+      <div class="perf-head">
         <div>
-          <h1 class="text-3xl font-bold tracking-tight">Performance Overview</h1>
-          <p class="text-sm text-zinc-500 mt-1" id="periodSub">Loading…</p>
+          <div class="h-chart">Month on month comparison</div>
+          <div class="chart-sub">${barsDef ? 'Line + bars · L = left axis, R = right axis' : 'Line · select a second metric to add bars'}</div>
         </div>
-        <div id="pipelineBanner" class="hide items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-900/50 bg-amber-950/30 text-xs text-amber-200">
-          <span class="signal-dot bg-amber-400"></span>
-          <span id="pipelineText"></span>
+        <div class="perf-pills">${pillsHTML}</div>
+      </div>
+      <div class="${canvasClass}">
+        <div class="yaxis yaxis-left" style="height:320px">${leftYHTML}</div>
+        <div class="chart-svg-wrap">
+          <div class="chart-area" style="height:320px">
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+              ${defsSVG}
+              ${gridSVG}
+              ${barsSVG}
+              ${lineSVG}
+              ${markersSVG}
+            </svg>
+            <div class="perf-guideline" id="perfGuideline"></div>
+            <div class="perf-tooltip" id="perfTooltip"></div>
+          </div>
+          <div class="chart-xaxis">${xAxisHTML}</div>
         </div>
+        ${rightAxisHTML}
       </div>
+    </div>`;
 
-      <div id="loadingArea" class="p-12 text-center text-zinc-500 text-sm">Loading…</div>
-      <div id="errorArea" class="hide p-12 text-center text-rose-600 dark:text-rose-400 text-sm"></div>
+  wireMonthClicks(grid);
+  wirePerfHover(grid, monthsData, lineDef, lineRaw, barsDef, barsRaw);
+}
 
-      <div id="contentArea" class="hide space-y-14">
+function wirePerfHover(container, months, lineDef, lineRaw, barsDef, barsRaw) {
+  const chartArea = container.querySelector('.chart-area');
+  const tooltip   = container.querySelector('#perfTooltip');
+  const guide     = container.querySelector('#perfGuideline');
+  if (!chartArea || !tooltip || !guide) return;
+  const n = months.length;
+  let lastIdx = -1;
 
-        <section class="grid grid-cols-12 gap-6">
-          <div class="col-span-7 p-8 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
-            <div class="absolute inset-0 grid-bg opacity-30 pointer-events-none"></div>
-            <div class="relative">
-              <div class="flex items-center justify-between mb-6">
-                <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Revenue Generated</div>
-                <div class="text-[10px] text-zinc-400 dark:text-zinc-600 uppercase tracking-widest" id="revPeriod">last 6 months</div>
-              </div>
-              <div class="flex items-end gap-6">
-                <div class="num-hero text-7xl font-bold tracking-tight" id="revHero">—</div>
-                <div class="flex flex-col gap-1 pb-2">
-                  <div class="text-xs text-zinc-500" id="revSub">—</div>
-                </div>
-              </div>
-              <div class="mt-8 grid grid-cols-6 gap-2 items-end h-20" id="revBars"></div>
-              <div class="mt-3 text-[10px] text-zinc-400 dark:text-zinc-600" id="revFootnote">* last month pipeline may still be open</div>
-            </div>
-          </div>
+  chartArea.addEventListener('mousemove', (e) => {
+    const rect = chartArea.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const slotW = rect.width / n;
+    const idx = Math.max(0, Math.min(n - 1, Math.floor(x / slotW)));
+    const cx = slotW * (idx + 0.5);
+    guide.style.left   = cx + 'px';
+    tooltip.style.left = cx + 'px';
+    if (idx === lastIdx) return;
+    lastIdx = idx;
 
-          <div class="col-span-5 p-8 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 border border-emerald-300 dark:border-emerald-900/30 relative overflow-hidden glow-emerald">
-            <div class="relative">
-              <div class="flex items-center justify-between mb-6">
-                <div class="text-xs font-medium text-zinc-500 uppercase tracking-widest">Overall ROAS</div>
-                <div class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-800/50">North star</div>
-              </div>
-              <div class="flex items-end gap-4 mb-6">
-                <div class="num-hero text-7xl font-bold gradient-text-em" id="roasHero">—</div>
-              </div>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
-                  <span class="text-xs text-zinc-500">Target</span>
-                  <span class="text-xs text-zinc-700 dark:text-zinc-300">5.0x baseline</span>
-                </div>
-                <div class="flex justify-between items-center pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
-                  <span class="text-xs text-zinc-500">Paid ROAS</span>
-                  <span class="text-xs text-zinc-700 dark:text-zinc-300 tabular" id="paidRoasVal">—</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-xs text-zinc-500">Cost / Sale</span>
-                  <span class="text-xs text-zinc-700 dark:text-zinc-300 tabular" id="cpsVal">—</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+    const m = months[idx];
+    const slug = m.month_slug;
+    const lineV = lineRaw[idx];
+    const barsV = barsDef ? barsRaw[idx] : null;
+    const fmtNullable = (def, v) => v == null ? '—' : def.fmt(v);
 
-        <section class="grid grid-cols-4 gap-4" id="secKpis"></section>
-
-        <section>
-          <div class="flex items-end justify-between mb-5">
-            <div>
-              <h2 class="text-base font-semibold tracking-tight">Marketing Funnel</h2>
-              <p class="text-xs text-zinc-500 mt-0.5">Aggregate across all events · conversion at each stage</p>
-            </div>
-          </div>
-          <div class="grid grid-cols-5 gap-3" id="funnelArea"></div>
-        </section>
-
-        <section class="p-6 rounded-2xl bg-white/70 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h2 class="text-base font-semibold tracking-tight">Performance Trend</h2>
-              <p class="text-xs text-zinc-500 mt-0.5">Monthly aggregates · latest month may be partial</p>
-            </div>
-            <div class="flex gap-1 text-xs" id="trendPills">
-              <button data-metric="roas"    class="px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border">ROAS</button>
-              <button data-metric="revenue" class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Revenue</button>
-              <button data-metric="sales"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Sales</button>
-              <button data-metric="spend"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">Spend</button>
-              <button data-metric="cpiql"   class="px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800">CPIQL</button>
-            </div>
-          </div>
-          <div class="h-72"><canvas id="trendChart"></canvas></div>
-        </section>
-
-        <section>
-          <div class="flex items-end justify-between mb-5">
-            <div>
-              <h2 class="text-base font-semibold tracking-tight">Event Performance</h2>
-              <p class="text-xs text-zinc-500 mt-0.5">Ranked by ROAS · top 3 highlighted</p>
-            </div>
-            <div class="text-[10px] text-zinc-400 dark:text-zinc-600">All amounts in <span id="curLbl">₹</span></div>
-          </div>
-          <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            <table class="w-full text-sm tabular">
-              <thead class="bg-zinc-100 dark:bg-zinc-900/60 text-[10px] uppercase tracking-widest text-zinc-500">
-                <tr>
-                  <th class="text-left px-4 py-3 font-medium">Event</th>
-                  <th class="text-right px-4 py-3 font-medium">Date</th>
-                  <th class="text-right px-4 py-3 font-medium">Spend</th>
-                  <th class="text-right px-4 py-3 font-medium">IQLs</th>
-                  <th class="text-right px-4 py-3 font-medium">Sales</th>
-                  <th class="text-right px-4 py-3 font-medium">Revenue</th>
-                  <th class="text-right px-4 py-3 font-medium">ROAS</th>
-                  <th class="text-center px-4 py-3 font-medium w-20">Signal</th>
-                </tr>
-              </thead>
-              <tbody id="leaderboardBody" class="divide-y divide-zinc-200 dark:divide-zinc-900"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section>
-          <h2 class="text-base font-semibold tracking-tight mb-5">What's driving the numbers</h2>
-          <div class="grid grid-cols-2 gap-4" id="insightsArea"></div>
-        </section>
-
-      </div>
-    </main>
-  </div>
-
-  <script>
-    'use strict';
-
-    const GOOGLE_CLIENT_ID = '801560849080-lgdgif7rjbgap4fqqp0cbcj7duc2ed0o.apps.googleusercontent.com';
-
-    let currentCountry = (localStorage.getItem('ik_country') || 'IN').toUpperCase();
-    let lastEvents = [];
-    let lastMonthly = [];
-    let chart = null;
-
-    const SUN_ICON  = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m11-11h-2m-18 0H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg>';
-    const MOON_ICON = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-    function applyTheme() { const dark = document.documentElement.classList.contains('dark'); const btn = document.getElementById('themeToggle'); if (btn) btn.innerHTML = dark ? SUN_ICON : MOON_ICON; }
-    function toggleTheme() { const dark = document.documentElement.classList.toggle('dark'); localStorage.setItem('ik_theme', dark ? 'dark' : 'light'); applyTheme(); }
-    function applyCountryButtons() {
-      const inEl = document.getElementById('ctryIN'), usEl = document.getElementById('ctryUS');
-      inEl.className = (currentCountry === 'IN' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5 border-r border-zinc-200 dark:border-zinc-800';
-      usEl.className = (currentCountry === 'US' ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300') + ' px-3 py-1.5';
-      document.getElementById('curLbl').textContent = isUS() ? '$' : '₹';
-    }
-    function setCountry(c) { if (currentCountry === c) return; currentCountry = c; localStorage.setItem('ik_country', c); applyCountryButtons(); load(); }
-    function countryParam() { return currentCountry === 'US' ? 'US' : 'India'; }
-    function isUS() { return currentCountry === 'US'; }
-    function moneySym() { return isUS() ? '$' : '₹'; }
-
-    function showApp(email) {
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('appWrap').style.display = '';
-      document.getElementById('userEmail').textContent = email;
-      if (email) document.getElementById('avatarBtn').textContent = (email[0] || '?').toUpperCase() + (email.split('.')[1]?.[0] || '').toUpperCase();
-      load();
-    }
-    function showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; document.getElementById('appWrap').style.display = 'none'; }
-    async function checkAuth() { try { const r = await fetch('/auth/check'); if (r.ok) { const d = await r.json(); showApp(d.email); } else showLogin(); } catch { showLogin(); } }
-    async function handleGoogleSignIn(response) {
-      const err = document.getElementById('loginError'); err.style.display = 'none';
-      try {
-        const r = await fetch('/auth/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({credential: response.credential}) });
-        const d = await r.json();
-        if (r.ok) showApp(d.email); else { err.textContent = d.error || 'Sign-in failed.'; err.style.display = 'block'; }
-      } catch { err.textContent = 'Sign-in failed.'; err.style.display = 'block'; }
-    }
-    async function signOut() { await fetch('/auth/logout', { method: 'POST' }); showLogin(); }
-    window.onGoogleLibraryLoad = function () {
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleSignIn, hd: 'interviewkickstart.com' });
-      google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'filled_black', size: 'large', width: 280 });
-    };
-    function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
-    document.addEventListener('click', e => { if (!e.target.closest('#avatarBtn') && !e.target.closest('#userMenu')) document.getElementById('userMenu')?.classList.add('hidden'); });
-
-    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function fmtN(n) {
-      if (n == null || isNaN(n)) return '—';
-      if (isUS()) {
-        if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
-        if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
-        if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'K';
-        return Math.round(n).toLocaleString();
-      }
-      if (n >= 1e7) { const v = (n/1e7); return v.toFixed(v >= 10 ? 1 : 2).replace(/\.?0+$/,'') + 'Cr'; }
-      if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
-      if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-      return Math.round(n).toLocaleString();
-    }
-    function fmtMoney(n) { return n == null ? '—' : moneySym() + fmtN(n); }
-    function fmtMoneyRaw(n) { return n == null ? '—' : moneySym() + Math.round(n).toLocaleString(); }
-    function fmtROAS(n) { return n == null || isNaN(n) ? '—' : n.toFixed(2) + 'x'; }
-    function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—'; }
-    function fmtPct(n, d=0) { return n == null ? '—' : n.toFixed(d) + '%'; }
-
-    // Revenue is stored in local currency at snapshot time (INR for India, USD for US)
-    function revLocal(s) { return s?.revenue ?? null; }
-    function paidRevLocal(s) { return s?.paid_revenue ?? null; }
-    function isPipelineOpen(ev) {
-      if (!ev.live_at) return false;
-      const days = (Date.now() - new Date(ev.live_at).getTime()) / 86400000;
-      return days >= 0 && days < 14;
-    }
-
-    async function load() {
-      showLoading();
-      try {
-        const r = await fetch(`/events?status=aired&country=${encodeURIComponent(countryParam())}&limit=200`);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const d = await r.json();
-        lastEvents = d.events || [];
-        hideLoading();
-        if (lastEvents.length === 0) {
-          document.getElementById('contentArea').classList.add('hide');
-          document.getElementById('errorArea').textContent = 'No aired events for this country yet.';
-          document.getElementById('errorArea').classList.remove('hide');
-          return;
-        }
-        document.getElementById('contentArea').classList.remove('hide');
-        render();
-      } catch (e) { hideLoading(); showError(e.message); }
-    }
-    function showLoading() { document.getElementById('loadingArea').classList.remove('hide'); document.getElementById('contentArea').classList.add('hide'); document.getElementById('errorArea').classList.add('hide'); }
-    function hideLoading() { document.getElementById('loadingArea').classList.add('hide'); }
-    function showError(msg) { document.getElementById('errorArea').textContent = 'Failed to load: ' + msg; document.getElementById('errorArea').classList.remove('hide'); }
-
-    function render() {
-      const monthMap = {};
-      lastEvents.forEach(ev => {
-        if (!ev.live_at) return;
-        const d = new Date(ev.live_at);
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        if (!monthMap[key]) monthMap[key] = { key, date: new Date(d.getFullYear(), d.getMonth(), 1), label: d.toLocaleDateString('en-US', {month:'short', year:'numeric'}), shortLabel: d.toLocaleDateString('en-US', {month:'short'}), events: [] };
-        monthMap[key].events.push(ev);
-      });
-      const months = Object.values(monthMap).sort((a,b) => a.date - b.date).slice(-6);
-
-      lastMonthly = months.map(m => {
-        const events = m.events;
-        const sales = events.reduce((s,e) => s + (e.snapshot?.sales || 0), 0);
-        const rev   = events.reduce((s,e) => s + (revLocal(e.snapshot) || 0), 0);
-        const paidRev = events.reduce((s,e) => s + (paidRevLocal(e.snapshot) || 0), 0);
-        const spend = events.reduce((s,e) => s + (e.snapshot?.meta_spend || 0), 0);
-        const regs    = events.reduce((s,e) => s + (e.snapshot?.total_regs || 0), 0);
-        const metaRegs= events.reduce((s,e) => s + (e.snapshot?.meta_regs  || 0), 0);
-        const att   = events.reduce((s,e) => s + (e.snapshot?.attendees || 0), 0);
-        // CPIQL = paid spend / paid (Meta) regs — not total regs (which dilutes by organic)
-        const cpiql = metaRegs > 0 ? spend / metaRegs : null;
-        const roas  = spend > 0 ? rev / spend : null;
-        const paidRoas = spend > 0 ? paidRev / spend : null;
-        const isOpen = events.some(isPipelineOpen);
-        return { ...m, events, sales, rev, paidRev, spend, regs, metaRegs, att, cpiql, roas, paidRoas, isOpen };
-      });
-
-      const totalRev = lastMonthly.reduce((s,m) => s + m.rev, 0);
-      const totalPaidRev = lastMonthly.reduce((s,m) => s + m.paidRev, 0);
-      const totalSpend = lastMonthly.reduce((s,m) => s + m.spend, 0);
-      const totalSales = lastMonthly.reduce((s,m) => s + m.sales, 0);
-      const totalRegs = lastMonthly.reduce((s,m) => s + m.regs, 0);
-      const totalMetaRegs = lastMonthly.reduce((s,m) => s + m.metaRegs, 0);
-      const totalAtt = lastMonthly.reduce((s,m) => s + m.att, 0);
-      const totalEvents = lastMonthly.reduce((s,m) => s + m.events.length, 0);
-      const aggRoas = totalSpend > 0 ? totalRev / totalSpend : null;
-      const aggPaidRoas = totalSpend > 0 ? totalPaidRev / totalSpend : null;
-      // Blended CPIQL across months: paid spend / paid (Meta) regs only.
-      const aggCpiql = totalMetaRegs > 0 ? totalSpend / totalMetaRegs : null;
-      const aggAttRate = totalRegs > 0 ? totalAtt / totalRegs * 100 : null;
-      const aggCps = totalSales > 0 ? totalSpend / totalSales : null;
-      const aggSaleRate = totalRegs > 0 ? totalSales / totalRegs * 100 : null;
-
-      const firstM = lastMonthly[0]?.label, lastM = lastMonthly[lastMonthly.length-1]?.label;
-      document.getElementById('periodSub').textContent = `${currentCountry === 'IN' ? 'India' : 'US'} · ${firstM} – ${lastM} · ${totalEvents} masterclass${totalEvents===1?'':'es'}`;
-
-      const openCount = lastMonthly.reduce((s,m) => s + m.events.filter(isPipelineOpen).length, 0);
-      const bnr = document.getElementById('pipelineBanner');
-      if (openCount > 0) { bnr.classList.remove('hide'); bnr.classList.add('flex'); document.getElementById('pipelineText').innerHTML = `<b>Pipeline open:</b> ${openCount} event${openCount===1?'':'s'} in 14-day sales window — expect +25–40% revenue lift`; }
-      else { bnr.classList.add('hide'); bnr.classList.remove('flex'); }
-
-      document.getElementById('revHero').innerHTML = totalRev > 0 ? formatRevHero(totalRev) : '—';
-      document.getElementById('revSub').textContent = `Across ${totalEvents} events`;
-      document.getElementById('revPeriod').textContent = `${lastMonthly.length} months`;
-
-      const maxRev = Math.max(...lastMonthly.map(m => m.rev), 1);
-      const bestRev = Math.max(...lastMonthly.filter(m => !m.isOpen).map(m => m.rev), 0);
-      document.getElementById('revBars').innerHTML = lastMonthly.map(m => {
-        const h = Math.max(2, m.rev / maxRev * 100);
-        const isBest = m.rev === bestRev && !m.isOpen && bestRev > 0;
-        const color = m.isOpen ? 'from-zinc-700 to-zinc-600 border border-dashed border-zinc-500' : (isBest ? 'from-emerald-500 to-emerald-400' : 'from-indigo-500 to-indigo-400');
-        const labelColor = m.isOpen ? 'text-amber-600 dark:text-amber-400' : isBest ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-zinc-500';
-        return `<div class="flex flex-col items-center gap-1">
-          <div class="w-full bg-gradient-to-t ${color} rounded-sm" style="height:${h}%;"></div>
-          <div class="text-[10px] ${labelColor}">${esc(m.shortLabel)}${m.isOpen ? '*' : ''}</div>
-        </div>`;
-      }).join('');
-
-      document.getElementById('roasHero').innerHTML = aggRoas ? aggRoas.toFixed(2) + '<span class="text-3xl ml-1">x</span>' : '—';
-      document.getElementById('paidRoasVal').textContent = fmtROAS(aggPaidRoas);
-      document.getElementById('cpsVal').textContent = fmtMoneyRaw(aggCps);
-
-      document.getElementById('secKpis').innerHTML = `
-        ${kpiCard('Sales', fmtN(totalSales), totalEvents + ' events · ' + (totalSales / Math.max(1,totalEvents)).toFixed(1) + ' avg')}
-        ${kpiCard('Paid Spend', fmtMoney(totalSpend), `${moneySym()}${Math.round(totalSpend/Math.max(1,totalEvents)).toLocaleString()} avg`)}
-        ${kpiCard('IQLs Generated', fmtN(totalRegs), `CPIQL <span class="text-zinc-700 dark:text-zinc-300">${fmtMoneyRaw(aggCpiql)}</span>`)}
-        ${kpiCard('Lead → Sale', aggSaleRate != null ? aggSaleRate.toFixed(2) + '%' : '—', 'Industry <span class="text-zinc-700 dark:text-zinc-300">0.8–1.5%</span>')}
-      `;
-
-      // Non-overlapping call stages: pre + 0-14D (cumulative) + 14D+ (exclusive).
-      // Matches event.html SUM_IDX [0,3,4]; previously summed pre+p2+p14p which
-      // both double-counted (p2 ⊂ p14) and skipped 3-14D calls entirely.
-      const totalCalls = lastMonthly.reduce((s,m) => s + m.events.reduce((s2,e) => s2 + ((e.snapshot?.call_pre_attempts||0) + (e.snapshot?.call_p14_attempts||0) + (e.snapshot?.call_p14p_attempts||0)), 0), 0);
-      document.getElementById('funnelArea').innerHTML = `
-        ${funnelStage('Spend', fmtMoney(totalSpend), 'Meta only', false)}
-        ${funnelStage('IQLs', fmtN(totalRegs), `<span class="text-emerald-600 dark:text-emerald-400">${fmtMoneyRaw(aggCpiql)}</span> <span class="text-zinc-400 dark:text-zinc-600">CPIQL</span>`, false)}
-        ${funnelStage('Attendees', fmtN(totalAtt), `<span class="text-emerald-600 dark:text-emerald-400">${fmtPct(aggAttRate, 1)}</span> <span class="text-zinc-400 dark:text-zinc-600">show-up</span>`, false)}
-        ${funnelStage('Sales Calls', fmtN(totalCalls), totalCalls > 0 ? `<span class="text-zinc-700 dark:text-zinc-300">${(totalCalls/Math.max(1,totalRegs)).toFixed(1)}</span> <span class="text-zinc-400 dark:text-zinc-600">calls/lead</span>` : '', false)}
-        ${funnelStage('Sales', fmtN(totalSales), `<span class="text-emerald-600 dark:text-emerald-400">${fmtMoney(totalRev)}</span> <span class="text-zinc-400 dark:text-zinc-600">rev</span>`, true)}
-      `;
-
-      renderTrend('roas');
-      renderLeaderboard();
-      renderInsights();
-    }
-
-    function formatRevHero(n) {
-      // Prefix currency symbol so the hero number is unambiguous (was rendering bare 'L'/'Cr' for US, which read as INR).
-      const sym = moneySym();
-      if (isUS()) {
-        if (n >= 1e9) { const v = n / 1e9; return `${sym}${v.toFixed(1).replace(/\.0$/,'')}<span class="text-3xl text-zinc-500 ml-1">B</span>`; }
-        if (n >= 1e6) { const v = n / 1e6; return `${sym}${v.toFixed(1).replace(/\.0$/,'')}<span class="text-3xl text-zinc-500 ml-1">M</span>`; }
-        if (n >= 1000) { const v = n / 1000; return `${sym}${v.toFixed(1).replace(/\.0$/,'')}<span class="text-3xl text-zinc-500 ml-1">K</span>`; }
-        return `${sym}${Math.round(n).toLocaleString()}`;
-      }
-      if (n >= 1e7) { const v = n / 1e7; return `${sym}${v.toFixed(v >= 10 ? 1 : 2).replace(/\.?0+$/,'')}<span class="text-3xl text-zinc-500 ml-1">Cr</span>`; }
-      if (n >= 1e5) { const v = n / 1e5; return `${sym}${v.toFixed(1)}<span class="text-3xl text-zinc-500 ml-1">L</span>`; }
-      return `${sym}${Math.round(n).toLocaleString()}`;
-    }
-
-    function kpiCard(label, value, sub) {
-      return `<div class="p-5 rounded-xl bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80">
-        <div class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-2">${esc(label)}</div>
-        <div class="num-big text-3xl font-bold tabular text-zinc-900 dark:text-zinc-100">${value === '—' ? '—' : value}</div>
-        <div class="mt-2 text-[11px] text-zinc-500">${sub}</div>
+    let html = `<div class="tt-title">${esc(fmtMonthFull(slug))}</div>`;
+    html += `<div class="tt-row">
+      <span class="tt-dot" style="background:${lineDef.color}"></span>
+      <span class="tt-name">${esc(getMetricLabel(lineDef.id))}</span>
+      <span class="tt-val">${esc(fmtNullable(lineDef, lineV))}</span>
+    </div>`;
+    if (barsDef) {
+      html += `<div class="tt-row">
+        <span class="tt-dot" style="background:${barsDef.color}"></span>
+        <span class="tt-name">${esc(getMetricLabel(barsDef.id))}</span>
+        <span class="tt-val">${esc(fmtNullable(barsDef, barsV))}</span>
       </div>`;
     }
+    tooltip.innerHTML = html;
+  });
 
-    function funnelStage(label, value, sub, isLast) {
-      const cls = isLast ? 'p-5 rounded-xl bg-gradient-to-br from-emerald-950/40 to-zinc-900 border border-emerald-300 dark:border-emerald-900/40' : 'funnel-stage stage-arrow p-5 rounded-xl bg-white/80 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800';
-      const lblCls = isLast ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500';
-      const valCls = isLast ? 'gradient-text-em' : 'text-zinc-900 dark:text-zinc-100';
-      return `<div class="${cls}">
-        <div class="text-[10px] font-medium ${lblCls} uppercase tracking-widest mb-2">${esc(label)}</div>
-        <div class="num-big text-2xl font-bold tabular ${valCls}">${value}</div>
-        ${sub ? `<div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px]">${sub}</div>` : `<div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-400 dark:text-zinc-600">—</div>`}
+  chartArea.addEventListener('mouseleave', () => { lastIdx = -1; });
+}
+
+// ── LEAD QUALITY BLOCK (heatmap · % share per month) ──────────────────
+function renderQuality() {
+  const grid = document.getElementById('qualityGrid');
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const roleKeys = isUS()
+    ? [
+        { key: 'role_ml',         label: 'Data',       color: '#ec4899' },
+        { key: 'role_sde',        label: 'SDE',        color: '#6366f1' },
+        { key: 'role_management', label: 'Management', color: '#f59e0b' },
+        { key: 'role_systems',    label: 'Systems',    color: '#10b981' },
+        { key: 'role_null',       label: 'Null',       color: '#a1a1aa' },
+        { key: 'role_other',      label: 'Other',      color: '#71717a' },
+      ]
+    : [
+        { key: 'role_sde',        label: 'Software',   color: '#6366f1' },
+        { key: 'role_management', label: 'Management', color: '#f59e0b' },
+        { key: 'role_ml',         label: 'Data',       color: '#ec4899' },
+        { key: 'role_systems',    label: 'Systems',    color: '#10b981' },
+      ];
+
+  const weKeys = isUS()
+    ? [
+        { key: 'we_3_5',   label: '0–5y',   color: '#fbbf24' },
+        { key: 'we_6_10',  label: '5–10y',  color: '#f59e0b' },
+        { key: 'we_10_15', label: '10–15y', color: '#ec4899' },
+        { key: 'we_15_20', label: '15–20y', color: '#a78bfa' },
+        { key: 'we_20p',   label: '20+y',   color: '#6366f1' },
+        { key: 'we_other', label: 'Other',  color: '#a1a1aa' },
+      ]
+    : [
+        { key: 'we_6_10',  label: '5–9',   color: '#f59e0b' },
+        { key: 'we_10_15', label: '10–15', color: '#ec4899' },
+        { key: 'we_15_20', label: '16–20', color: '#a78bfa' },
+        { key: 'we_20p',   label: '20+',   color: '#6366f1' },
+      ];
+
+  // Pre-compute % data so we can reuse for rendering + hover + modal
+  function computePcts(keys) {
+    const monthTotals = monthsData.map(m => keys.reduce((s, k) => s + (m[k.key] || 0), 0));
+    return keys.map(k =>
+      monthsData.map((m, i) => {
+        const t = monthTotals[i];
+        return t > 0 ? (m[k.key] || 0) / t * 100 : null;
+      })
+    );
+  }
+  const rolePcts = computePcts(roleKeys);
+  const wePcts   = computePcts(weKeys);
+
+  // Cache for modal expansion
+  lqChartCache.role = { title: 'Domain',          sub: '% share over time', keys: roleKeys, pcts: rolePcts };
+  lqChartCache.we   = { title: 'Work experience', sub: '% share over time', keys: weKeys,   pcts: wePcts   };
+
+  grid.innerHTML = [
+    pctLineChart('Domain',          '% share over time', roleKeys, rolePcts, isDark, { expandId: 'role' }),
+    pctLineChart('Work experience', '% share over time', weKeys,   wePcts,   isDark, { expandId: 'we'   }),
+  ].join('');
+  wireMonthClicks(grid);
+
+  // Wire hover tooltips on both charts
+  const cards = grid.querySelectorAll('.chart-card');
+  if (cards[0]) wireLqHover(cards[0], roleKeys, rolePcts);
+  if (cards[1]) wireLqHover(cards[1], weKeys,   wePcts);
+}
+
+// Cache for the modal — lets us re-render any LQ chart at larger size
+const lqChartCache = {};
+
+function openLqModal(chartId) {
+  const cfg = lqChartCache[chartId];
+  if (!cfg) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  const content = document.getElementById('chartModalContent');
+  content.innerHTML = pctLineChart(cfg.title, cfg.sub, cfg.keys, cfg.pcts, isDark, {
+    chartHeight: 440,
+    closeable: true,
+  });
+  document.getElementById('chartModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  const card = content.querySelector('.chart-card');
+  if (card) wireLqHover(card, cfg.keys, cfg.pcts);
+  wireMonthClicks(content);
+}
+
+function closeLqModal() {
+  const modal = document.getElementById('chartModal');
+  if (modal) modal.classList.remove('show');
+  const content = document.getElementById('chartModalContent');
+  if (content) content.innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('chartModal');
+    if (modal && modal.classList.contains('show')) closeLqModal();
+  }
+});
+
+function wireLqHover(card, keys, pctsPerKey) {
+  const chartArea = card.querySelector('.chart-area');
+  const tooltip   = card.querySelector('.perf-tooltip');
+  const guide     = card.querySelector('.perf-guideline');
+  if (!chartArea || !tooltip || !guide) return;
+  const n = monthsData.length;
+  let lastIdx = -1;
+
+  chartArea.addEventListener('mousemove', (e) => {
+    const rect = chartArea.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const slotW = rect.width / n;
+    const idx = Math.max(0, Math.min(n - 1, Math.floor(x / slotW)));
+    const cx = slotW * (idx + 0.5);
+    guide.style.left   = cx + 'px';
+    tooltip.style.left = cx + 'px';
+    if (idx === lastIdx) return;
+    lastIdx = idx;
+
+    const slug = monthsData[idx].month_slug;
+    let html = `<div class="tt-title">${esc(fmtMonthFull(slug))}</div>`;
+    keys.forEach((k, ki) => {
+      const v = pctsPerKey[ki][idx];
+      html += `<div class="tt-row">
+        <span class="tt-dot" style="background:${k.color}"></span>
+        <span class="tt-name">${esc(k.label)}</span>
+        <span class="tt-val">${v != null ? v.toFixed(1) + '%' : '—'}</span>
       </div>`;
-    }
+    });
+    tooltip.innerHTML = html;
+  });
 
-    function renderTrend(metric) {
-      const ctx = document.getElementById('trendChart').getContext('2d');
-      const labels = lastMonthly.map(m => m.shortLabel + (m.isOpen ? '*' : ''));
-      const valueFor = m => { switch (metric) { case 'roas': return m.roas; case 'revenue': return m.rev; case 'sales': return m.sales; case 'spend': return m.spend; case 'cpiql': return m.cpiql; } return 0; };
-      const data = lastMonthly.map(valueFor);
-      const fmt = v => { if (v == null) return '—'; if (metric === 'roas') return v.toFixed(2) + 'x'; if (metric === 'sales') return Math.round(v); if (metric === 'cpiql') return fmtMoneyRaw(v); return fmtMoney(v); };
+  chartArea.addEventListener('mouseleave', () => { lastIdx = -1; });
+}
 
-      if (chart) chart.destroy();
-      const gradient = ctx.createLinearGradient(0, 0, 0, 288);
-      gradient.addColorStop(0, 'rgba(99,102,241,0.35)');
-      gradient.addColorStop(1, 'rgba(99,102,241,0)');
+function pctLineChart(title, sub, keys, pctsPerKey, isDark, opts) {
+  opts = opts || {};
+  const chartHeight = opts.chartHeight || 220;
+  let actionBtn = '';
+  if (opts.expandId) {
+    actionBtn = `<button class="lq-icon-btn" onclick="openLqModal('${opts.expandId}')" title="Expand chart" aria-label="Expand">⤢</button>`;
+  } else if (opts.closeable) {
+    actionBtn = `<button class="lq-icon-btn" onclick="closeLqModal()" title="Close" aria-label="Close">✕</button>`;
+  }
+  const n = monthsData.length;
+  if (n === 0) {
+    return `<div class="chart-card">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="h-chart">${esc(title)}</div>
+        <div class="chart-sub">${esc(sub)}</div>
+      </div>
+      <div class="text-xs text-zinc-400 py-6 text-center">No data</div>
+    </div>`;
+  }
 
-      const datasets = [{
-        label: metric, data,
-        borderColor: '#818cf8', backgroundColor: gradient, fill: true, tension: 0.35, borderWidth: 2.5,
-        pointBackgroundColor: '#a5b4fc', pointRadius: 5, pointBorderColor: '#1e1b4b', pointBorderWidth: 2, pointHoverRadius: 7,
-      }];
-      if (metric === 'roas') {
-        datasets.push({ label: 'Target', data: lastMonthly.map(() => 5), borderColor: 'rgba(244,63,94,0.4)', borderDash: [6,6], borderWidth: 1.5, pointRadius: 0, fill: false });
-      }
+  // Y-axis max — nearest 10 above the highest value (min 20%)
+  const allVals = pctsPerKey.flat().filter(v => v != null);
+  const dataMax = allVals.length ? Math.max(...allVals) : 50;
+  const niceMax = Math.max(20, Math.ceil(dataMax / 10) * 10);
 
-      chart = new Chart(ctx, {
-        type: 'line', data: { labels, datasets },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor: '#18181b', borderColor: '#3f3f46', borderWidth: 1, titleColor: '#fafafa', bodyColor: '#d4d4d8', padding: 12, displayColors: false, callbacks: { label: c => c.datasetIndex === 1 ? `Target: 5.00x` : fmt(c.parsed.y) } }
-          },
-          scales: {
-            x: { grid: {display:false}, ticks: {color:'#71717a', font:{size:11}}, border: {color:'#3f3f46'} },
-            y: { beginAtZero: true, grid: {color:'rgba(63,63,70,0.4)'}, ticks: {color:'#71717a', font:{size:11}, callback: v => metric === 'roas' ? v+'x' : metric === 'sales' ? v : metric === 'cpiql' ? fmtMoneyRaw(v) : fmtMoney(v)}, border:{color:'#3f3f46'} }
-          }
-        }
-      });
-    }
+  // SVG canvas — line points centered in slots so x-axis labels (flex:1, centered) align
+  const W = 720, H = 220;
+  const slot = W / n;
+  const slugs = monthsData.map(m => m.month_slug);
+  function xOf(i) { return slot * i + slot / 2; }
+  function yOf(v) { return H - (v / niceMax) * H; }
 
-    function renderLeaderboard() {
-      const ranked = lastEvents.slice().sort((a,b) => (b.snapshot?.overall_roas||0) - (a.snapshot?.overall_roas||0));
-      const closed = ranked.filter(ev => !isPipelineOpen(ev));
-      const top3 = new Set(closed.slice(0,3).map(e => e.event_id));
-      const bot3 = new Set(closed.slice(-3).map(e => e.event_id));
+  // Y-axis ticks
+  const tickStep = niceMax > 60 ? 20 : niceMax > 30 ? 10 : 5;
+  const ticks = [];
+  for (let v = 0; v <= niceMax; v += tickStep) {
+    const p = ((niceMax - v) / niceMax) * 100;
+    ticks.push({ p, v });
+  }
+  // Gridlines
+  const gridSVG = ticks.map(t => {
+    const y = (t.p / 100) * H;
+    return `<line class="perf-gridline" x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/>`;
+  }).join('');
 
-      const tbody = document.getElementById('leaderboardBody');
-      const showAll = ranked.length <= 10;
-      const visible = showAll ? ranked : [...ranked.slice(0,3), 'COLLAPSE', ...ranked.slice(-3)];
+  // Smooth lines per category
+  const linesSVG = keys.map((k, ki) => {
+    const pcts = pctsPerKey[ki];
+    const pts = [];
+    pcts.forEach((v, i) => {
+      if (v != null) pts.push({ x: xOf(i), y: yOf(v), v, slug: slugs[i] });
+    });
+    if (pts.length < 2) return '';
+    const d = smoothPath(pts);
+    return `<path d="${d}" stroke="${k.color}" stroke-width="2.25" fill="none" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>`;
+  }).join('');
 
-      tbody.innerHTML = visible.map(ev => {
-        if (ev === 'COLLAPSE') {
-          const hidden = ranked.length - 6;
-          return `<tr class="bg-zinc-950/40"><td colspan="8" class="px-4 py-2.5 text-center text-[11px] text-zinc-400 dark:text-zinc-600">↓ ${hidden} more events ↓</td></tr>`;
-        }
-        const s = ev.snapshot || {};
-        const open = isPipelineOpen(ev);
-        const roas = s.overall_roas;
-        const rowCls = top3.has(ev.event_id) ? 'row-highlight-top' : bot3.has(ev.event_id) ? 'row-highlight-bot' : '';
-        const roasCls = roas == null ? 'text-zinc-500' : roas >= 8 ? 'gradient-text-em font-bold' : roas >= 4 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : roas >= 2 ? 'text-zinc-800 dark:text-zinc-200' : 'text-rose-600 dark:text-rose-400 font-bold';
-        const signal = top3.has(ev.event_id) && !open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">★ ${roas >= 10 ? 'Best' : 'Strong'}</span>` : open ? `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">⏱ Pipeline</span>` : `<span class="text-[10px] text-zinc-500">—</span>`;
-        return `<tr class="${rowCls} hover:bg-zinc-100 dark:hover:bg-zinc-900/40 cursor-pointer" onclick="location.href='/event.html?id=${encodeURIComponent(ev.event_id)}'">
-          <td class="px-4 py-3">
-            <div class="font-medium text-zinc-900 dark:text-zinc-100">${esc(ev.title || ev.event_id)}</div>
-            <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}</div>
-          </td>
-          <td class="px-4 py-3 text-right text-zinc-500">${esc(fmtDate(ev.live_at))}</td>
-          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${fmtMoneyRaw(s.meta_spend)}</td>
-          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${s.total_regs != null ? Math.round(s.total_regs).toLocaleString() : '—'}</td>
-          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${s.sales != null ? s.sales : '—'}</td>
-          <td class="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">${revLocal(s) ? fmtMoneyRaw(revLocal(s)) : '—'}</td>
-          <td class="px-4 py-3 text-right ${roasCls}">${fmtROAS(roas)}${open ? '*' : ''}</td>
-          <td class="px-4 py-3 text-center">${signal}</td>
-        </tr>`;
-      }).join('');
-    }
+  // Markers per data point (clickable + tooltip via <title>)
+  const markersSVG = keys.map((k, ki) => {
+    const pcts = pctsPerKey[ki];
+    return pcts.map((v, i) => {
+      if (v == null) return '';
+      const slug = slugs[i];
+      const sel = selectedMonth === slug;
+      const dim = selectedMonth && !sel;
+      const cx = xOf(i), cy = yOf(v);
+      const r = sel ? 4.5 : 3;
+      const markerFill = isDark ? '#0c0c0e' : '#fff';
+      return `<g class="month-bar${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}">
+        <circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="9" fill="transparent"/>
+        <circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r}" fill="${markerFill}" stroke="${k.color}" stroke-width="2"/>
+        <title>${fmtMonthFull(slug)} · ${esc(k.label)}: ${v.toFixed(1)}%</title>
+      </g>`;
+    }).join('');
+  }).join('');
 
-    function renderInsights() {
-      const ranked = lastEvents.filter(ev => !isPipelineOpen(ev) && ev.snapshot?.overall_roas != null).sort((a,b) => b.snapshot.overall_roas - a.snapshot.overall_roas);
-      const bestEv = ranked[0];
-      const lastM = lastMonthly[lastMonthly.length - 1];
-      const isLastMOpen = lastM?.isOpen;
-      const avgRoas = ranked.reduce((s,e) => s + e.snapshot.overall_roas, 0) / Math.max(1, ranked.length);
-      const totalRegs = lastEvents.reduce((s,e) => s + (e.snapshot?.total_regs||0), 0);
-      const totalAtt = lastEvents.reduce((s,e) => s + (e.snapshot?.attendees||0), 0);
-      const totalSales = lastEvents.reduce((s,e) => s + (e.snapshot?.sales||0), 0);
-      const aggAttRate = totalRegs > 0 ? totalAtt/totalRegs*100 : 0;
-      const saleRate = totalRegs > 0 ? totalSales/totalRegs*100 : 0;
+  // X-axis labels
+  const labelStep = n > 18 ? 3 : n > 12 ? 2 : 1;
+  const xAxisHTML = monthsData.map((m, i) => {
+    const sel = selectedMonth === m.month_slug;
+    const visible = (i % labelStep === 0) || (i === n - 1);
+    if (!visible) return `<span data-slug="${m.month_slug}" style="visibility:hidden">${fmtMonthLabel(m.month_slug)}</span>`;
+    return `<span data-slug="${m.month_slug}"${sel ? ' class="selected"' : ''}>${fmtMonthLabel(m.month_slug)}</span>`;
+  }).join('');
 
-      const insights = [];
-      if (bestEv) insights.push({ tone: 'emerald', title: 'Winning Pattern', body: `<b>${esc(bestEv.title)}</b> drove <span class="text-emerald-700 dark:text-emerald-300 font-semibold">${fmtROAS(bestEv.snapshot.overall_roas)}</span> ROAS${avgRoas > 0 ? ` — ${(bestEv.snapshot.overall_roas/avgRoas*100 - 100).toFixed(0)}% above portfolio average` : ''}.`, action: 'Investigate what worked and replicate (topic, presenter, budget)' });
-      if (isLastMOpen && lastM.roas != null) insights.push({ tone: 'amber', title: 'Efficiency Drop (expected)', body: `<b>${esc(lastM.label)}</b> ROAS at <span class="text-amber-700 dark:text-amber-300 font-semibold">${fmtROAS(lastM.roas)}</span> reflects open pipeline, not weak performance. Historical lift over 14 days is <span class="text-zinc-700 dark:text-zinc-300 font-semibold">+25–40%</span>.`, action: `Re-evaluate after ${new Date(Date.now() + 14*86400000).toLocaleDateString('en-US', {month:'short', day:'numeric'})}` });
-      if (saleRate > 0 && aggAttRate > 0) insights.push({ tone: 'indigo', title: 'Funnel Bottleneck', body: `Show-up rate <span class="text-zinc-700 dark:text-zinc-300 font-semibold">${aggAttRate.toFixed(0)}%</span> is in benchmark — but only <span class="text-zinc-700 dark:text-zinc-300 font-semibold">${saleRate.toFixed(2)}%</span> of leads buy. The gap is at <b>attendee → sale</b>.`, action: 'Push sales call connectivity for next 5 events' });
-      // India-only insight — MASTERCLASS_INDIA_2 doesn't exist for US, and the
-      // hardcoded ₹1.5 Cr would render wrong on the US dashboard.
-      if (!isUS()) {
-        insights.push({ tone: 'zinc', title: 'Coverage Gap', body: `Recurring MASTERCLASS_INDIA_2 series events aren't tracked in this dashboard. Backfill estimated to add <span class="text-zinc-700 dark:text-zinc-300 font-semibold">~₹1.5 Cr</span> attributable revenue.`, action: 'Backfill weekly recurring series' });
-      }
+  // Y-axis labels (HTML, positioned over chart)
+  const yAxisHTML = ticks.map(t =>
+    `<div class="ytick" style="top:${t.p}%;color:#71717a">${t.v}%</div>`
+  ).join('');
 
-      const colorMap = {
-        emerald: { border: 'border-emerald-300 dark:border-emerald-900/40', bg: 'from-emerald-950/30', icon: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300', label: 'text-emerald-600 dark:text-emerald-400' },
-        amber:   { border: 'border-amber-300 dark:border-amber-900/40',   bg: 'from-amber-950/30',   icon: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',   label: 'text-amber-600 dark:text-amber-400' },
-        indigo:  { border: 'border-zinc-200 dark:border-zinc-800',       bg: '',                    icon: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300', label: 'text-indigo-600 dark:text-indigo-400' },
-        zinc:    { border: 'border-zinc-200 dark:border-zinc-800',       bg: '',                    icon: 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300',        label: 'text-zinc-500' },
-      };
+  // Legend below the chart — shows latest %
+  const legendHTML = keys.map((k, ki) => {
+    const pcts = pctsPerKey[ki];
+    const last = [...pcts].reverse().find(v => v != null);
+    return `<div class="lq-legend-item">
+      <span class="lq-dot" style="background:${k.color}"></span>
+      <span class="lq-legend-name">${esc(k.label)}</span>
+      <span class="lq-legend-val">${last != null ? last.toFixed(0) + '%' : '—'}</span>
+    </div>`;
+  }).join('');
 
-      document.getElementById('insightsArea').innerHTML = insights.map(ins => {
-        const c = colorMap[ins.tone];
-        return `<div class="p-5 rounded-xl border ${c.border} ${c.bg ? `bg-gradient-to-br ${c.bg} to-zinc-900/40` : 'bg-white/80 dark:bg-zinc-900/40'}">
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg ${c.icon} flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-            </div>
-            <div class="flex-1">
-              <div class="text-[10px] uppercase tracking-widest ${c.label} mb-1">${esc(ins.title)}</div>
-              <div class="text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed">${ins.body}</div>
-              ${ins.action ? `<div class="mt-2 text-xs text-zinc-500">Recommended action: ${esc(ins.action)}</div>` : ''}
-            </div>
+  return `
+    <div class="chart-card">
+      <div class="flex items-start justify-between mb-3 gap-2 flex-wrap">
+        <div>
+          <div class="h-chart">${esc(title)}</div>
+          <div class="chart-sub">${esc(sub)}</div>
+        </div>
+        ${actionBtn}
+      </div>
+      <div class="chart-canvas chart-canvas-single" style="grid-template-columns:42px 1fr">
+        <div class="yaxis yaxis-left" style="height:${chartHeight}px">${yAxisHTML}</div>
+        <div class="chart-svg-wrap">
+          <div class="chart-area" style="height:${chartHeight}px">
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+              ${gridSVG}
+              ${linesSVG}
+              ${markersSVG}
+            </svg>
+            <div class="perf-guideline"></div>
+            <div class="perf-tooltip"></div>
           </div>
-        </div>`;
-      }).join('');
-    }
+          <div class="chart-xaxis">${xAxisHTML}</div>
+        </div>
+      </div>
+      <div class="lq-legend">${legendHTML}</div>
+    </div>`;
+}
 
-    document.addEventListener('click', e => {
-      const btn = e.target.closest('#trendPills button');
-      if (!btn) return;
-      const metric = btn.dataset.metric;
-      document.querySelectorAll('#trendPills button').forEach(b => { b.className = 'px-3 py-1.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800'; });
-      btn.className = 'px-3 py-1.5 rounded-md pill-active text-indigo-200 font-medium border';
-      renderTrend(metric);
+function combinedHeatmapCard(title, sub, groups, isDark) {
+  const n = monthsData.length;
+  if (n === 0) {
+    return `<div class="chart-card">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="h-chart">${esc(title)}</div>
+        <div class="chart-sub">${esc(sub)}</div>
+      </div>
+      <div class="text-xs text-zinc-400 py-6 text-center">No data</div>
+    </div>`;
+  }
+
+  const labelStep = n > 18 ? 3 : n > 12 ? 2 : 1;
+  const headerCells = monthsData.map((m, i) => {
+    const sel = selectedMonth === m.month_slug;
+    const visible = (i % labelStep === 0) || (i === n - 1);
+    const label = visible ? fmtMonthLabel(m.month_slug) : '';
+    return `<div class="lq-month${sel?' selected':''}" data-slug="${m.month_slug}">${esc(label)}</div>`;
+  }).join('');
+
+  const sections = groups.map(group => {
+    const { label: sectionLabel, keys } = group;
+
+    // % share per month within this section
+    const monthTotals = monthsData.map(m => keys.reduce((s, k) => s + (m[k.key] || 0), 0));
+    const pcts = monthsData.map((m, i) => {
+      const t = monthTotals[i];
+      const r = {};
+      keys.forEach(k => { r[k.key] = t > 0 ? (m[k.key] || 0) / t * 100 : null; });
+      return r;
     });
 
-    applyCountryButtons();
-    applyTheme();
-    checkAuth();
-  </script>
+    // Max % in this section (normalize intensity)
+    let maxPct = 0;
+    pcts.forEach(p => keys.forEach(k => {
+      if (p[k.key] != null && p[k.key] > maxPct) maxPct = p[k.key];
+    }));
+    maxPct = Math.max(maxPct, 1);
+
+    const rows = keys.map(k => {
+      const cells = pcts.map((p, i) => {
+        const slug = monthsData[i].month_slug;
+        const sel = selectedMonth === slug;
+        const dim = selectedMonth && !sel;
+        const v = p[k.key];
+        if (v == null) {
+          return `<div class="lq-cell lq-cell-empty${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}" title="${esc(fmtMonthFull(slug))} · ${esc(k.label)}: no data">—</div>`;
+        }
+        const intensity = v / maxPct;
+        const alphaVal = Math.round((0.10 + intensity * 0.82) * 255);
+        const alphaHex = alphaVal.toString(16).padStart(2, '0');
+        const bg = k.color + alphaHex;
+        const textColor = intensity > 0.55 ? '#ffffff' : (isDark ? '#e4e4e7' : '#3f3f46');
+        return `<div class="lq-cell${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}" style="background:${bg};color:${textColor}" title="${esc(fmtMonthFull(slug))} · ${esc(k.label)}: ${v.toFixed(1)}%">${v.toFixed(0)}%</div>`;
+      }).join('');
+      return `<div class="lq-row">
+        <div class="lq-cat">
+          <span class="lq-dot" style="background:${k.color}"></span>
+          <span>${esc(k.label)}</span>
+        </div>
+        ${cells}
+      </div>`;
+    }).join('');
+
+    return `<div class="lq-section">${esc(sectionLabel)}</div>${rows}`;
+  }).join('');
+
+  return `
+    <div class="chart-card">
+      <div class="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
+        <div class="h-chart">${esc(title)}</div>
+        <div class="chart-sub">${esc(sub)}</div>
+      </div>
+      <div class="lq-heatmap" style="--lq-n:${n}">
+        <div class="lq-row lq-header">
+          <div></div>
+          ${headerCells}
+        </div>
+        ${sections}
+      </div>
+    </div>`;
+}
+
+function heatmapCard(title, sub, keys, isDark) {
+  const n = monthsData.length;
+  if (n === 0) {
+    return `<div class="chart-card">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="h-chart">${esc(title)}</div>
+        <div class="chart-sub">${esc(sub)}</div>
+      </div>
+      <div class="text-xs text-zinc-400 py-6 text-center">No data</div>
+    </div>`;
+  }
+
+  // % share per (month, category)
+  const monthTotals = monthsData.map(m => keys.reduce((s, k) => s + (m[k.key] || 0), 0));
+  const pcts = monthsData.map((m, i) => {
+    const t = monthTotals[i];
+    const r = {};
+    keys.forEach(k => { r[k.key] = t > 0 ? (m[k.key] || 0) / t * 100 : null; });
+    return r;
+  });
+
+  // Max % across all cells (normalize intensity)
+  let maxPct = 0;
+  pcts.forEach(p => keys.forEach(k => {
+    if (p[k.key] != null && p[k.key] > maxPct) maxPct = p[k.key];
+  }));
+  maxPct = Math.max(maxPct, 1);
+
+  // Skip some month labels if too many
+  const labelStep = n > 18 ? 3 : n > 12 ? 2 : 1;
+
+  const headerCells = monthsData.map((m, i) => {
+    const sel = selectedMonth === m.month_slug;
+    const visible = (i % labelStep === 0) || (i === n - 1);
+    const label = visible ? fmtMonthLabel(m.month_slug) : '';
+    return `<div class="lq-month${sel?' selected':''}" data-slug="${m.month_slug}">${esc(label)}</div>`;
+  }).join('');
+
+  const rows = keys.map(k => {
+    const cells = pcts.map((p, i) => {
+      const slug = monthsData[i].month_slug;
+      const sel = selectedMonth === slug;
+      const dim = selectedMonth && !sel;
+      const v = p[k.key];
+      if (v == null) {
+        return `<div class="lq-cell lq-cell-empty${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}" title="${esc(fmtMonthFull(slug))} · ${esc(k.label)}: no data">—</div>`;
+      }
+      const intensity = v / maxPct;
+      const alphaVal = Math.round((0.10 + intensity * 0.82) * 255);
+      const alphaHex = alphaVal.toString(16).padStart(2, '0');
+      const bg = k.color + alphaHex;
+      const textColor = intensity > 0.55 ? '#ffffff' : (isDark ? '#e4e4e7' : '#3f3f46');
+      return `<div class="lq-cell${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}" style="background:${bg};color:${textColor}" title="${esc(fmtMonthFull(slug))} · ${esc(k.label)}: ${v.toFixed(1)}%">${v.toFixed(0)}%</div>`;
+    }).join('');
+    return `<div class="lq-row">
+      <div class="lq-cat">
+        <span class="lq-dot" style="background:${k.color}"></span>
+        <span>${esc(k.label)}</span>
+      </div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="chart-card">
+      <div class="flex items-baseline justify-between mb-3 gap-2">
+        <div class="h-chart">${esc(title)}</div>
+        <div class="chart-sub">${esc(sub)}</div>
+      </div>
+      <div class="lq-heatmap" style="--lq-n:${n}">
+        <div class="lq-row lq-header">
+          <div></div>
+          ${headerCells}
+        </div>
+        ${rows}
+      </div>
+    </div>`;
+}
+
+// ── CALL EFFORTS BLOCK ───────────────────────────────────────────────
+const CALL_PHASES = [
+  { id: 'p2',   label: '0–2D',   color: '#34d399' },
+  { id: 'p7',   label: '0–7D',   color: '#fbbf24' },
+  { id: 'p14',  label: '0–14D',  color: '#fb923c' },
+  { id: 'p14p', label: '14D+',   color: '#f472b6' },
+];
+const CALL_METRICS = [
+  { id: 'cpu',  title: 'Calls / user',     sub: 'Attempts per registered lead',  fmt: v => v == null ? '—' : v.toFixed(2),         tickFmt: v => v.toFixed(1) },
+  { id: 'cov',  title: 'Call coverage',    sub: '% of leads with ≥1 attempt',     fmt: v => v == null ? '—' : v.toFixed(0) + '%',  tickFmt: v => Math.round(v) + '%' },
+  { id: 'conn', title: 'Connected / user', sub: 'Successful contacts per lead',  fmt: v => v == null ? '—' : v.toFixed(2),         tickFmt: v => v.toFixed(2) },
+  { id: 'talk', title: 'Talk time',        sub: 'Avg seconds per connected call', fmt: v => v == null ? '—' : Math.round(v) + 's', tickFmt: v => Math.round(v) + 's' },
+];
+
+function renderCalls() {
+  const grid = document.getElementById('callsGrid');
+  const isDark = document.documentElement.classList.contains('dark');
+  const slugs = monthsData.map(m => m.month_slug);
+
+  // Build per-metric / per-phase arrays
+  const seriesByMetric = {};
+  CALL_METRICS.forEach(metric => {
+    seriesByMetric[metric.id] = CALL_PHASES.map(phase => ({
+      phase,
+      values: monthsData.map(m => {
+        const ph = m.call_phases ? m.call_phases[phase.id] : null;
+        return ph ? ph[metric.id] : null;
+      }),
+    }));
+  });
+
+  // Cache for hover
+  callsRenderCache = { slugs, seriesByMetric };
+
+  grid.innerHTML = CALL_METRICS.map(metric =>
+    phaseLinesChart(metric, seriesByMetric[metric.id], slugs, isDark)
+  ).join('');
+  wireMonthClicks(grid);
+
+  const cards = grid.querySelectorAll('.chart-card');
+  cards.forEach((card, i) => {
+    wirePhaseHover(card, CALL_METRICS[i], seriesByMetric[CALL_METRICS[i].id], slugs);
+  });
+}
+
+let callsRenderCache = null;
+
+function phaseLinesChart(metric, series, slugs, isDark) {
+  const n = slugs.length;
+  if (n === 0) return `<div class="chart-card"><div class="h-chart">${esc(metric.title)}</div><div class="text-xs text-zinc-400 py-6 text-center">No data</div></div>`;
+
+  // Y-axis max from all phase values across all months for this metric
+  const allVals = series.flatMap(s => s.values).filter(v => v != null);
+  const dataMax = allVals.length ? Math.max(...allVals) : 1;
+  // For coverage cap at 100; otherwise nice rounded
+  const axis = metric.id === 'cov'
+    ? { max: Math.max(100, Math.ceil(dataMax / 25) * 25), interval: 25 }
+    : niceAxisFromZero(dataMax);
+  const yMax = axis.max;
+
+  const W = 720, H = 220;
+  const slot = W / n;
+  function xOf(i) { return slot * i + slot / 2; }
+  function yOf(v) { return H - (v / yMax) * H; }
+
+  // Ticks
+  const ticks = [];
+  for (let v = 0; v <= yMax + axis.interval * 0.001; v += axis.interval) ticks.push(v);
+  const tickStep = ticks.length > 6 ? 2 : 1; // skip every other tick if too many
+  const visibleTicks = ticks.filter((_, i) => i % tickStep === 0 || i === ticks.length - 1);
+
+  // Gridlines
+  const gridSVG = visibleTicks.map(v => {
+    const y = yOf(v);
+    return `<line class="perf-gridline" x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/>`;
+  }).join('');
+
+  // Lines + markers per phase
+  const linesSVG = series.map(s => {
+    const pts = [];
+    s.values.forEach((v, i) => {
+      if (v != null) pts.push({ x: xOf(i), y: yOf(Math.min(v, yMax)), v, slug: slugs[i] });
+    });
+    if (pts.length < 2) return '';
+    const d = smoothPath(pts);
+    return `<path d="${d}" stroke="${s.phase.color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>`;
+  }).join('');
+  const markersSVG = series.map(s =>
+    s.values.map((v, i) => {
+      if (v == null) return '';
+      const slug = slugs[i];
+      const sel = selectedMonth === slug;
+      const dim = selectedMonth && !sel;
+      const cx = xOf(i), cy = yOf(Math.min(v, yMax));
+      const r = sel ? 4.5 : 3;
+      const markerFill = isDark ? '#0c0c0e' : '#fff';
+      return `<g class="month-bar${sel?' selected':''}${dim?' dim':''}" data-slug="${slug}">
+        <circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="9" fill="transparent"/>
+        <circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r}" fill="${markerFill}" stroke="${s.phase.color}" stroke-width="1.75"/>
+      </g>`;
+    }).join('')
+  ).join('');
+
+  // Y-axis HTML labels
+  const yAxisHTML = visibleTicks.map(v => {
+    const p = (1 - v / yMax) * 100;
+    return `<div class="ytick" style="top:${p.toFixed(2)}%;color:#71717a">${esc(metric.tickFmt(v))}</div>`;
+  }).join('');
+
+  // X-axis labels
+  const labelStep = n > 18 ? 3 : n > 12 ? 2 : 1;
+  const xAxisHTML = monthsData.map((m, i) => {
+    const sel = selectedMonth === m.month_slug;
+    const visible = (i % labelStep === 0) || (i === n - 1);
+    if (!visible) return `<span data-slug="${m.month_slug}" style="visibility:hidden">${fmtMonthLabel(m.month_slug)}</span>`;
+    return `<span data-slug="${m.month_slug}"${sel ? ' class="selected"' : ''}>${fmtMonthLabel(m.month_slug)}</span>`;
+  }).join('');
+
+  // Legend with phase color + name + latest value
+  const legendHTML = series.map(s => {
+    const last = [...s.values].reverse().find(v => v != null);
+    return `<div class="lq-legend-item">
+      <span class="lq-dot" style="background:${s.phase.color}"></span>
+      <span class="lq-legend-name">${esc(s.phase.label)}</span>
+      <span class="lq-legend-val">${esc(last != null ? metric.fmt(last) : '—')}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="chart-card">
+      <div class="flex items-start justify-between mb-3 gap-2 flex-wrap">
+        <div>
+          <div class="h-chart">${esc(metric.title)}</div>
+          <div class="chart-sub">${esc(metric.sub)}</div>
+        </div>
+      </div>
+      <div class="chart-canvas chart-canvas-single" style="grid-template-columns:46px 1fr">
+        <div class="yaxis yaxis-left" style="height:220px">${yAxisHTML}</div>
+        <div class="chart-svg-wrap">
+          <div class="chart-area" style="height:220px">
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+              ${gridSVG}
+              ${linesSVG}
+              ${markersSVG}
+            </svg>
+            <div class="perf-guideline"></div>
+            <div class="perf-tooltip"></div>
+          </div>
+          <div class="chart-xaxis">${xAxisHTML}</div>
+        </div>
+      </div>
+      <div class="lq-legend">${legendHTML}</div>
+    </div>`;
+}
+
+function wirePhaseHover(card, metric, series, slugs) {
+  const chartArea = card.querySelector('.chart-area');
+  const tooltip   = card.querySelector('.perf-tooltip');
+  const guide     = card.querySelector('.perf-guideline');
+  if (!chartArea || !tooltip || !guide) return;
+  const n = slugs.length;
+  let lastIdx = -1;
+
+  chartArea.addEventListener('mousemove', (e) => {
+    const rect = chartArea.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const slotW = rect.width / n;
+    const idx = Math.max(0, Math.min(n - 1, Math.floor(x / slotW)));
+    const cx = slotW * (idx + 0.5);
+    guide.style.left   = cx + 'px';
+    tooltip.style.left = cx + 'px';
+    if (idx === lastIdx) return;
+    lastIdx = idx;
+
+    const slug = slugs[idx];
+    let html = `<div class="tt-title">${esc(fmtMonthFull(slug))}</div>`;
+    series.forEach(s => {
+      const v = s.values[idx];
+      html += `<div class="tt-row">
+        <span class="tt-dot" style="background:${s.phase.color}"></span>
+        <span class="tt-name">${esc(s.phase.label)}</span>
+        <span class="tt-val">${esc(v != null ? metric.fmt(v) : '—')}</span>
+      </div>`;
+    });
+    tooltip.innerHTML = html;
+  });
+  chartArea.addEventListener('mouseleave', () => { lastIdx = -1; });
+}
+
+// ─── Chart primitives ──────────────────────────────────────────────
+const W = 240, H = 96, PAD_L = 24, PAD_R = 8, PAD_T = 12, PAD_B = 20;
+
+function deltaChip(values, lowerIsBetter) {
+  // delta = last non-null vs prev non-null
+  const clean = values.map((v, i) => ({ v, i })).filter(x => x.v != null);
+  if (clean.length < 2) return '';
+  const last = clean[clean.length-1].v;
+  const prev = clean[clean.length-2].v;
+  if (last === 0 && prev === 0) return '';
+  const delta = prev !== 0 ? (100 * (last - prev) / prev) : (last > 0 ? 100 : 0);
+  if (Math.abs(delta) < 1) return '<span class="chip chip-flat">flat</span>';
+  const arrow = delta > 0 ? '↑' : '↓';
+  const positive = lowerIsBetter ? delta < 0 : delta > 0;
+  const cls = positive ? 'chip-up' : 'chip-down';
+  return `<span class="chip ${cls}">${arrow} ${Math.abs(delta).toFixed(0)}%</span>`;
+}
+
+function barChart({ title, sub, values, fmt, color, slugs, lowerIsBetter }) {
+  const max = Math.max(...values.map(v => v == null ? 0 : v), 0.001);
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const barW = innerW / values.length * 0.6;
+  const gap  = innerW / values.length;
+  const bars = values.map((v, i) => {
+    const val = v == null ? 0 : v;
+    const h = max > 0 ? (val / max) * innerH : 0;
+    const x = PAD_L + gap * i + (gap - barW) / 2;
+    const y = PAD_T + innerH - h;
+    const sel = selectedMonth === slugs[i];
+    const dim = selectedMonth && !sel;
+    return `<rect class="month-bar ${sel ? 'selected' : ''} ${dim ? 'dim' : ''}" data-slug="${slugs[i]}"
+            x="${x}" y="${y}" width="${barW}" height="${Math.max(2, h)}"
+            rx="2" fill="${color}">
+            <title>${fmtMonthFull(slugs[i])}: ${fmt(val)}</title>
+          </rect>`;
+  }).join('');
+  const labels = slugs.map((s, i) => {
+    const x = PAD_L + gap * i + gap / 2;
+    const sel = selectedMonth === s;
+    return `<text class="month-label ${sel ? 'selected' : ''}" data-slug="${s}" x="${x}" y="${H-6}" text-anchor="middle">${fmtMonthLabel(s)}</text>`;
+  }).join('');
+  const cleanVals = values.filter(v => v != null);
+  const latest = cleanVals[cleanVals.length-1];
+  return `
+    <div class="chart-card">
+      <div class="flex items-baseline justify-between mb-1">
+        <div>
+          <div class="h-chart">${esc(title)}</div>
+          <div class="chart-sub">${esc(sub)}</div>
+        </div>
+        ${deltaChip(values, lowerIsBetter)}
+      </div>
+      <div class="text-2xl font-bold tabular mt-1 mb-2">${fmt(latest)}</div>
+      <svg viewBox="0 0 ${W} ${H}" class="w-full">
+        <line class="gridline" x1="${PAD_L}" y1="${PAD_T + (H - PAD_T - PAD_B)/2}" x2="${W-PAD_R}" y2="${PAD_T + (H - PAD_T - PAD_B)/2}"/>
+        ${bars}
+        ${labels}
+      </svg>
+    </div>`;
+}
+
+function lineChart({ title, sub, values, fmt, color, slugs, lowerIsBetter }) {
+  const clean = values.map(v => v == null ? null : v);
+  const nonNull = clean.filter(v => v != null);
+  // Anchor y-axis at 0, top is nice rounded value
+  const dataMax = nonNull.length ? Math.max(...nonNull) : 1;
+  const axis = niceAxisFromZero(dataMax);
+  const yMax = axis.max || 1;
+  const PL = 36; // bigger left padding for proper y-axis labels
+  const innerW = W - PL - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const gap = innerW / clean.length;
+  const xy = clean.map((v, i) => {
+    if (v == null) return null;
+    const x = PL + gap * i + gap / 2;
+    const y = PAD_T + innerH - (v / yMax) * innerH;
+    return { x, y, i, v };
+  });
+  // Build path skipping nulls
+  const segments = [];
+  let cur = '';
+  xy.forEach(p => {
+    if (p == null) { if (cur) { segments.push(cur); cur = ''; } return; }
+    cur += (cur ? ' L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1);
+  });
+  if (cur) segments.push(cur);
+  const path = segments.map(d => `<path d="${d}" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`).join('');
+  // Area fill
+  let areaD = '';
+  xy.forEach(p => { if (p) areaD += (areaD ? ' L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); });
+  if (areaD) areaD += ` L ${(PL + gap * (clean.length-1) + gap/2).toFixed(1)} ${(PAD_T + innerH).toFixed(1)} L ${(PL + gap/2).toFixed(1)} ${(PAD_T + innerH).toFixed(1)} Z`;
+  // Y-axis ticks + gridlines (anchored at 0)
+  const ticks = [];
+  for (let v = 0; v <= yMax + axis.interval * 0.001; v += axis.interval) {
+    ticks.push(v);
+  }
+  const tickHTML = ticks.map(v => {
+    const y = PAD_T + innerH - (v / yMax) * innerH;
+    return `<line class="gridline" x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PAD_R}" y2="${y.toFixed(1)}"/>
+      <text class="axis-text" x="${PL - 3}" y="${(y+3).toFixed(1)}" text-anchor="end">${esc(fmt(v))}</text>`;
+  }).join('');
+  // Dots
+  const dots = clean.map((v, i) => {
+    const slug = slugs[i];
+    const sel = selectedMonth === slug;
+    const dim = selectedMonth && !sel;
+    const x = PL + gap * i + gap / 2;
+    if (v == null) {
+      return `<circle class="month-bar ${dim ? 'dim' : ''}" data-slug="${slug}" cx="${x}" cy="${PAD_T + innerH}" r="10" fill="transparent"/>`;
+    }
+    const y = PAD_T + innerH - (v / yMax) * innerH;
+    return `<g class="month-bar ${sel ? 'selected' : ''} ${dim ? 'dim' : ''}" data-slug="${slug}">
+              <circle cx="${x}" cy="${y}" r="10" fill="transparent"/>
+              <circle cx="${x}" cy="${y}" r="${sel ? 5 : 3}" fill="${color}"/>
+              <title>${fmtMonthFull(slug)}: ${fmt(v)}</title>
+            </g>`;
+  }).join('');
+  const labels = slugs.map((s, i) => {
+    const x = PL + gap * i + gap / 2;
+    const sel = selectedMonth === s;
+    return `<text class="month-label ${sel ? 'selected' : ''}" data-slug="${s}" x="${x}" y="${H-6}" text-anchor="middle">${fmtMonthLabel(s)}</text>`;
+  }).join('');
+  const latest = nonNull[nonNull.length-1];
+  return `
+    <div class="chart-card">
+      <div class="flex items-baseline justify-between mb-1">
+        <div>
+          <div class="h-chart">${esc(title)}</div>
+          <div class="chart-sub">${esc(sub)}</div>
+        </div>
+        ${deltaChip(values, lowerIsBetter)}
+      </div>
+      <div class="text-2xl font-bold tabular mt-1 mb-2">${fmt(latest)}</div>
+      <div class="calls-chart-wrap" data-pl="${PL}" data-pr="${PAD_R}" data-vw="${W}">
+        <svg viewBox="0 0 ${W} ${H}" class="w-full" style="display:block">
+          ${tickHTML}
+          <path d="${areaD}" fill="${color}" opacity="0.10"/>
+          ${path}
+          ${dots}
+          ${labels}
+        </svg>
+        <div class="perf-guideline"></div>
+        <div class="perf-tooltip"></div>
+      </div>
+    </div>`;
+}
+
+function stackedBarChart({ title, sub, stacks, slugs, data }) {
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const barW = innerW / slugs.length * 0.6;
+  const gap  = innerW / slugs.length;
+  // For each month, total of stacks
+  const totals = data.map(d => stacks.reduce((sum, s) => sum + (d[s.key] || 0), 0));
+  const max = Math.max(...totals, 0.001);
+  const bars = slugs.map((slug, i) => {
+    const total = totals[i];
+    const totalH = max > 0 ? (total / max) * innerH : 0;
+    const baseX = PAD_L + gap * i + (gap - barW) / 2;
+    let curY = PAD_T + innerH;
+    const segs = stacks.map(s => {
+      const v = data[i][s.key] || 0;
+      if (v === 0) return '';
+      const h = total > 0 ? (v / total) * totalH : 0;
+      curY -= h;
+      return `<rect x="${baseX}" y="${curY}" width="${barW}" height="${h}" fill="${s.color}">
+                <title>${fmtMonthFull(slug)} · ${esc(s.label)}: ${fmtN(v)}</title>
+              </rect>`;
+    }).join('');
+    const sel = selectedMonth === slug;
+    const dim = selectedMonth && !sel;
+    return `<g class="month-bar ${sel ? 'selected' : ''} ${dim ? 'dim' : ''}" data-slug="${slug}">
+              <rect x="${baseX - 2}" y="${PAD_T + innerH - totalH}" width="${barW + 4}" height="${totalH}" fill="transparent"/>
+              ${segs}
+            </g>`;
+  }).join('');
+  const labels = slugs.map((s, i) => {
+    const x = PAD_L + gap * i + gap / 2;
+    const sel = selectedMonth === s;
+    return `<text class="month-label ${sel ? 'selected' : ''}" data-slug="${s}" x="${x}" y="${H-6}" text-anchor="middle">${fmtMonthLabel(s)}</text>`;
+  }).join('');
+  const legend = stacks.map(s => `
+    <span class="inline-flex items-center gap-1 text-[10px] text-zinc-500">
+      <span class="w-2 h-2 rounded-sm" style="background:${s.color}"></span>${esc(s.label)}
+    </span>`).join(' ');
+  const latestTotal = totals[totals.length-1];
+  return `
+    <div class="chart-card">
+      <div class="flex items-baseline justify-between mb-1">
+        <div>
+          <div class="h-chart">${esc(title)}</div>
+          <div class="chart-sub">${esc(sub)}</div>
+        </div>
+        ${deltaChip(totals)}
+      </div>
+      <div class="text-2xl font-bold tabular mt-1 mb-2">${fmtN(latestTotal)}</div>
+      <svg viewBox="0 0 ${W} ${H}" class="w-full">
+        ${bars}
+        ${labels}
+      </svg>
+      <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">${legend}</div>
+    </div>`;
+}
+
+// ─── Interaction ───────────────────────────────────────────────────
+function wireMonthClicks(container) {
+  container.querySelectorAll('[data-slug]').forEach(el => {
+    el.addEventListener('click', () => selectMonth(el.dataset.slug));
+  });
+}
+function selectMonth(slug) {
+  if (selectedMonth === slug) {
+    // Clicking same month again deselects
+    clearSelection();
+    return;
+  }
+  selectedMonth = slug;
+  render();
+  // Scroll drill-in into view after render
+  setTimeout(() => {
+    const el = document.getElementById('drillSection');
+    if (el && !el.classList.contains('hidden')) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+function clearSelection() {
+  selectedMonth = null;
+  render();
+}
+
+// ── DRILL-IN ─────────────────────────────────────────────────────────
+function renderDrillIn() {
+  const section = document.getElementById('drillSection');
+  if (!selectedMonth) {
+    section.classList.add('hidden');
+    return;
+  }
+  section.classList.remove('hidden');
+  document.getElementById('drillTitle').textContent = fmtMonthFull(selectedMonth);
+  // Find events in this month
+  const m = monthsData.find(x => x.month_slug === selectedMonth);
+  const ids = new Set(m?.event_ids || []);
+  const evs = eventsData
+    .filter(ev => ids.has(ev.event_id))
+    .sort((a, b) => new Date(b.live_at) - new Date(a.live_at));
+  if (evs.length === 0) {
+    document.getElementById('drillRows').innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-zinc-400 text-sm">No events in this month yet</td></tr>`;
+    return;
+  }
+  document.getElementById('drillRows').innerHTML = evs.map(drillRow).join('');
+}
+
+function drillRow(ev) {
+  const regs = (ev.meta_regs || 0) + (ev.crm_regs || 0) + (ev.other_regs || 0);
+  const cpiql = (ev.meta_spend > 0 && ev.meta_regs > 0) ? ev.meta_spend / ev.meta_regs : null;
+  const rev   = ev.revenue;
+  const sales = ev.sales;
+  const spend = ev.meta_spend;
+  const roas  = (spend > 0 && rev != null) ? rev / spend : null;
+  const roasCls = roas == null ? 'text-zinc-500'
+                : roas >= 5 ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                : roas >= 2 ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                : 'text-amber-600 dark:text-amber-400 font-semibold';
+  return `
+    <tr class="drill-row cursor-pointer" onclick="window.location.href='/event.html?id=${encodeURIComponent(ev.event_id)}'">
+      <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap text-xs">${esc(fmtDate(ev.live_at))}</td>
+      <td class="px-4 py-3">
+        <div class="font-medium text-zinc-900 dark:text-zinc-100">${esc(ev.title || ev.event_id)}</div>
+        <div class="text-[11px] text-zinc-500">${esc(ev.instructor_name || '—')}</div>
+      </td>
+      <td class="px-4 py-3 text-right tabular">${fmtN(regs)}</td>
+      <td class="px-4 py-3 text-right tabular">${fmtMoneyRaw(spend)}</td>
+      <td class="px-4 py-3 text-right tabular">${fmtMoneyRaw(cpiql)}</td>
+      <td class="px-4 py-3 text-right">
+        <div class="font-medium tabular">${rev != null && rev > 0 ? fmtMoney(rev) : '—'}</div>
+        <div class="text-[11px] text-zinc-500 tabular">${sales != null && sales > 0 ? sales + ' sales' : '—'}</div>
+      </td>
+      <td class="px-4 py-3 text-right tabular ${roasCls}">${fmtROAS(roas)}</td>
+    </tr>`;
+}
+
+// ─── Init ───────────────────────────────────────────────────────────
+applyTheme();
+checkAuth();
+</script>
+
 </body>
 </html>

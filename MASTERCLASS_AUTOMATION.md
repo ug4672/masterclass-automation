@@ -21,6 +21,7 @@ Internal marketing-automation tool for **Interview Kickstart**, owned by **Utkar
 | `…/event.html?id=<event_id>` | Per-event detail page (with Refresh button) |
 | `…/compare.html?ids=a,b,c` | Side-by-side comparison (up to 8 events) |
 | `…/months.html` | Monthly performance overview (6 months, leaderboard, insights) |
+| `…/sales.html` | Sales directory — individual US sales grouped by sale-month |
 | `…/Masterclass%20Automation.html` | Legacy 3-tab UI (Create Event / Leads / Webinar Attendance) |
 
 The `1016538215063` in the URL is the GCP project number; can't be stripped from auto-generated `.run.app` URLs. Options to clean it up (custom domain / URL shortener / GitHub Pages redirect) discussed — user hasn't picked yet.
@@ -37,6 +38,7 @@ The `1016538215063` in the URL is the GCP project number; can't be stripped from
 | `event.html` | Dynamic detail page. Fetches `/events/:id`. Has per-event Refresh button (2026-06-21). |
 | `compare.html` | Compare workspace — side-by-side up to 8 events. |
 | `months.html` | Monthly aggregation page — 6-month rollup + leaderboard + auto-insights. |
+| `sales.html` | Sales directory (US) — individual sales grouped by sale-month with masterclass attribution. |
 | `styles.css` | Shared styles for new pages. |
 | `mockup-upcoming.html`, `mockup-detail.html`, `hub_mock.html`, `months_mock.html`, `months_mock_v2.html` | Static design mockups (visual reference only). v2 (2026-06-23) proposes new Lead Quality trend + Call Efforts trend sections + dual revenue hero (event-attributed + sale-month). |
 | `schema.sql` | DDL for BQ tables. Already applied. Safe to re-run. |
@@ -265,6 +267,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY snapshot_at DESC) = 1;
 | `GET` | `/events/:id` | session | Event detail payload |
 | **`POST`** | **`/events/:id/refresh`** | **session** | **Per-event re-snapshot. Added 2026-06-21.** |
 | `GET` | `/months?country=…&series=…` | session | Server-side monthly aggregation (months.html doesn't yet consume) |
+| `GET` | `/sales?country=US&since=YYYY-MM-DD` | session | Lists individual US sales from `Bq_data_Alumni`, left-joined to `events.event` on (webinar_type, PT-converted live_at). Returns one row per sale; frontend groups by sale-month. |
 | `GET` | `/series?country=…` | session | List distinct event series |
 | `GET` | `/event/poll-qna-export?event_id=…` | session | Downloads Polls + Q&A as XLSX |
 | `POST` | `/run-snapshot` | **none (security gap)** | Triggers per-event BQ snapshots for all active events |
@@ -288,7 +291,7 @@ Run as `ug4672@gmail.com`. Switch with `gcloud config set account ug4672@gmail.c
 
 **Before deploying new HTML files**: add `COPY <file> .` to the `Dockerfile`. The current Dockerfile selectively copies — files not listed silently 404.
 
-**Latest revision**: `masterclass-automation-00073-h2p` (deployed 2026-06-23). Includes `SPEND_CORRECTIONS` dict + ₹37,619 correction for `ai-launchpad-master-ai-may09` (source pipeline missing May 3).
+**Latest revision**: `masterclass-automation-00092-g22` (deployed 2026-06-26). Hub Past tab: default sort = "Date (newest)"; client requests 1000 events (server cap raised from 200 → 1000).
 
 ---
 
@@ -378,6 +381,60 @@ Run as `ug4672@gmail.com`. Switch with `gcloud config set account ug4672@gmail.c
 
 ## Conversation history summary
 
+### 2026-06-26 — Header alignment + real per-channel attendance (`00087-99k`)
+- **Header alignment fix**: event.html used `max-w-7xl` + `justify-between` with 3 flex siblings (logo, nav, avatar) — which pushed the nav into the center, unlike hub/months/compare that group `logo + nav` together on the left. Restructured event.html's header to match the others: `max-w-[1400px]` and a single left-flex group `[logo, nav]`, with the avatar/theme on the right.
+- **Real per-channel attendance**: new `_query_channel_attendance(event)` helper runs at `_get_event` read-time (only for aired events). Joins `webinar_attendee_data_from_zoom` to lead source/utm and returns per-UI-bucket `{leads, attendees}` counts. India uses regex on `Channel` (Meta/CRM/Others, matching `_RE_META`/`_RE_CRM`); US uses the same `CASE` on `utm_campaign` as the snapshot pipeline (YT/Social/L10X Email/L10X Bot/NI Base/Other). Failure is non-fatal — `channel_attendance` returns null and the UI falls back to the overall-rate approximation.
+- `event.html` renderFunnel uses real numbers when present (legend shows "per-channel from Zoom roster" in emerald); otherwise falls back to the approximation (legend still says "approximated…"). Each lane label now also shows the per-channel attendance %.
+
+### 2026-06-26 — Event detail page revamp (`00086-9gz`)
+- **KPI strip expanded** from 3 to 5 cards: IQLs/GQLs · CPIQL/CPGQL · Attendance · Sales · Revenue. ROAS shown as subtitle of Revenue card. Pre-event cards show "Populates after airing" placeholder.
+- **Lead Funnel now shows attended overlay**: each channel's bar is split into a darker "attended" segment + a lighter "registered but not attended" segment. **Per-channel attendance isn't snapshotted** — we use the event's overall `attendance_pct` as a proxy and apply it uniformly across channels (noted in the legend as "approximated"). Real per-channel attendance would need a new BQ query joining Zoom attendee data to lead channel.
+- **Attendance & Engagement section hidden**. Total attendance is in the KPI strip; email funnel is WIP. Section deleted from JSX; renderer functions kept in JS for now (cheap, easy to re-enable).
+- **Daily pacing — channel-stacked bars**: each day's bar is now segmented by channel using `meta_regs`/`crm_regs`/`other_regs` from `history.event_daily`. India: Meta (blue) / CRM (emerald) / Others (zinc). US: same 3-bucket shape but relabeled Paid / L10X / Other since `event_daily` only stores 3 buckets (the 6-bucket US split lives only in `event_snapshot`). Legend chips below the table.
+
+### 2026-06-25 — Sales Directory: India wired end-to-end (`00081-455`)
+- `_list_sales` now branches on country. India reads `ik-marketing-data.India_Leads.US_Domain_combined_view`, dedupes by `hubspot_ID` + IST `event_start_date_time`, applies the target-audience filter (`work_ex NOT IN ('0-2','3-4') AND work_ex NOT LIKE '%student%'`), and INNER-JOINs `events.event` on (webinar_type, IST live_at). USD→INR conversion at sale-month avg rate from `events.fx_rates_monthly` (fallback 84). Response includes `currency: 'USD' | 'INR'`.
+- `sales.html` is now currency-aware: `moneySym()` returns `₹` for India / `$` for US; `fmtMoneyAbbr` switches between Cr/L/k (India) and K/M/B (US).
+- Channel mapping extended to India source values: `Facebook` → Meta (blue), `WhatsApp` → emerald (CRM family), `Google Discovery` → YT (red), `Email` → emerald, `Organic` → amber, `Other` → zinc.
+- Dropped the WIP placeholder card from `sales.html`. India tab now loads from the live endpoint.
+
+### 2026-06-25 — Sales Directory: India country toggle (WIP) (`00079-f52`)
+- Added an India/US country switcher to `/sales.html` header (same visual pattern as the country switcher on `compare.html`). Persisted to `localStorage.ik_sales_country`.
+- US tab works as before. India tab shows a "🚧 Work in progress — India Sales Directory coming soon" placeholder card; load() short-circuits before hitting `/sales` so no API request is made.
+- When wired, India will need the same USD→INR sale-month FX conversion the snapshot code does (server.py `_query_sales_india`). Endpoint already returns 400 for `country=India`, so no backend change yet.
+
+### 2026-06-25 — Sales Directory tweaks (`00078-kg4`)
+- **Month dropdown**: page header now has a `Month` `<select>` (defaults to "All months"). Picking a month filters the visible sales + summary KPIs to that month only. Options are populated from the actual sale-months in the data.
+- **Channel labels** cleaned up via new `channelLabel()` helper: `Google YouTube` → `YouTube`, `L10X` stays as-is, others kept verbatim. Pill colors unchanged.
+- **Row subtitle**: under the masterclass title, now shows `{masterclass live-date} | {instructor}` (using `web_scheduled_date` so the date matches the event's PT live-date, distinct from the sale date in the left column). Falls back to `webinar_type` if neither is available.
+
+### 2026-06-25 — Renamed event: crewAI → OpenClaw (data-only, no deploy)
+- Title change: "Build Your Own AI Assistant with crewAI" → "Build Your Own AI Assistant with OpenClaw".
+- Slug change: `build-ai-assistant-crewai-ra-apr21` → `build-ai-assistant-openclaw-ra-apr21`.
+- UPDATEd via `bq query` (US region) on three tables: `events.event` (1 row), `history.event_snapshot` (9 rows), `history.event_daily` (72 rows). Total: 82 rows. Verified 0 rows remain under old slug. Latest streaming insert was ~50h old, so well past the 90-min DML lock.
+- Note: this is the first time we've migrated an `event_id`. Slugs are documented as "immutable" in the project context, but it's a data-only rename with no FK enforcement — the join is by string equality and all references are inside this project. URL bookmarks to `/event.html?id=build-ai-assistant-crewai-ra-apr21` will now 404; user is aware.
+
+### 2026-06-25 — Sales Directory: filter to masterclass sales only (`00077-pxd`)
+- Original `_list_sales` query used LEFT JOIN and returned every Bq_data_Alumni sale (including funnel-wide sales unrelated to a masterclass). User flagged the issue.
+- Switched to INNER JOIN on `events.event` so only sales matching a tracked masterclass (via webinar_type + PT-converted live_at) come through. Also excludes archived events.
+- Frontend cleanup: dropped the "Unattributed" code path in `saleRow()` and the "Attributed %" KPI; replaced KPI with "Masterclasses" (distinct event count).
+
+### 2026-06-25 — Sales Directory page (US)
+- New page `/sales.html` that lists individual US sales grouped by sale-month. Each row: Sale_date · Masterclass title (linked to `event.html`) · Channel (color-coded pill: L10X violet, Google YouTube/YouTube rose, Email emerald, Organic zinc, SMS amber) · Revenue (USD).
+- New endpoint `GET /sales?country=US&since=YYYY-MM-DD` in `server.py` (`_list_sales` method) — reads `ik-marketing-data.Marketing_data_new_logic.Bq_data_Alumni`, dedupes via `ROW_NUMBER() OVER (leads_hubspot_id, event PT date)`, filters `dupe_logic=1 AND dupe_flag=0 AND Sale_date IS NOT NULL`. Left-joins `events.event` on `webinar_type = s.webinar_type AND DATE(e.live_at, "America/Los_Angeles") = s.web_scheduled_date AND LOWER(country) IN ('us','usa')`. Sales without a match land as "Unattributed" with the webinar_type shown as fallback.
+- Page has a `since` date filter (defaults to 2026-01-01) and a top KPI strip (Total Sales / Total Revenue / Attributed % / Channel count). Country toggle deferred — `_list_sales` returns 400 for anything other than `country=US`.
+- Added `Sales` link to the top nav on `hub.html`, `months.html`, `compare.html`, `event.html`, `sales.html`. Added `COPY sales.html .` to the Dockerfile.
+- Deployed as `masterclass-automation-00076-z54`.
+
+### 2026-06-25 — Sales & Revenue section on event detail page
+- `event.html` previously had zero references to sales/revenue/ROAS — only the hub grid (`hub.html`) and the side-by-side `compare.html` surfaced them. User flagged the gap on the per-event page.
+- Added a new "Sales & Revenue" card in the left column between Call Efforts and Daily Pacing. Gated to aired events; shows "populate after the event airs" pill otherwise.
+- 4-card top KPI strip: Sales count, Revenue (abbreviated Cr/L/k for India, K/M/B for US, with raw value as subtitle), Overall ROAS, Paid ROAS. ROAS is colour-coded (emerald ≥ 5, zinc ≥ 2, amber otherwise — same thresholds as `hub.html`).
+- 3-card secondary row: Paid Revenue (with % of total), Cost / Sale (paid spend ÷ sales), Revenue / IQL or GQL.
+- New helpers in `event.html`: `fmtMoneyAbbr()` (locale-aware abbreviations) and `fmtROAS()` (matches `compare.html` style).
+- All values pulled from `snap.sales / revenue / paid_revenue / overall_roas / paid_roas / meta_spend / total_regs` — already returned by `/events/:id` via `SELECT *`. No server changes needed.
+- Deployed as `masterclass-automation-00075-9jc`.
+
 ### 2026-06-14 — Mockup design
 - Created `mockup-upcoming.html` (card grid hub) and `mockup-detail.html` (event detail page) as static design references.
 - Discussed what to remove from legacy tool: SQL viewers, Configuration block visibility, redundant date+webinar_type re-entry, MASTERCLASS_INDIA_* enum exposure.
@@ -403,6 +460,10 @@ Run as `ug4672@gmail.com`. Switch with `gcloud config set account ug4672@gmail.c
 ### 2026-06-18 — URL cleanup + CONTEXT.md
 - User asked how to remove `1016538215063` from URL. Discussed 3 options (custom domain / shortener / GH Pages redirect). No decision yet.
 - Created the original `CONTEXT.md` (predecessor to this file).
+
+### 2026-06-23 — Git commit ac5d5f6 pushed
+- All session work pushed to `main`: 14 files (4,491 insertions / 488 deletions).
+- Skipped: `snapshot_config.json` (contains Slack token), `.DS_Store`, `__pycache__/`, and unrelated dirs (`Zoom/`, `masterclass-launch/`, `projects/`, `split-simple/`, etc.). User has no `.gitignore` — these stay untracked manually for now.
 
 ### 2026-06-23 — Audit: India IQL & attendance gaps + months v2 mockup
 - **Cross-checked India spend** against marketing reference (`actual` $4,450 for May 9 Launchpad vs our $4,036). Diff was ₹37,619 — **May 3 missing from `Combined_India_Spend` source** for the 5 `Pilot_Meta_L10X_India_01_AI_Launchpad_9_10_May*` campaigns. User confirmed actuals (May1 ₹14,842 + May2 ₹9,783 + May3 ₹12,994). Patched via SPEND_CORRECTIONS dict (see entry below).
