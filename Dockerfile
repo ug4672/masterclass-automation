@@ -12,6 +12,7 @@ COPY sales.html .
 COPY lead_funnel_mock.html .
 COPY hub_unified_mock.html .
 COPY hub_timeline_premium.html .
+COPY mobile.html .
 COPY styles.css .
 COPY ["Masterclass Automation.html", "."]
 EXPOSE 8080
